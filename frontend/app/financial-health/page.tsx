@@ -9,6 +9,7 @@ export default async function FinancialHealthPage() {
   const { getToken } = await auth();
   const data = await getFinancialHealth(await getToken());
   const factors = data.factors ?? healthFactors;
+  const savingsRateLabel = data.savingsRateLabel ?? `${data.savingsRate}%`;
 
   return (
     <AppShell currentPath="/financial-health" eyebrow="Score and guidance" title="Quantify how strong your financial position really is">
@@ -16,7 +17,8 @@ export default async function FinancialHealthPage() {
         <Panel className="flex flex-col items-center justify-center p-8">
           <ScoreRing score={data.score} />
           <p className="mt-6 max-w-sm text-center text-sm leading-7 text-slate-300">
-            FinSight scores savings momentum, spending consistency, subscription burden, and cash runway to explain what is helping or hurting your money habits.
+            {data.summary ??
+              "FinSight scores savings momentum, spending consistency, subscription burden, and cash runway to explain what is helping or hurting your money habits."}
           </p>
         </Panel>
 
@@ -30,7 +32,10 @@ export default async function FinancialHealthPage() {
                   <span className="font-medium text-white">{factor.value}/100</span>
                 </div>
                 <div className="h-3 rounded-full bg-white/7">
-                  <div className="h-3 rounded-full bg-[var(--color-accent)]" style={{ width: `${factor.value}%` }} />
+                  <div
+                    className="h-3 rounded-full bg-[var(--color-accent)]"
+                    style={{ width: `${Math.min(Math.max(factor.value, 0), 100)}%` }}
+                  />
                 </div>
               </div>
             ))}
@@ -39,7 +44,7 @@ export default async function FinancialHealthPage() {
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
               <div className="text-sm text-slate-400">Savings rate</div>
-              <div className="mt-3 text-2xl font-semibold text-white">{data.savingsRate}%</div>
+              <div className="mt-3 text-2xl font-semibold text-white">{savingsRateLabel}</div>
             </div>
             <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
               <div className="text-sm text-slate-400">Emergency runway</div>

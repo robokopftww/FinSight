@@ -33,6 +33,75 @@ export type DashboardOverview = {
   };
 };
 
+export type TransactionCategoryOption = {
+  raw: string;
+  label: string;
+};
+
+export type TransactionRow = {
+  id: string;
+  merchant?: string;
+  merchantName?: string | null;
+  description: string;
+  amount: number;
+  category?: string;
+  categoryPrimary?: string;
+  categoryRaw?: string;
+  direction?: "inflow" | "outflow";
+  status?: string;
+  date?: string;
+  occurredAt?: string;
+};
+
+export type TransactionsResponse = {
+  data: TransactionRow[];
+  categories?: TransactionCategoryOption[];
+  summary?: {
+    count: number;
+    income: number;
+    spending: number;
+    net: number;
+  };
+};
+
+export type SubscriptionsResponse = {
+  data: Array<{
+    id?: string;
+    name?: string;
+    merchantName?: string;
+    monthlyCost: number;
+    yearlyCost: number;
+    opportunity: string;
+    note?: string;
+    chargeCount?: number;
+    cadence?: string;
+    confidence?: number;
+    lastChargedAt?: string;
+    category?: string;
+  }>;
+  summary?: {
+    count: number;
+    totalMonthly: number;
+    totalYearly: number;
+    reviewMonthly: number;
+    reviewYearly: number;
+  };
+};
+
+export type FinancialHealthResponse = {
+  score: number;
+  savingsRate: number;
+  savingsRateLabel?: string;
+  displaySavingsRate?: number;
+  savingsRateIsExtreme?: boolean;
+  spendingConsistency: number;
+  emergencyFundDays: number;
+  subscriptionBurden: number;
+  summary?: string;
+  factors: Array<{ label: string; value: number }>;
+  recommendations: string[];
+};
+
 async function getJson<T>(path: string, fallback: T, token?: string | null): Promise<T> {
   if (!apiBaseUrl) {
     return fallback;
@@ -68,19 +137,19 @@ export async function getDashboardOverview(token?: string | null) {
 }
 
 export async function getTransactions(token?: string | null) {
-  return getJson("/api/transactions", {
+  return getJson<TransactionsResponse>("/api/transactions", {
     data: transactions,
   }, token);
 }
 
 export async function getSubscriptions(token?: string | null) {
-  return getJson("/api/subscriptions", {
+  return getJson<SubscriptionsResponse>("/api/subscriptions", {
     data: subscriptions,
   }, token);
 }
 
 export async function getFinancialHealth(token?: string | null) {
-  return getJson("/api/financial-health", {
+  return getJson<FinancialHealthResponse>("/api/financial-health", {
     score: overview.healthScore,
     savingsRate: overview.savingsRate,
     spendingConsistency: healthFactors[1].value,

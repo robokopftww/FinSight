@@ -174,6 +174,9 @@ export function detectSubscriptions(transactions: Transaction[]) {
 
   return [...byMerchant.entries()]
     .map(([merchantName, merchantTransactions]) => {
+      const sortedTransactions = [...merchantTransactions].sort(
+        (a, b) => b.occurredAt.getTime() - a.occurredAt.getTime(),
+      );
       const amounts = merchantTransactions.map((transaction) => toNumber(transaction.amount));
       const average = amounts.reduce((total, amount) => total + amount, 0) / amounts.length;
       const consistentAmount =
@@ -189,6 +192,11 @@ export function detectSubscriptions(transactions: Transaction[]) {
         merchantName,
         monthlyCost: currency(average),
         yearlyCost: currency(average * 12),
+        chargeCount: merchantTransactions.length,
+        cadence: merchantTransactions.length >= 3 ? "Recurring" : "Likely recurring",
+        confidence: merchantTransactions.length >= 3 ? 0.86 : 0.68,
+        lastChargedAt: sortedTransactions[0]?.occurredAt,
+        category: toDisplayCategory(sortedTransactions[0]?.categoryPrimary ?? "Uncategorized"),
         opportunity: average > 25 ? "Review" : "Keep",
         note:
           average > 25
@@ -196,7 +204,7 @@ export function detectSubscriptions(transactions: Transaction[]) {
             : "Recurring charge detected from transaction cadence.",
       };
     })
-    .filter(Boolean)
+    .filter((subscription): subscription is NonNullable<typeof subscription> => Boolean(subscription))
     .sort((a, b) => (b?.monthlyCost ?? 0) - (a?.monthlyCost ?? 0))
     .slice(0, 9);
 }
@@ -219,6 +227,7 @@ export function calculateHealthScore({
   const emergencyFundDays = monthlySpending > 0 ? Math.round((currentBalance / monthlySpending) * 30) : 90;
   const runwayComponent = Math.min(emergencyFundDays / 90, 1);
   const subscriptionComponent = Math.max(1 - subscriptionBurden / 10, 0);
+  const savingsRateIsExtreme = Math.abs(savingsRate) > 100;
   const score = Math.round(
     savingsComponent * 35 + spendingConsistency * 25 + runwayComponent * 25 + subscriptionComponent * 15,
   );
@@ -226,9 +235,15 @@ export function calculateHealthScore({
   return {
     score: Math.max(0, Math.min(score, 100)),
     savingsRate: currency(savingsRate),
+    savingsRateLabel: formatPercent(savingsRate),
+    displaySavingsRate: clamp(savingsRate, -100, 100),
+    savingsRateIsExtreme,
     spendingConsistency: Math.round(spendingConsistency * 100),
     emergencyFundDays,
     subscriptionBurden: currency(subscriptionBurden),
+    summary: savingsRateIsExtreme
+      ? "Plaid sandbox data can contain large transfers and loan-style outflows, so FinSight caps the displayed savings rate while keeping the score grounded in the synced transactions."
+      : "FinSight scores your recent savings momentum, spending consistency, subscription burden, and cash runway from synced account activity.",
     factors: [
       { label: "Savings rate", value: Math.round(savingsComponent * 100) },
       { label: "Spending consistency", value: Math.round(spendingConsistency * 100) },
