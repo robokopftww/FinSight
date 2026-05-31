@@ -102,6 +102,19 @@ export type FinancialHealthResponse = {
   recommendations: string[];
 };
 
+export type WeeklyReportResponse = {
+  periodLabel: string;
+  cards: Array<{ label: string; value: string; detail: string }>;
+  insights: Array<{ title: string; summary: string; severity: string }>;
+  weeklySpend: Array<{ label: string; amount: number }>;
+  forecast?: {
+    projectedBalance: number;
+    safeToSpend: number;
+    riskProbability: number;
+  };
+  source?: string;
+};
+
 async function getJson<T>(path: string, fallback: T, token?: string | null): Promise<T> {
   if (!apiBaseUrl) {
     return fallback;
@@ -157,6 +170,34 @@ export async function getFinancialHealth(token?: string | null) {
     subscriptionBurden: 3.4,
     factors: healthFactors,
     recommendations,
+  }, token);
+}
+
+export async function getWeeklyReport(token?: string | null) {
+  return getJson<WeeklyReportResponse>("/api/reports/weekly", {
+    periodLabel: "Demo week",
+    cards: [
+      { label: "This week spending", value: "$1,248", detail: "Demo report until Plaid data is synced." },
+      { label: "Change vs last week", value: "+12.4%", detail: "$138 higher than last week." },
+      { label: "Top category", value: "Food And Drink", detail: "$420" },
+      { label: "Largest transaction", value: "$184", detail: "Whole Foods" },
+    ],
+    insights,
+    weeklySpend: [
+      { label: "Mon", amount: 120 },
+      { label: "Tue", amount: 80 },
+      { label: "Wed", amount: 260 },
+      { label: "Thu", amount: 140 },
+      { label: "Fri", amount: 310 },
+      { label: "Sat", amount: 220 },
+      { label: "Sun", amount: 118 },
+    ],
+    forecast: {
+      projectedBalance: overview.currentBalance,
+      safeToSpend: overview.safeToSpend,
+      riskProbability: 0.18,
+    },
+    source: "mock-fallback",
   }, token);
 }
 

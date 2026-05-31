@@ -9,6 +9,7 @@
   "scripts": {
     "dev:frontend": "npm run dev --workspace frontend",
     "dev:backend": "npm run dev --workspace backend",
+    "dev:ai": "cd ai-service && .venv/bin/python -m uvicorn main:app --port 8000",
     "build:frontend": "npm run build --workspace frontend",
     "build:backend": "npm run build --workspace backend",
     "lint:frontend": "npm run lint --workspace frontend",

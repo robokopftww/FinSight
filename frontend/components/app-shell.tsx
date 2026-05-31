@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Bot, ChartNoAxesCombined, CreditCard, House, ShieldCheck } from "lucide-react";
+import { Bot, ChartNoAxesCombined, CreditCard, FileText, House, MessageCircle, ShieldCheck } from "lucide-react";
 
 import { AppUserControls } from "@/components/app-user-controls";
 import { UserSync } from "@/components/user-sync";
@@ -11,6 +11,8 @@ const navItems = [
   { href: "/transactions", label: "Transactions", icon: CreditCard },
   { href: "/subscriptions", label: "Subscriptions", icon: Bot },
   { href: "/financial-health", label: "Financial health", icon: ShieldCheck },
+  { href: "/advisor", label: "Advisor", icon: MessageCircle },
+  { href: "/reports", label: "Reports", icon: FileText },
 ];
 
 export function AppShell({
@@ -48,7 +50,7 @@ export function AppShell({
                   className={cn(
                     "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition",
                     currentPath === item.href
-                      ? "bg-white text-slate-950"
+                      ? "border border-emerald-300/16 bg-emerald-300/12 text-emerald-100"
                       : "text-slate-300 hover:bg-white/6 hover:text-white",
                   )}
                 >

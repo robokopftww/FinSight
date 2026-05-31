@@ -42,6 +42,7 @@ async function authenticatedFetch(path: string, token: string | null, init?: Req
 export function BankConnectionPanel() {
   const { getToken, isSignedIn } = useAuth();
   const [status, setStatus] = useState<PlaidStatus | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,7 +56,10 @@ export function BankConnectionPanel() {
     const response = await authenticatedFetch("/api/plaid/status", token);
 
     if (response.ok) {
+      setStatusError(null);
       setStatus((await response.json()) as PlaidStatus);
+    } else {
+      setStatusError("Backend unavailable");
     }
   }, [getToken, isSignedIn]);
 
@@ -123,7 +127,8 @@ export function BankConnectionPanel() {
       }
 
       if (!response.ok) {
-        throw new Error("Unable to create Plaid Link token");
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "Unable to create Plaid Link token");
       }
 
       const body = (await response.json()) as { linkToken: string };
@@ -165,7 +170,9 @@ export function BankConnectionPanel() {
   }
 
   const connected = Boolean(status?.connected);
-  const configured = status?.configured ?? false;
+  const configured = status?.configured ?? null;
+  const plaidStatusLabel =
+    statusError ?? (configured === null ? "Checking..." : configured ? "Configured" : "Missing keys");
 
   return (
     <Panel className="p-6">
@@ -214,7 +221,7 @@ export function BankConnectionPanel() {
       <div className="mt-6 grid gap-3 md:grid-cols-3">
         <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
           <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Plaid sandbox</div>
-          <div className="mt-2 text-lg font-semibold text-white">{configured ? "Configured" : "Missing keys"}</div>
+          <div className="mt-2 text-lg font-semibold text-white">{plaidStatusLabel}</div>
         </div>
         <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
           <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Accounts</div>

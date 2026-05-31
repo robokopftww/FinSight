@@ -62,6 +62,16 @@ Terminal 2:
 npm run dev:frontend
 ```
 
+Terminal 3:
+
+```bash
+python3 -m venv ai-service/.venv
+ai-service/.venv/bin/python -m pip install -r ai-service/requirements.txt
+npm run dev:ai
+```
+
 Open `http://localhost:3000`.
 
 When Clerk keys are present, `/dashboard`, `/transactions`, `/subscriptions`, and `/financial-health` require sign-in. After a user signs up, the frontend calls `POST /api/auth/sync-user`, and the backend upserts that Clerk user into PostgreSQL.
+
+The backend calls the Python AI service at `AI_SERVICE_URL`, which defaults to `http://127.0.0.1:8000`. If the Python service is not running, FinSight falls back to the TypeScript analytics engine so the app still loads.
