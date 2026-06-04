@@ -8,6 +8,7 @@ const isProtectedRoute = createRouteMatcher([
   "/financial-health(.*)",
   "/advisor(.*)",
   "/reports(.*)",
+  "/settings(.*)",
 ]);
 
 const isClerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);

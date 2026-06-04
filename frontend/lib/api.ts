@@ -107,6 +107,7 @@ export type WeeklyReportResponse = {
   cards: Array<{ label: string; value: string; detail: string }>;
   insights: Array<{ title: string; summary: string; severity: string }>;
   weeklySpend: Array<{ label: string; amount: number }>;
+  llmSummary?: string | null;
   forecast?: {
     projectedBalance: number;
     safeToSpend: number;
@@ -192,6 +193,8 @@ export async function getWeeklyReport(token?: string | null) {
       { label: "Sat", amount: 220 },
       { label: "Sun", amount: 118 },
     ],
+    llmSummary:
+      "Spending rose this week in the demo data, led by food and everyday purchases. Your forecast remains stable, but recurring increases are worth watching before they compound.",
     forecast: {
       projectedBalance: overview.currentBalance,
       safeToSpend: overview.safeToSpend,

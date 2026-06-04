@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { Bot, Send, Sparkles, UserRound } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { Bot, Clock3, Loader2, Send, Sparkles, Trash2, UserRound } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -14,28 +14,71 @@ type AdvisorMessage = {
   content: string;
   decision?: string;
   dataPoints?: Array<{ label: string; value: string }>;
+  source?: string;
+  createdAt?: string;
+};
+
+type HistoryResponse = {
+  data: AdvisorMessage[];
+};
+
+const welcomeMessage: AdvisorMessage = {
+  id: "welcome",
+  role: "assistant",
+  content:
+    "Ask me about affordability, spending spikes, savings goals, or cash-flow risk. I will answer from your synced Plaid transactions and FinSight forecast.",
+  decision: "ready",
 };
 
 const starterPrompts = [
   "Can I afford a $400 purchase?",
+  "I want to save $5,000 by December",
   "Why did I spend so much this month?",
-  "How can I save more money?",
   "What is my biggest cash flow risk?",
 ];
 
 export function AdvisorChat() {
-  const { getToken } = useAuth();
-  const [messages, setMessages] = useState<AdvisorMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "Ask me about affordability, spending spikes, savings plans, or cash-flow risk. I will answer from your synced Plaid transactions and FinSight forecast.",
-      decision: "ready",
-    },
-  ]);
+  const { getToken, isSignedIn } = useAuth();
+  const [messages, setMessages] = useState<AdvisorMessage[]>([welcomeMessage]);
   const [question, setQuestion] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [historyMessage, setHistoryMessage] = useState<string | null>(null);
+
+  const loadHistory = useCallback(async () => {
+    if (!apiBaseUrl || !isSignedIn) {
+      setIsLoadingHistory(false);
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      const response = await fetch(`${apiBaseUrl}/api/advisor/history`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (!response.ok) {
+        throw new Error("History request failed.");
+      }
+
+      const data = (await response.json()) as HistoryResponse;
+      setMessages(data.data.length ? data.data : [welcomeMessage]);
+      setHistoryMessage(data.data.length ? `Restored ${data.data.length} saved messages.` : null);
+    } catch {
+      setMessages([welcomeMessage]);
+      setHistoryMessage("Could not load saved advisor history.");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, [getToken, isSignedIn]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      void loadHistory();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [loadHistory]);
 
   async function sendQuestion(nextQuestion: string) {
     const trimmedQuestion = nextQuestion.trim();
@@ -77,6 +120,7 @@ export function AdvisorChat() {
         answer: string;
         decision?: string;
         dataPoints?: Array<{ label: string; value: string }>;
+        source?: string;
       };
 
       setMessages((currentMessages) => [
@@ -87,6 +131,7 @@ export function AdvisorChat() {
           content: data.answer,
           decision: data.decision,
           dataPoints: data.dataPoints,
+          source: data.source,
         },
       ]);
     } catch {
@@ -109,6 +154,37 @@ export function AdvisorChat() {
     void sendQuestion(question);
   }
 
+  async function clearHistory() {
+    if (!apiBaseUrl || isSending || isLoadingHistory) {
+      return;
+    }
+
+    if (!window.confirm("Clear saved advisor chat history for this account?")) {
+      return;
+    }
+
+    setIsLoadingHistory(true);
+
+    try {
+      const token = await getToken();
+      const response = await fetch(`${apiBaseUrl}/api/advisor/history`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (!response.ok) {
+        throw new Error("Clear history request failed.");
+      }
+
+      setMessages([welcomeMessage]);
+      setHistoryMessage("Advisor history cleared.");
+    } catch {
+      setHistoryMessage("Could not clear advisor history.");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }
+
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]">
       <section className="overflow-hidden rounded-[28px] border border-white/8 bg-[#091120]">
@@ -122,12 +198,21 @@ export function AdvisorChat() {
               <p className="text-sm text-slate-400">Grounded in synced balances, spending, and forecasts.</p>
             </div>
           </div>
-          <span className="rounded-full bg-emerald-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
-            Python analytics
-          </span>
+          <div className="flex items-center gap-2">
+            {isLoadingHistory ? <Loader2 className="size-4 animate-spin text-slate-400" /> : null}
+            <span className="rounded-full bg-emerald-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+              Gemini + Python
+            </span>
+          </div>
         </div>
 
         <div className="max-h-[34rem] space-y-4 overflow-y-auto px-5 py-5">
+          {historyMessage ? (
+            <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-white/8 bg-white/5 px-3 py-2 text-xs text-slate-300">
+              <Clock3 className="size-3.5" />
+              {historyMessage}
+            </div>
+          ) : null}
           {messages.map((message) => {
             const isAssistant = message.role === "assistant";
 
@@ -154,6 +239,11 @@ export function AdvisorChat() {
                           <div className="mt-1 font-semibold text-white">{point.value}</div>
                         </div>
                       ))}
+                    </div>
+                  ) : null}
+                  {isAssistant && message.source ? (
+                    <div className="mt-4 inline-flex rounded-full bg-emerald-300/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                      {formatSourceLabel(message.source)}
                     </div>
                   ) : null}
                 </div>
@@ -185,7 +275,19 @@ export function AdvisorChat() {
 
       <aside className="space-y-4">
         <div className="rounded-[28px] border border-white/8 bg-white/5 p-5">
-          <h2 className="font-semibold text-white">Try asking</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-semibold text-white">Try asking</h2>
+            <button
+              type="button"
+              className="rounded-full border border-white/8 p-2 text-slate-300 transition hover:border-amber-300/30 hover:bg-amber-300/10 hover:text-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => void clearHistory()}
+              disabled={isSending || isLoadingHistory}
+              aria-label="Clear advisor history"
+              title="Clear advisor history"
+            >
+              {isLoadingHistory ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+            </button>
+          </div>
           <div className="mt-4 space-y-2">
             {starterPrompts.map((prompt) => (
               <button
@@ -207,11 +309,24 @@ export function AdvisorChat() {
             <p>Recent Plaid transactions</p>
             <p>Subscription estimates</p>
             <p>Python forecast and score</p>
+            <p>Gemini explanation layer</p>
           </div>
         </div>
       </aside>
     </div>
   );
+}
+
+function formatSourceLabel(source: string) {
+  if (source.startsWith("gemini")) {
+    return "Gemini + Python analytics";
+  }
+
+  if (source.startsWith("typescript")) {
+    return "Local fallback";
+  }
+
+  return "Python analytics";
 }
 
 function formatQuestionForDisplay(question: string) {

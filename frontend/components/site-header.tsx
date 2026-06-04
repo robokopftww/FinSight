@@ -5,7 +5,7 @@ import { AuthControls } from "@/components/auth-controls";
 const links = [
   { href: "#features", label: "Features" },
   { href: "#pricing", label: "Pricing" },
-  { href: "/dashboard", label: "Demo" },
+  { href: "/demo", label: "Demo" },
 ];
 
 export function SiteHeader() {

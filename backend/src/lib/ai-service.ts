@@ -40,6 +40,7 @@ export type AiWeeklyReportResponse = {
   cards: Array<{ label: string; value: string; detail: string }>;
   insights: Array<{ title: string; summary: string; severity: string }>;
   weeklySpend: Array<{ label: string; amount: number }>;
+  llmSummary?: string | null;
   forecast?: {
     projectedBalance: number;
     safeToSpend: number;
@@ -47,6 +48,9 @@ export type AiWeeklyReportResponse = {
   };
   source?: string;
 };
+
+const AI_CHAT_TIMEOUT_MS = 30000;
+const AI_REPORT_TIMEOUT_MS = 30000;
 
 export async function requestAiSummary({
   accounts,
@@ -113,7 +117,7 @@ export async function requestAiChat({
   monthlySubscriptionCost: number;
 }) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 3000);
+  const timeout = setTimeout(() => controller.abort(), AI_CHAT_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${env.AI_SERVICE_URL}/analytics/chat`, {
@@ -161,7 +165,7 @@ export async function requestAiWeeklyReport({
   monthlySubscriptionCost: number;
 }) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 3000);
+  const timeout = setTimeout(() => controller.abort(), AI_REPORT_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${env.AI_SERVICE_URL}/analytics/report`, {

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import calendar
 from fastapi import APIRouter
 import re
 from datetime import datetime, timedelta, timezone
@@ -7,15 +8,17 @@ from datetime import datetime, timedelta, timezone
 from categorization.service import categorize_merchant
 from forecasting.service import build_forecast
 from insights.service import generate_insights
+from llm.service import build_weekly_summary, llm_status, refine_advisor_answer
 from schemas.analytics import AnalyticsRequest, ChatRequest
 from scoring.service import calculate_financial_health_score
 
 router = APIRouter()
+NOISE_CATEGORIES = {"TRANSFER_OUT", "TRANSFER_IN", "LOAN_PAYMENTS"}
 
 
 @router.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "finsight-ai-service"}
+    return {"status": "ok", "service": "finsight-ai-service", "llm": llm_status()}
 
 
 @router.post("/analytics/score")
@@ -107,12 +110,26 @@ def build_advisor_response(
     transactions: list[dict],
 ) -> dict:
     lower_question = question.lower()
+    savings_goal = extract_savings_goal(question)
     purchase_amount = extract_purchase_amount(question)
     top_category = top_spending_category(transactions)
     projected_balance = float(forecast_data["projectedBalance"])
     safe_to_spend = max(payload.current_balance - max(payload.monthly_spending * 0.5, 500), 0)
 
-    if purchase_amount:
+    if savings_goal:
+        monthly_surplus = payload.monthly_income - payload.monthly_spending
+        required_monthly_savings = savings_goal["amount"] / savings_goal["months_remaining"]
+        monthly_gap = required_monthly_savings - monthly_surplus
+        decision = "goal_plan"
+        answer = (
+            f"To save {format_currency(savings_goal['amount'])} by {savings_goal['target_label']}, "
+            f"you would need to set aside about {format_currency(required_monthly_savings)} per month. "
+            f"Your current detected monthly surplus is {format_currency(monthly_surplus)}, "
+            f"so the monthly gap is about {format_currency(monthly_gap)}."
+        )
+        if top_category and monthly_gap > 0:
+            answer += f" Start by reviewing {top_category[0]}, your largest flexible category in recent synced data."
+    elif purchase_amount:
         remaining_safe = safe_to_spend - purchase_amount
         remaining_projection = projected_balance - purchase_amount
         affordable = remaining_safe >= 0 and projected_balance - purchase_amount >= 500
@@ -154,24 +171,42 @@ def build_advisor_response(
             f"with a safe-to-spend estimate around {format_currency(safe_to_spend)}."
         )
 
-    data_points = (
-        [
+    if savings_goal:
+        monthly_surplus = payload.monthly_income - payload.monthly_spending
+        required_monthly_savings = savings_goal["amount"] / savings_goal["months_remaining"]
+        monthly_gap = required_monthly_savings - monthly_surplus
+        data_points = [
+            {"label": "Goal amount", "value": format_currency(savings_goal["amount"])},
+            {"label": "Target date", "value": savings_goal["target_label"]},
+            {"label": "Monthly required", "value": format_currency(required_monthly_savings)},
+            {"label": "Current monthly surplus", "value": format_currency(monthly_surplus)},
+            {"label": "Monthly gap", "value": format_currency(monthly_gap)},
+        ]
+    elif purchase_amount:
+        data_points = [
             {"label": "Current balance", "value": format_currency(payload.current_balance)},
             {"label": "Purchase amount", "value": format_currency(purchase_amount)},
             {"label": "After-purchase buffer", "value": format_currency(safe_to_spend - purchase_amount)},
             {"label": "After-purchase projection", "value": format_currency(projected_balance - purchase_amount)},
         ]
-        if purchase_amount
-        else [
+    else:
+        data_points = [
             {"label": "Current balance", "value": format_currency(payload.current_balance)},
             {"label": "Projected 30-day balance", "value": format_currency(projected_balance)},
             {"label": "Safe to spend", "value": format_currency(safe_to_spend)},
             {"label": "Savings rate", "value": score_data["savingsRateLabel"]},
         ]
-    )
 
     if top_category:
         data_points.append({"label": "Top spending category", "value": f"{top_category[0]} ({format_currency(top_category[1])})"})
+
+    answer, source = refine_advisor_answer(
+        question=question,
+        draft_answer=answer,
+        decision=decision,
+        data_points=data_points,
+        top_category=top_category,
+    )
 
     return {
         "answer": answer,
@@ -179,10 +214,11 @@ def build_advisor_response(
         "dataPoints": data_points,
         "followUps": [
             "Can I afford a $400 purchase?",
+            "I want to save $5,000 by December",
             "Why did I spend so much this month?",
             "How can I save more money?",
         ],
-        "source": "python-analytics-v1",
+        "source": source,
     }
 
 
@@ -193,12 +229,76 @@ def extract_purchase_amount(question: str) -> float | None:
     return float(match.group(1).replace(",", ""))
 
 
+def extract_savings_goal(question: str) -> dict | None:
+    lower_question = question.lower()
+    if not any(term in lower_question for term in ["save", "savings goal", "goal"]):
+        return None
+
+    amount = extract_purchase_amount(question)
+    if not amount:
+        return None
+
+    target = extract_target_date(question)
+    if not target:
+        return None
+
+    today = datetime.now(timezone.utc).date()
+    days_remaining = max((target - today).days, 1)
+    months_remaining = max(round(days_remaining / 30.44), 1)
+
+    return {
+        "amount": amount,
+        "target_date": target.isoformat(),
+        "target_label": target.strftime("%b %-d, %Y"),
+        "months_remaining": months_remaining,
+    }
+
+
+def extract_target_date(question: str):
+    month_match = re.search(
+        r"\b(?:by|before|until)\s+"
+        r"(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|"
+        r"sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
+        r"(?:\s+([0-9]{4}))?\b",
+        question,
+        re.IGNORECASE,
+    )
+
+    if not month_match:
+        return None
+
+    month_key = month_match.group(1).lower()[:3]
+    month = {
+        "jan": 1,
+        "feb": 2,
+        "mar": 3,
+        "apr": 4,
+        "may": 5,
+        "jun": 6,
+        "jul": 7,
+        "aug": 8,
+        "sep": 9,
+        "oct": 10,
+        "nov": 11,
+        "dec": 12,
+    }[month_key]
+    today = datetime.now(timezone.utc).date()
+    year = int(month_match.group(2)) if month_match.group(2) else today.year
+
+    if not month_match.group(2) and month < today.month:
+        year += 1
+
+    last_day = calendar.monthrange(year, month)[1]
+    return datetime(year, month, last_day, tzinfo=timezone.utc).date()
+
+
 def top_spending_category(transactions: list[dict]) -> tuple[str, float] | None:
+    outflows = [transaction for transaction in transactions if transaction.get("direction") == "outflow"]
+    flexible_outflows = [transaction for transaction in outflows if not is_noise_category(transaction.get("category"))]
+    candidates = flexible_outflows if flexible_outflows else outflows
     totals: dict[str, float] = {}
 
-    for transaction in transactions:
-        if transaction.get("direction") != "outflow":
-            continue
+    for transaction in candidates:
         category = display_category(transaction.get("category") or "Uncategorized")
         totals[category] = totals.get(category, 0) + abs(float(transaction.get("amount", 0)))
 
@@ -324,45 +424,54 @@ def build_weekly_report(payload: AnalyticsRequest, forecast_data: dict, transact
             "severity": "low" if projected_balance >= 500 else "high",
         },
     ]
+    period_label = f"{current_start.strftime('%b %-d')} - {latest.strftime('%b %-d')}"
+    cards = [
+        {
+            "label": "This week spending",
+            "value": format_currency(current_spending),
+            "detail": f"{len(current_outflows)} outflow transactions analyzed.",
+        },
+        {
+            "label": "Change vs last week",
+            "value": format_change_percent(change_percent),
+            "detail": f"{format_currency(abs(change_amount))} {('higher' if change_amount > 0 else 'lower' if change_amount < 0 else 'unchanged')}.",
+        },
+        {
+            "label": "Top category",
+            "value": top_category[0] if top_category else "None",
+            "detail": format_currency(top_category[1]) if top_category else "No outflows this week.",
+        },
+        {
+            "label": "Largest transaction",
+            "value": format_currency(largest_amount),
+            "detail": str(largest_name),
+        },
+    ]
+    forecast_context = {
+        "projectedBalance": projected_balance,
+        "safeToSpend": safe_to_spend,
+        "riskProbability": forecast_data["riskProbability"],
+    }
+    llm_summary, source = build_weekly_summary(
+        period_label=period_label,
+        cards=cards,
+        insights=insights,
+        forecast=forecast_context,
+    )
 
     return {
-        "periodLabel": f"{current_start.strftime('%b %-d')} - {latest.strftime('%b %-d')}",
-        "cards": [
-            {
-                "label": "This week spending",
-                "value": format_currency(current_spending),
-                "detail": f"{len(current_outflows)} outflow transactions analyzed.",
-            },
-            {
-                "label": "Change vs last week",
-                "value": format_change_percent(change_percent),
-                "detail": f"{format_currency(abs(change_amount))} {('higher' if change_amount > 0 else 'lower' if change_amount < 0 else 'unchanged')}.",
-            },
-            {
-                "label": "Top category",
-                "value": top_category[0] if top_category else "None",
-                "detail": format_currency(top_category[1]) if top_category else "No outflows this week.",
-            },
-            {
-                "label": "Largest transaction",
-                "value": format_currency(largest_amount),
-                "detail": str(largest_name),
-            },
-        ],
+        "periodLabel": period_label,
+        "cards": cards,
         "insights": insights,
         "weeklySpend": daily_spend,
-        "forecast": {
-            "projectedBalance": projected_balance,
-            "safeToSpend": safe_to_spend,
-            "riskProbability": forecast_data["riskProbability"],
-        },
-        "source": "python-analytics-v1",
+        "forecast": forecast_context,
+        "llmSummary": llm_summary,
+        "source": source,
     }
 
 
 def top_report_category(transactions: list[dict]) -> tuple[str, float] | None:
-    ignored = {"TRANSFER_OUT", "TRANSFER_IN", "LOAN_PAYMENTS"}
-    flexible = [transaction for transaction in transactions if transaction.get("category") not in ignored]
+    flexible = [transaction for transaction in transactions if not is_noise_category(transaction.get("category"))]
     candidates = flexible if flexible else transactions
     totals: dict[str, float] = {}
 
@@ -374,3 +483,7 @@ def top_report_category(transactions: list[dict]) -> tuple[str, float] | None:
         return None
 
     return max(totals.items(), key=lambda item: item[1])
+
+
+def is_noise_category(category: str | None) -> bool:
+    return str(category or "").upper() in NOISE_CATEGORIES

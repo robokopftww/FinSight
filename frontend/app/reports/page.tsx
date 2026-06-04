@@ -108,9 +108,14 @@ export default async function ReportsPage() {
           </span>
           <div>
             <h2 className="text-xl font-semibold text-white">AI weekly brief</h2>
-            <p className="mt-2 text-sm text-slate-300">Generated from synced transactions and the Python forecast engine.</p>
+            <p className="mt-2 text-sm text-slate-300">Generated from synced transactions, Python analytics, and the Gemini explanation layer.</p>
           </div>
         </div>
+        {report.llmSummary ? (
+          <div className="mt-6 rounded-[24px] border border-emerald-300/16 bg-emerald-300/8 p-5 text-sm leading-7 text-emerald-50">
+            {report.llmSummary}
+          </div>
+        ) : null}
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
           {report.insights.map((insight) => (
             <InsightCard

@@ -1,322 +1,238 @@
 # FinSight Architecture
 
-## System Overview
+FinSight is a three-service financial analytics product. The frontend handles product experience, the backend owns auth-aware data orchestration, and the Python service owns forecasting, scoring, anomaly detection, and LLM grounding.
 
-FinSight is a three-service product:
-
-1. `frontend`: Next.js 15 application for the marketing site and authenticated dashboard
-2. `backend`: Node.js + TypeScript API for auth-aware business logic, data sync, persistence, and orchestration
-3. `ai-service`: Python FastAPI service for analytics, scoring, forecasting, and LLM-backed explanations
+## High-Level System
 
 ```mermaid
 flowchart TD
-    U[User Browser] --> F[Frontend: Next.js 15]
-    F --> B[Backend API: Node.js + TypeScript]
-    B --> DB[(PostgreSQL / Neon)]
-    B --> R[(Redis Cache)]
-    B --> P[Plaid API]
-    B --> A[AI Service: FastAPI]
-    A --> L[OpenAI or Gemini]
-    A --> M[Pandas / NumPy / Scikit-Learn]
+    Browser["Browser"] --> Frontend["Frontend: Next.js App Router"]
+    Frontend --> Clerk["Clerk"]
+    Frontend --> Backend["Backend: Fastify + TypeScript"]
+    Backend --> Prisma["Prisma ORM"]
+    Prisma --> Postgres[("PostgreSQL")]
+    Backend --> Plaid["Plaid Sandbox"]
+    Backend --> AI["AI Service: FastAPI"]
+    AI --> Analytics["Pandas + NumPy + Scikit-learn"]
+    AI --> Gemini["Gemini LLM"]
 ```
 
-## Why This Shape
-
-- The frontend stays focused on UX, navigation, and presentation.
-- The backend owns secure integrations, session-aware orchestration, persistence, caching, and access control.
-- The Python service owns the analytics engine so forecasting and scoring can become more sophisticated without contaminating the web application.
-- LLMs are used after analytics to explain results, answer advisor questions, and improve categorization confidence.
-
-## Service Responsibilities
+## Service Boundaries
 
 ### Frontend
 
-- Landing page and pricing
-- Authenticated dashboard shell
-- Querying backend APIs
-- Chart rendering with Recharts
-- Chat UI and insight presentation
-- Transaction filtering and editing interactions
+The frontend is responsible for the user-facing product:
+
+- Landing page and public demo mode
+- Clerk sign-in and sign-up pages
+- Authenticated app shell and sidebar navigation
+- Dashboard, transactions, subscriptions, health, advisor, reports, and settings pages
+- Plaid Link launch flow
+- Recharts visualizations
+- Advisor chat interface and report presentation
+
+The frontend talks only to the backend API. It does not call Plaid, PostgreSQL, or Gemini directly.
 
 ### Backend
 
-- Clerk session validation
-- User, account, transaction, forecast, and score persistence
-- Plaid link token creation and item exchange
-- Transaction sync jobs and normalization
-- Redis caching for dashboard payloads and analytics snapshots
-- Routing requests to the AI service
+The backend is the trusted application layer:
+
+- Verifies Clerk sessions
+- Upserts Clerk users into PostgreSQL
+- Creates Plaid Link tokens
+- Exchanges Plaid public tokens for access tokens
+- Syncs Plaid accounts, balances, and transactions
+- Normalizes financial records into Prisma models
+- Routes analytics requests to the Python service
+- Persists advisor chat history
+- Provides settings controls for sandbox cleanup and Plaid disconnect
+- Falls back to TypeScript analytics if the Python service is unavailable
 
 ### AI Service
 
-- Financial health score calculation
+The Python service owns analytics and AI composition:
+
+- Financial health scoring
+- Cash-flow forecasting
 - Safe-to-spend calculation
-- Forecast generation for 7, 30, and 90 days
-- Spending anomaly detection
-- Subscription burden analysis
-- Insight prompt grounding and LLM response generation
+- Weekly report metrics
+- Goal planning calculations
+- Advisor context generation
+- Transaction categorization suggestions
+- Gemini prompt construction and response generation
 
-## Repository Layout
+Gemini is used after the analytics layer has computed grounded facts. If `GEMINI_API_KEY` is missing, the service returns deterministic analytics explanations.
 
-```text
-FinSight/
-├── frontend/
-│   ├── app/
-│   ├── components/
-│   ├── lib/
-│   ├── hooks/
-│   ├── styles/
-│   └── public/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   ├── modules/
-│   │   ├── lib/
-│   │   ├── middleware/
-│   │   ├── jobs/
-│   │   └── routes/
-│   ├── prisma/
-│   └── tests/
-├── ai-service/
-│   ├── api/
-│   ├── forecasting/
-│   ├── scoring/
-│   ├── insights/
-│   ├── categorization/
-│   ├── models/
-│   ├── schemas/
-│   ├── main.py
-│   └── tests/
-├── README.md
-├── PROJECT_REQUIREMENTS.md
-└── ARCHITECTURE.md
+## Data Flow
+
+### Plaid Connection
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant Plaid
+    participant Postgres
+
+    User->>Frontend: Click Connect bank
+    Frontend->>Backend: POST /api/plaid/link-token
+    Backend->>Plaid: Create Link token
+    Plaid-->>Backend: link_token
+    Backend-->>Frontend: link_token
+    User->>Plaid: Complete Plaid Link
+    Plaid-->>Frontend: public_token
+    Frontend->>Backend: POST /api/plaid/exchange-public-token
+    Backend->>Plaid: Exchange public token
+    Backend->>Postgres: Store Plaid item and accounts
+```
+
+### Transaction Sync
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant Backend
+    participant Plaid
+    participant Postgres
+
+    Frontend->>Backend: POST /api/plaid/sync
+    Backend->>Plaid: Fetch accounts and transactions
+    Backend->>Backend: Normalize amounts, direction, categories
+    Backend->>Postgres: Upsert accounts and transactions
+    Backend-->>Frontend: Sync summary
+```
+
+### Advisor Chat
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant AI
+    participant Gemini
+    participant Postgres
+
+    User->>Frontend: Ask financial question
+    Frontend->>Backend: POST /api/advisor/chat
+    Backend->>Postgres: Load synced financial context
+    Backend->>AI: POST /analytics/chat
+    AI->>AI: Calculate affordability, risk, goal, or spending context
+    AI->>Gemini: Generate grounded explanation when configured
+    Gemini-->>AI: Explanation
+    AI-->>Backend: Answer + facts + source label
+    Backend->>Postgres: Save chat history
+    Backend-->>Frontend: Advisor response
 ```
 
 ## Data Model
 
-### Core Tables
+Core Prisma models:
 
-`User`
-- `id`
-- `clerkId`
-- `email`
-- `firstName`
-- `lastName`
-- `createdAt`
-- `updatedAt`
+- `User` - Clerk-linked application user
+- `PlaidItem` - Plaid item and encrypted access-token boundary for MVP
+- `Account` - Plaid account metadata and balances
+- `Transaction` - normalized transaction history
+- `Subscription` - recurring merchant estimates
+- `FinancialScore` - score snapshots and factors
+- `Forecast` - forecast snapshots by horizon
+- `Insight` - generated insight cards
+- `ChatHistory` - persisted advisor conversation history
 
-`Account`
-- `id`
-- `userId`
-- `plaidItemId`
-- `plaidAccountId`
-- `institutionName`
-- `name`
-- `mask`
-- `type`
-- `subtype`
-- `currentBalance`
-- `availableBalance`
-- `currencyCode`
-- `lastSyncedAt`
+## Backend API Surface
 
-`Transaction`
-- `id`
-- `userId`
-- `accountId`
-- `plaidTransactionId`
-- `merchantName`
-- `description`
-- `amount`
-- `direction`
-- `categoryPrimary`
-- `categoryDetailed`
-- `isRecurring`
-- `occurredAt`
-- `pending`
-- `raw`
+Auth:
 
-`Subscription`
-- `id`
-- `userId`
-- `merchantName`
-- `category`
-- `monthlyCost`
-- `yearlyCost`
-- `lastChargedAt`
-- `nextExpectedAt`
-- `confidence`
-- `status`
+- `POST /api/auth/sync-user`
+- `GET /api/auth/me`
 
-`FinancialScore`
-- `id`
-- `userId`
-- `score`
-- `savingsRate`
-- `spendingVolatility`
-- `subscriptionBurden`
-- `emergencyFundDays`
-- `calculatedAt`
-- `explanation`
+Plaid:
 
-`Forecast`
-- `id`
-- `userId`
-- `horizonDays`
-- `projectedBalance`
-- `lowestProjectedBalance`
-- `lowBalanceRisk`
-- `riskProbability`
-- `generatedAt`
-- `data`
+- `GET /api/plaid/status`
+- `POST /api/plaid/link-token`
+- `POST /api/plaid/exchange-public-token`
+- `POST /api/plaid/sync`
 
-`Insight`
-- `id`
-- `userId`
-- `type`
-- `title`
-- `summary`
-- `severity`
-- `payload`
-- `createdAt`
+Product:
 
-`ChatHistory`
-- `id`
-- `userId`
-- `role`
-- `message`
-- `contextSnapshot`
-- `createdAt`
+- `GET /api/dashboard/overview`
+- `GET /api/transactions`
+- `PATCH /api/transactions/:id/category`
+- `GET /api/subscriptions`
+- `GET /api/financial-health`
+- `GET /api/forecast`
+- `GET /api/reports/weekly`
 
-## API Design
+Advisor:
 
-### Backend Public API
+- `POST /api/advisor/chat`
+- `GET /api/advisor/history`
+- `DELETE /api/advisor/history`
 
-`POST /api/auth/sync-user`
-- Upserts the authenticated Clerk user in PostgreSQL
+Settings:
 
-`POST /api/plaid/link-token`
-- Creates a Plaid Link token for the signed-in user
+- `GET /api/settings/status`
+- `DELETE /api/settings/plaid-connection`
+- `DELETE /api/settings/sandbox-data`
 
-`POST /api/plaid/exchange-public-token`
-- Exchanges the public token and stores item metadata
+## AI Service API Surface
 
-`POST /api/plaid/sync`
-- Pulls latest transactions and account balances from Plaid
-
-`GET /api/dashboard/overview`
-- Returns balance, income, spending, savings rate, score, and top insights
-
-`GET /api/transactions`
-- Paginated transactions with search and filters
-
-`PATCH /api/transactions/:id/category`
-- Manually updates a transaction category
-
-`GET /api/subscriptions`
-- Returns recurring subscriptions and savings opportunities
-
-`GET /api/financial-health`
-- Returns current score, factors, and recommendations
-
-`GET /api/forecast`
-- Returns forecast data for requested horizon
-
-`POST /api/insights/refresh`
-- Triggers the AI service to recompute insight payloads
-
-`POST /api/chat`
-- Sends a grounded financial advisor prompt and returns a response
-
-### AI Service Internal API
-
-`POST /analytics/score`
-- Computes a financial health score from normalized balances and transactions
-
-`POST /analytics/forecast`
-- Produces 7, 30, and 90 day cash flow projections
-
-`POST /analytics/subscriptions`
-- Detects recurring merchants and computes burden metrics
-
-`POST /analytics/insights`
-- Generates grounded insight candidates from transaction trends and forecasts
-
-`POST /analytics/chat`
-- Accepts a user message plus context snapshot and returns a grounded advisor answer
-
-`POST /analytics/categorize`
-- Suggests a category for uncategorized merchants
+- `GET /health`
+- `POST /analytics/score`
+- `POST /analytics/forecast`
+- `POST /analytics/insights`
+- `POST /analytics/summary`
+- `POST /analytics/report`
+- `POST /analytics/chat`
+- `POST /analytics/categorize`
 
 ## Analytics Strategy
 
-### Financial Health Score
+### Financial Health
 
-Inputs:
+The score combines:
 
 - Savings rate
-- Spending consistency
+- Spending volatility
 - Subscription burden
 - Emergency fund runway
-- Balance trend risk
-
-Output:
-
-- Score from 0 to 100
-- Factor breakdown for UI
-- Recommendation summary
+- Forecast risk
 
 ### Forecasting
 
-Initial approach:
+The forecast engine starts with deterministic time-series baselines using recent transaction behavior, balance data, and projected outflows. This keeps the MVP understandable and testable while leaving room for more advanced models later.
 
-- Daily cash flow time series in Pandas
-- Moving averages and regression baselines
-- Known recurring income and bill adjustments
+### Advisor Logic
 
-Future iterations:
+Advisor questions are routed through analytics first:
 
-- Seasonality-aware models
-- Personalized peer benchmarking
-- Better paycheck detection
+- Purchase affordability questions use safe-to-spend and projected balances.
+- Goal questions calculate target amount, deadline, monthly requirement, surplus, and gap.
+- Risk questions identify top category pressure, low-balance risk, and spending imbalance.
+- General questions summarize the current financial snapshot.
 
-### Insight Generation
+The LLM receives only a compact context object with calculated facts and is instructed to explain those facts, not invent new numbers.
 
-1. Python computes numeric truth:
-   - category deltas
-   - balance risk
-   - safe-to-spend
-   - subscription waste
-2. The backend stores those outputs.
-3. The LLM translates them into concise, actionable guidance.
+## Fallback Strategy
 
-## Development Roadmap
+FinSight is designed to keep working during local development:
 
-### Phase 1
+- If Gemini is missing, Python returns deterministic local explanations.
+- If the AI service is offline, the backend uses TypeScript analytics fallbacks.
+- If Plaid is not configured, the UI shows setup status instead of failing silently.
+- Demo mode is public and does not require Clerk or Plaid.
 
-- Root architecture docs
-- Monorepo scaffolding
-- Frontend design system and routes
-- Backend service skeleton
-- FastAPI skeleton
+## Deployment Shape
 
-### Phase 2
+Recommended MVP deployment:
 
-- Clerk integration
-- Prisma schema and migrations
-- Plaid sandbox flow
-- Transaction normalization and persistence
+- Frontend: Vercel
+- PostgreSQL: Neon
+- Redis: Upstash or optional off for MVP
+- Backend API: Render, Railway, Fly.io, or a container host
+- AI service: Render, Railway, Fly.io, or a container host
+- Auth: Clerk
+- Financial data: Plaid sandbox first, production later
 
-### Phase 3
-
-- Financial score engine
-- Forecast engine
-- Subscription detection
-- AI insight and chat orchestration
-
-### Phase 4
-
-- Dashboard polish
-- Testing and observability
-- Seed data and demo readiness
-- Deployment to Vercel, Railway or Render, and Neon
+See `DEPLOYMENT.md` for the deployment checklist.

@@ -94,7 +94,7 @@ export default function Home() {
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button asChild className="h-12">
-                  <Link href="/dashboard">
+                  <Link href="/demo">
                     Open product demo
                     <ArrowRight className="ml-2 size-4" />
                   </Link>
@@ -262,13 +262,13 @@ export default function Home() {
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
                   <Button asChild className="h-12">
-                    <Link href="/dashboard">
+                    <Link href="/demo">
                       Explore dashboard
                       <ArrowRight className="ml-2 size-4" />
                     </Link>
                   </Button>
                   <Button asChild variant="secondary" className="h-12">
-                    <Link href="/financial-health">View health score</Link>
+                    <Link href="/demo">View health score</Link>
                   </Button>
                 </div>
               </div>

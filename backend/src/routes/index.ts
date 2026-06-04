@@ -2,9 +2,16 @@ import type { FastifyInstance } from "fastify";
 
 import { requestAiChat, requestAiSummary, requestAiWeeklyReport } from "../lib/ai-service.js";
 import { requireAppUser } from "../lib/auth.js";
-import { calculateHealthScore, detectSubscriptions, summarizeDashboard } from "../lib/financial-analytics.js";
+import {
+  calculateHealthScore,
+  detectSubscriptions,
+  isInternalTransferCategory,
+  summarizeDashboard,
+} from "../lib/financial-analytics.js";
 import { chatResponse } from "../lib/mock-data.js";
 import { prisma } from "../lib/prisma.js";
+import { env } from "../config/env.js";
+import { isPlaidConfigured } from "../lib/plaid.js";
 
 const editableCategories = [
   "FOOD_AND_DRINK",
@@ -29,6 +36,126 @@ export async function registerRoutes(app: FastifyInstance) {
     status: "ok",
     service: "finsight-backend",
   }));
+
+  app.get("/api/settings/status", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const [plaidItems, accountsCount, transactionsCount, latestAccount, latestTransaction, chatCount] = await Promise.all([
+      prisma.plaidItem.findMany({
+        where: { userId: user.id },
+        select: {
+          institutionName: true,
+          lastSyncedAt: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.account.count({ where: { userId: user.id } }),
+      prisma.transaction.count({ where: { userId: user.id } }),
+      prisma.account.findFirst({
+        where: { userId: user.id },
+        orderBy: { lastSyncedAt: "desc" },
+        select: { lastSyncedAt: true },
+      }),
+      prisma.transaction.findFirst({
+        where: { userId: user.id },
+        orderBy: { occurredAt: "desc" },
+        select: { occurredAt: true },
+      }),
+      prisma.chatHistory.count({ where: { userId: user.id } }),
+    ]);
+    const ai = await getAiRuntimeStatus();
+
+    return reply.send({
+      user: {
+        id: user.id,
+        clerkId: user.clerkId,
+        email: user.email,
+        name: [user.firstName, user.lastName].filter(Boolean).join(" ") || null,
+      },
+      database: {
+        connected: true,
+        provider: "PostgreSQL",
+      },
+      clerk: {
+        configured: Boolean(env.CLERK_SECRET_KEY && env.CLERK_PUBLISHABLE_KEY),
+      },
+      plaid: {
+        configured: isPlaidConfigured(),
+        connected: accountsCount > 0,
+        itemsCount: plaidItems.length,
+        accountsCount,
+        transactionsCount,
+        institutions: plaidItems.map((item) => item.institutionName),
+        lastSyncedAt: latestAccount?.lastSyncedAt ?? plaidItems[0]?.lastSyncedAt ?? null,
+        latestTransactionAt: latestTransaction?.occurredAt ?? null,
+      },
+      ai,
+      data: {
+        chatMessages: chatCount,
+      },
+    });
+  });
+
+  app.delete("/api/settings/plaid-connection", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const transactions = await tx.transaction.deleteMany({ where: { userId: user.id } });
+      const accounts = await tx.account.deleteMany({ where: { userId: user.id } });
+      const plaidItems = await tx.plaidItem.deleteMany({ where: { userId: user.id } });
+      const subscriptions = await tx.subscription.deleteMany({ where: { userId: user.id } });
+
+      return {
+        transactions: transactions.count,
+        accounts: accounts.count,
+        plaidItems: plaidItems.count,
+        subscriptions: subscriptions.count,
+      };
+    });
+
+    return reply.send({ disconnected: true, removed: result });
+  });
+
+  app.delete("/api/settings/sandbox-data", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const chatHistory = await tx.chatHistory.deleteMany({ where: { userId: user.id } });
+      const insights = await tx.insight.deleteMany({ where: { userId: user.id } });
+      const forecasts = await tx.forecast.deleteMany({ where: { userId: user.id } });
+      const scores = await tx.financialScore.deleteMany({ where: { userId: user.id } });
+      const subscriptions = await tx.subscription.deleteMany({ where: { userId: user.id } });
+      const transactions = await tx.transaction.deleteMany({ where: { userId: user.id } });
+      const accounts = await tx.account.deleteMany({ where: { userId: user.id } });
+      const plaidItems = await tx.plaidItem.deleteMany({ where: { userId: user.id } });
+
+      return {
+        chatHistory: chatHistory.count,
+        insights: insights.count,
+        forecasts: forecasts.count,
+        scores: scores.count,
+        subscriptions: subscriptions.count,
+        transactions: transactions.count,
+        accounts: accounts.count,
+        plaidItems: plaidItems.count,
+      };
+    });
+
+    return reply.send({ cleared: true, removed: result });
+  });
 
   app.get("/api/dashboard/overview", async (request, reply) => {
     const user = await requireAppUser(request, reply);
@@ -355,6 +482,45 @@ export async function registerRoutes(app: FastifyInstance) {
 
     return reply.send(answer);
   });
+
+  app.get("/api/advisor/history", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const rows = await prisma.chatHistory.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 80,
+    });
+
+    return reply.send({
+      data: rows.reverse().map((row) => ({
+        id: row.id,
+        role: row.role,
+        content: row.message,
+        createdAt: row.createdAt,
+        ...extractChatContext(row.contextSnapshot),
+      })),
+    });
+  });
+
+  app.delete("/api/advisor/history", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const deleted = await prisma.chatHistory.deleteMany({
+      where: { userId: user.id },
+    });
+
+    return reply.send({ deletedCount: deleted.count });
+  });
+
   app.post("/api/chat", async () => chatResponse);
 
   app.patch("/api/transactions/:id/category", async (request, reply) => {
@@ -486,6 +652,80 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+function extractChatContext(context: unknown) {
+  if (!isRecord(context)) {
+    return {};
+  }
+
+  return {
+    decision: typeof context.decision === "string" ? context.decision : undefined,
+    source: typeof context.source === "string" ? context.source : undefined,
+    dataPoints: isDataPointArray(context.dataPoints) ? context.dataPoints : undefined,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isDataPointArray(value: unknown): value is Array<{ label: string; value: string }> {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        isRecord(item) &&
+        typeof item.label === "string" &&
+        typeof item.value === "string",
+    )
+  );
+}
+
+async function getAiRuntimeStatus() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1500);
+
+  try {
+    const response = await fetch(`${env.AI_SERVICE_URL}/health`, {
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error("AI service health check failed");
+    }
+
+    const body = (await response.json()) as {
+      service?: string;
+      llm?: {
+        provider?: string;
+        model?: string;
+        configured?: boolean;
+      };
+    };
+
+    return {
+      online: true,
+      service: body.service ?? "finsight-ai-service",
+      analytics: "python-analytics-v1",
+      llmProvider: body.llm?.provider ?? "gemini",
+      llmModel: body.llm?.model ?? "gemini-2.5-flash",
+      llmConfigured: Boolean(body.llm?.configured),
+      fallbackMode: !body.llm?.configured,
+    };
+  } catch {
+    return {
+      online: false,
+      service: "offline",
+      analytics: "typescript-fallback",
+      llmProvider: "gemini",
+      llmModel: "gemini-2.5-flash",
+      llmConfigured: false,
+      fallbackMode: true,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function buildFallbackWeeklyReport(
   dashboard: ReturnType<typeof summarizeDashboard>,
   transactions: Awaited<ReturnType<typeof prisma.transaction.findMany>>,
@@ -512,9 +752,13 @@ function buildFallbackWeeklyReport(
   const changeAmount = currentSpending - previousSpending;
   const changePercent = previousSpending ? (changeAmount / previousSpending) * 100 : currentSpending ? 100 : 0;
   const largest = currentOutflows.sort((a, b) => Number(b.amount) - Number(a.amount))[0];
+  const flexibleOutflows = currentOutflows.filter(
+    (transaction) => !isInternalTransferCategory(transaction.categoryPrimary),
+  );
+  const categoryCandidates = flexibleOutflows.length ? flexibleOutflows : currentOutflows;
   const byCategory = new Map<string, number>();
 
-  for (const transaction of currentOutflows) {
+  for (const transaction of categoryCandidates) {
     const category = formatCategory(transaction.categoryPrimary ?? "Uncategorized");
     byCategory.set(category, (byCategory.get(category) ?? 0) + Number(transaction.amount));
   }

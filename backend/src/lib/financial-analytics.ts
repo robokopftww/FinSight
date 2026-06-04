@@ -36,7 +36,11 @@ function toDisplayCategory(category: string) {
 }
 
 function isInternalTransfer(transaction: Transaction) {
-  return internalTransferCategories.has(transaction.categoryPrimary ?? "");
+  return isInternalTransferCategory(transaction.categoryPrimary);
+}
+
+export function isInternalTransferCategory(category?: string | null) {
+  return internalTransferCategories.has(category ?? "");
 }
 
 function formatPercent(value: number) {

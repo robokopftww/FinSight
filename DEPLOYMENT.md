@@ -1,0 +1,158 @@
+# FinSight Deployment Checklist
+
+This is the practical path to move FinSight from local development to a public MVP.
+
+## Recommended Hosting
+
+- Frontend: Vercel
+- PostgreSQL: Neon
+- Backend API: Render, Railway, or Fly.io
+- AI service: Render, Railway, or Fly.io
+- Redis: Upstash, optional for the current MVP
+- Auth: Clerk
+- Banking data: Plaid sandbox
+
+## 1. Prepare GitHub
+
+Make sure the repo is pushed and `.env` files are not committed.
+
+```bash
+git status
+git add .
+git commit -m "Prepare FinSight MVP for deployment"
+git push
+```
+
+## 2. Create Production-Like Services
+
+Create:
+
+- A Neon PostgreSQL database
+- A Clerk application for the deployed frontend URL
+- A Plaid sandbox app
+- A Google AI Studio Gemini API key
+- A backend hosting service
+- An AI service hosting service
+- A Vercel project for `frontend`
+
+## 3. Backend Environment
+
+Set these in the backend host:
+
+```bash
+PORT=4000
+NODE_ENV=production
+DATABASE_URL=
+REDIS_URL=
+FRONTEND_URL=https://your-vercel-domain.vercel.app
+CLERK_SECRET_KEY=
+CLERK_PUBLISHABLE_KEY=
+PLAID_CLIENT_ID=
+PLAID_SECRET=
+PLAID_ENV=sandbox
+AI_SERVICE_URL=https://your-ai-service-host
+```
+
+Build and start commands:
+
+```bash
+npm install
+npm run build --workspace backend
+npm run start --workspace backend
+```
+
+Before first deploy, run Prisma migrations against Neon:
+
+```bash
+cd backend
+npx prisma migrate deploy
+```
+
+## 4. AI Service Environment
+
+Set these in the AI service host:
+
+```bash
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Install and start commands:
+
+```bash
+pip install -r ai-service/requirements.txt
+cd ai-service
+uvicorn main:app --host 0.0.0.0 --port $PORT
+```
+
+Confirm:
+
+```bash
+curl https://your-ai-service-host/health
+```
+
+## 5. Frontend Environment
+
+Set these in Vercel:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=https://your-backend-host
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
+```
+
+Vercel settings:
+
+- Root directory: `frontend`
+- Build command: `npm run build`
+- Output: Next.js default
+
+## 6. Clerk URLs
+
+In Clerk, add the deployed URLs:
+
+- Sign-in URL: `/sign-in`
+- Sign-up URL: `/sign-up`
+- After sign-in URL: `/dashboard`
+- After sign-up URL: `/dashboard`
+- Allowed origins: frontend Vercel domain
+
+## 7. Plaid URLs
+
+For sandbox, keep `PLAID_ENV=sandbox`.
+
+When moving beyond sandbox:
+
+- Request Plaid production access
+- Complete Plaid compliance steps
+- Add production redirect and allowed origins
+- Re-review token handling and data deletion flows
+
+## 8. Smoke Test
+
+After deploy:
+
+- Open landing page.
+- Open `/demo` without signing in.
+- Sign up with Clerk.
+- Connect Plaid sandbox.
+- Sync transactions.
+- Open dashboard, transactions, subscriptions, health, reports, advisor, and settings.
+- Ask advisor: `Can I spend $1,000?`
+- Ask advisor: `I want to save $5,000 by December 31, 2026.`
+- Confirm `/settings` shows backend, database, Plaid, and AI status.
+
+## 9. Next Production Hardening
+
+- Add CI for lint, typecheck, and build.
+- Add backend API tests.
+- Add analytics unit tests.
+- Encrypt Plaid access tokens before storing them.
+- Add Plaid webhooks for background sync.
+- Add rate limiting to advisor endpoints.
+- Add structured logs and error tracking.
+- Add account deletion and data export flows.

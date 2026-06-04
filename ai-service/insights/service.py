@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+NOISE_CATEGORIES = {"TRANSFER_OUT", "TRANSFER_IN", "LOAN_PAYMENTS"}
+
 
 def generate_insights(score: dict, forecast: dict, transactions: list[dict] | None = None) -> list[dict]:
     insights = []
@@ -58,12 +60,16 @@ def generate_insights(score: dict, forecast: dict, transactions: list[dict] | No
 
 
 def _top_spending_category(transactions: list[dict]) -> tuple[str, float] | None:
+    outflows = [transaction for transaction in transactions if transaction.get("direction") == "outflow"]
+    flexible_outflows = [
+        transaction
+        for transaction in outflows
+        if str(transaction.get("category") or "").upper() not in NOISE_CATEGORIES
+    ]
+    candidates = flexible_outflows if flexible_outflows else outflows
     totals: defaultdict[str, float] = defaultdict(float)
 
-    for transaction in transactions:
-        if transaction.get("direction") != "outflow":
-            continue
-
+    for transaction in candidates:
         category = _display_category(transaction.get("category") or "Uncategorized")
         totals[category] += abs(float(transaction.get("amount", 0)))
 
