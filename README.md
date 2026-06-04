@@ -1,5 +1,7 @@
 # FinSight
 
+![CI](https://github.com/robokopftww/FinSight/actions/workflows/ci.yml/badge.svg)
+
 FinSight is an AI-powered financial copilot that connects to Plaid sandbox bank data, analyzes spending behavior, forecasts cash flow, and uses Gemini to explain financial decisions in plain English.
 
 The product is built like a startup MVP: real authentication, real persistence, real Plaid sync, a separate Python analytics service, and a polished fintech dashboard experience.
@@ -157,8 +159,8 @@ The checked-in `.env.example` files show the required names without exposing sec
 
 ## Roadmap
 
-- Add automated tests for backend routes and analytics calculations.
-- Add CI for linting, typechecking, and build verification.
+- Add backend API route tests.
+- Add frontend component tests for dashboard and advisor workflows.
 - Deploy frontend to Vercel.
 - Deploy backend and AI service to Render, Railway, or Fly.io.
 - Move PostgreSQL to Neon and Redis to Upstash.

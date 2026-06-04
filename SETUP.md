@@ -162,6 +162,17 @@ curl http://127.0.0.1:4000/health
 curl http://127.0.0.1:8000/health
 ```
 
+Run local verification:
+
+```bash
+npm run lint:frontend
+npm run build:frontend
+npm run typecheck:backend
+npm run build:backend
+ai-service/.venv/bin/python -m pip install -r ai-service/requirements-dev.txt
+ai-service/.venv/bin/python -m pytest ai-service/tests
+```
+
 ## Common Fixes
 
 ### `npm error enoent Could not read package.json`

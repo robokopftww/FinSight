@@ -14,7 +14,7 @@ This is the practical path to move FinSight from local development to a public M
 
 ## 1. Prepare GitHub
 
-Make sure the repo is pushed and `.env` files are not committed.
+Make sure the repo is pushed and `.env` files are not committed. GitHub Actions will run the frontend, backend, and AI service checks after each push.
 
 ```bash
 git status
