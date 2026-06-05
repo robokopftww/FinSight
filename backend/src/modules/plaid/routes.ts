@@ -49,6 +49,7 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
 
     return reply.send({
       configured: isPlaidConfigured(),
+      environment: env.PLAID_ENV,
       connected: accountsCount > 0,
       itemsCount,
       accountsCount,
@@ -191,11 +192,27 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
       let hasMore = true;
 
       while (hasMore) {
-        const response = await plaid.transactionsSync({
-          access_token: plaidItem.accessToken,
-          cursor,
-          count: 100,
-        });
+        let response;
+
+        try {
+          response = await plaid.transactionsSync({
+            access_token: plaidItem.accessToken,
+            cursor,
+            count: 100,
+          });
+        } catch (error) {
+          const plaidError = getPlaidError(error);
+          request.log.warn({ plaidError, plaidItemId: plaidItem.id }, "Plaid transaction sync failed");
+
+          return reply.status(409).send({
+            error:
+              plaidError.code === "INVALID_ACCESS_TOKEN" || plaidError.code === "ITEM_LOGIN_REQUIRED"
+                ? "Stored Plaid connection cannot sync anymore. Disconnect this bank and reconnect it."
+                : "Unable to sync transactions from Plaid right now.",
+            plaidErrorCode: plaidError.code,
+            plaidErrorMessage: plaidError.message,
+          });
+        }
 
         const accounts = await prisma.account.findMany({
           where: { itemId: plaidItem.id },
@@ -294,4 +311,13 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
       removedCount,
     });
   });
+}
+
+function getPlaidError(error: unknown) {
+  const responseData = (error as { response?: { data?: { error_code?: string; error_message?: string } } }).response?.data;
+
+  return {
+    code: responseData?.error_code ?? "UNKNOWN_PLAID_ERROR",
+    message: responseData?.error_message ?? (error instanceof Error ? error.message : "Unknown Plaid error"),
+  };
 }

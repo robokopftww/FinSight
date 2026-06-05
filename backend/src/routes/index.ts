@@ -86,6 +86,7 @@ export async function registerRoutes(app: FastifyInstance) {
       },
       plaid: {
         configured: isPlaidConfigured(),
+        environment: env.PLAID_ENV,
         connected: accountsCount > 0,
         itemsCount: plaidItems.length,
         accountsCount,

@@ -10,6 +10,7 @@ import { Panel } from "@/components/ui/panel";
 
 type PlaidStatus = {
   configured: boolean;
+  environment?: "sandbox" | "development" | "production";
   connected: boolean;
   itemsCount: number;
   accountsCount: number;
@@ -152,7 +153,8 @@ export function BankConnectionPanel() {
       });
 
       if (!response.ok) {
-        throw new Error("Unable to sync transactions right now");
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "Unable to sync transactions right now");
       }
 
       const body = (await response.json()) as { addedCount: number; modifiedCount: number; removedCount: number };
@@ -165,12 +167,43 @@ export function BankConnectionPanel() {
     }
   }
 
+  async function disconnectBank() {
+    if (!window.confirm("Disconnect this bank and remove synced accounts and transactions for this user?")) {
+      return;
+    }
+
+    setLoading(true);
+    setMessage("Disconnecting bank...");
+
+    try {
+      const token = await getToken();
+      const response = await authenticatedFetch("/api/settings/plaid-connection", token, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "Unable to disconnect bank");
+      }
+
+      setLinkToken(null);
+      setMessage("Bank disconnected. You can now connect again.");
+      await refreshStatus();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to disconnect bank");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (!isSignedIn) {
     return null;
   }
 
   const connected = Boolean(status?.connected);
   const configured = status?.configured ?? null;
+  const plaidEnvironment = status?.environment ?? "sandbox";
+  const plaidEnvironmentLabel = plaidEnvironment === "production" ? "Plaid production" : "Plaid sandbox";
   const plaidStatusLabel =
     statusError ?? (configured === null ? "Checking..." : configured ? "Configured" : "Missing keys");
 
@@ -188,17 +221,23 @@ export function BankConnectionPanel() {
             <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-300">
               {connected
                 ? "FinSight can now use synced accounts and transactions as the source for forecasts, scoring, and AI insights."
-                : "Connect a Plaid sandbox account so FinSight can replace demo data with real account, balance, and transaction records."}
+                : `Connect a ${plaidEnvironment === "production" ? "bank account" : "Plaid sandbox account"} so FinSight can replace demo data with real account, balance, and transaction records.`}
             </p>
           </div>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
           {connected ? (
-            <Button type="button" onClick={syncTransactions} disabled={loading}>
-              {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCcw className="mr-2 size-4" />}
-              Sync
-            </Button>
+            <>
+              <Button type="button" onClick={syncTransactions} disabled={loading}>
+                {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCcw className="mr-2 size-4" />}
+                Sync
+              </Button>
+              <Button type="button" variant="secondary" onClick={disconnectBank} disabled={loading}>
+                <Unplug className="mr-2 size-4" />
+                Disconnect
+              </Button>
+            </>
           ) : (
             <Button
               type="button"
@@ -220,7 +259,7 @@ export function BankConnectionPanel() {
 
       <div className="mt-6 grid gap-3 md:grid-cols-3">
         <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
-          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Plaid sandbox</div>
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">{plaidEnvironmentLabel}</div>
           <div className="mt-2 text-lg font-semibold text-white">{plaidStatusLabel}</div>
         </div>
         <div className="rounded-2xl border border-white/8 bg-white/4 p-4">

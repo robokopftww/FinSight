@@ -12,6 +12,40 @@ This is the practical path to move FinSight from local development to a public M
 - Auth: Clerk
 - Banking data: Plaid sandbox
 
+## Free Render Option
+
+If Render asks for a card before creating a second Web Service, run the backend and AI service together in one free Render Web Service.
+
+Use these settings:
+
+```bash
+Root Directory:
+Build Command: bash scripts/render-combined-build.sh
+Start Command: bash scripts/render-combined-start.sh
+```
+
+Leave Root Directory blank so Render builds from the repo root.
+
+Set:
+
+```bash
+NODE_ENV=production
+DATABASE_URL=
+FRONTEND_URL=https://your-vercel-domain.vercel.app
+CLERK_SECRET_KEY=
+CLERK_PUBLISHABLE_KEY=
+PLAID_CLIENT_ID=
+PLAID_SECRET=
+PLAID_ENV=sandbox
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash
+PYTHON_VERSION=3.11.9
+```
+
+Do not set `AI_SERVICE_URL` in this combined setup. The start script points the backend to the internal Python service automatically.
+
+The public Render URL will be the backend API URL. The Python service runs privately inside the same instance.
+
 ## 1. Prepare GitHub
 
 Make sure the repo is pushed and `.env` files are not committed. GitHub Actions will run the frontend, backend, and AI service checks after each push.

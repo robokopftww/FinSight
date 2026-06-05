@@ -25,6 +25,7 @@ type SettingsStatus = {
   };
   plaid: {
     configured: boolean;
+    environment?: "sandbox" | "development" | "production";
     connected: boolean;
     itemsCount: number;
     accountsCount: number;
@@ -217,7 +218,11 @@ export function SettingsControlCenter() {
   return (
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatTile label="Connected accounts" value={status.plaid.accountsCount} detail={status.plaid.connected ? "Plaid sandbox active" : "No bank connected"} />
+        <StatTile
+          label="Connected accounts"
+          value={status.plaid.accountsCount}
+          detail={status.plaid.connected ? `Plaid ${status.plaid.environment ?? "sandbox"} active` : "No bank connected"}
+        />
         <StatTile label="Transactions" value={status.plaid.transactionsCount} detail={`Latest: ${formatDate(status.plaid.latestTransactionAt)}`} />
         <StatTile label="Last sync" value={formatDate(status.plaid.lastSyncedAt)} detail={status.plaid.institutions.join(", ") || "No institution yet"} />
         <StatTile label="Advisor history" value={status.data.chatMessages} detail="Stored in PostgreSQL" />
@@ -233,7 +238,7 @@ export function SettingsControlCenter() {
               <div>
                 <h2 className="text-xl font-semibold text-white">Plaid connection</h2>
                 <p className="mt-2 text-sm leading-7 text-slate-300">
-                  Manage synced sandbox banking data used by forecasts, health scoring, reports, and Gemini advisor context.
+                  Manage synced Plaid banking data used by forecasts, health scoring, reports, and Gemini advisor context.
                 </p>
               </div>
             </div>
@@ -310,7 +315,7 @@ export function SettingsControlCenter() {
                 <AlertTriangle className="size-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold text-white">Sandbox reset</h2>
+                <h2 className="text-xl font-semibold text-white">Data reset</h2>
                 <p className="mt-2 text-sm leading-7 text-slate-300">
                   Clear the current user’s synced Plaid records, generated analytics artifacts, and advisor chat history.
                 </p>
@@ -325,7 +330,7 @@ export function SettingsControlCenter() {
             </Button>
             <Button type="button" variant="secondary" onClick={clearSandboxData} disabled={busy} className="gap-2 border-amber-300/20 text-amber-100 hover:bg-amber-300/10">
               {action === "clearing" ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-              Clear sandbox data
+              Clear financial data
             </Button>
           </div>
         </Panel>
