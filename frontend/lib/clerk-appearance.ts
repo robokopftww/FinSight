@@ -23,6 +23,12 @@ export const clerkAppearance = {
     formFieldInput: "!border-white/12 !bg-white/5 !text-white placeholder:!text-slate-500",
     formFieldInputShowPasswordButton: "!text-slate-300",
     formFieldAction: "!text-[#a7c3ff] hover:!text-[#8fb0ff]",
+    formFieldErrorText: "!text-rose-300",
+    formFieldSuccessText: "!text-[#dbe6ff]",
+    otpCodeFieldInput:
+      "!border-white/15 !bg-white/5 !text-white focus:!border-[#a7c3ff] focus:!ring-[#a7c3ff]/25",
+    formResendCodeLink: "!text-[#a7c3ff] hover:!text-[#8fb0ff]",
+    backLink: "!text-[#a7c3ff] hover:!text-[#8fb0ff]",
     formButtonPrimary: "!bg-[#a7c3ff] !text-slate-950 hover:!bg-[#8fb0ff]",
     identityPreviewText: "!text-white",
     identityPreviewEditButton: "!text-[#a7c3ff]",
