@@ -79,7 +79,25 @@ function getAnalysisWindow(transactions: Transaction[]) {
 }
 
 export function summarizeDashboard(accounts: Account[], transactions: Transaction[], profile?: UserFinancialProfile) {
-  const currentBalance = currency(accounts.reduce((total, account) => total + toNumber(account.currentBalance), 0));
+  const cashAccounts = accounts.filter((account) => account.type === "depository");
+  const creditAccounts = accounts.filter((account) => account.type === "credit");
+  const cashAccountIds = new Set(cashAccounts.map((account) => account.id));
+  const cashTransactions = transactions.filter((transaction) => cashAccountIds.has(transaction.accountId));
+  const currentBalance = currency(cashAccounts.reduce((total, account) => total + toNumber(account.currentBalance), 0));
+  const availableBalance = currency(
+    cashAccounts.reduce((total, account) => total + toNumber(account.availableBalance ?? account.currentBalance), 0),
+  );
+  const creditCardBalance = currency(
+    creditAccounts.reduce((total, account) => total + Math.max(toNumber(account.currentBalance), 0), 0),
+  );
+  const creditCards = creditAccounts.map((account) => ({
+    name: account.name,
+    mask: account.mask,
+    outstandingBalance: currency(Math.max(toNumber(account.currentBalance), 0)),
+    statementBalance: null,
+    minimumPayment: null,
+    dueDate: null,
+  }));
   const { start } = getAnalysisWindow(transactions);
   const recentTransactions = transactions.filter((transaction) => transaction.occurredAt >= start);
   const outflows = recentTransactions.filter((transaction) => transaction.direction === "outflow");
@@ -141,9 +159,9 @@ export function summarizeDashboard(accounts: Account[], transactions: Transactio
   const spendingAvgMonthly = monthsOfHistory ? currency(totalFlexibleSpend / monthsOfHistory) : 0;
 
   const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-  const balanceEndOfLastMonth = balanceAsOf(currentBalance, transactions, endOfLastMonth);
+  const balanceEndOfLastMonth = balanceAsOf(currentBalance, cashTransactions, endOfLastMonth);
   const monthOverMonthChange =
-    transactions.length > 0
+    cashTransactions.length > 0
       ? {
           amount: currency(currentBalance - balanceEndOfLastMonth),
           percent:
@@ -152,16 +170,16 @@ export function summarizeDashboard(accounts: Account[], transactions: Transactio
               : 0,
         }
       : null;
-  const balanceTrend = transactions.length
+  const balanceTrend = cashTransactions.length
     ? [5, 4, 3, 2, 1, 0].map((monthsAgo) => {
         const boundary = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59, 999);
         const label = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1).toLocaleString("en-US", {
           month: "short",
         });
-        return { label, balance: balanceAsOf(currentBalance, transactions, boundary) };
+        return { label, balance: balanceAsOf(currentBalance, cashTransactions, boundary) };
       })
     : [];
-  const accountsBreakdown = accounts.map((account) => ({
+  const accountsBreakdown = cashAccounts.map((account) => ({
     name: account.name,
     mask: account.mask,
     currentBalance: currency(toNumber(account.currentBalance)),
@@ -234,7 +252,10 @@ export function summarizeDashboard(accounts: Account[], transactions: Transactio
 
   return {
     currentBalance,
-    availableBalance: currency(accounts.reduce((total, account) => total + toNumber(account.availableBalance), 0)),
+    availableBalance,
+    creditCardBalance,
+    creditCards,
+    creditCardDetailsAvailable: false,
     monthlySpending,
     monthlyIncome,
     incomeMode,
@@ -261,7 +282,7 @@ export function summarizeDashboard(accounts: Account[], transactions: Transactio
     forecast,
     insightHighlights,
     metricCopy: {
-      currentBalance: accounts.length ? `${accounts.length} synced Plaid accounts` : "No accounts connected yet",
+      currentBalance: cashAccounts.length ? `${cashAccounts.length} cash account${cashAccounts.length === 1 ? "" : "s"}` : "No cash accounts connected yet",
       monthlySpending: isOutflowHeavy ? "Sandbox outflows are unusually high" : "Based on recent synced transactions",
       monthlyIncome: monthlyIncome > 0 ? "Detected from recent inflows" : "No recent income detected",
       savingsRate: isOutflowHeavy ? "Capped for display due to sandbox data" : "Based on recent income minus spending",

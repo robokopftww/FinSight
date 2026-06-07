@@ -41,6 +41,16 @@ export type DashboardOverview = {
   monthOverMonthChange?: { amount: number; percent: number } | null;
   balanceTrend?: Array<{ label: string; balance: number }>;
   accountsBreakdown?: Array<{ name: string; mask: string | null; currentBalance: number }>;
+  creditCardBalance?: number;
+  creditCardDetailsAvailable?: boolean;
+  creditCards?: Array<{
+    name: string;
+    mask: string | null;
+    outstandingBalance: number;
+    statementBalance: number | null;
+    minimumPayment: number | null;
+    dueDate: string | null;
+  }>;
 };
 
 export type UserProfile = {

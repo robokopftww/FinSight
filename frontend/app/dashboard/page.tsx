@@ -6,6 +6,7 @@ import { BalanceCard } from "@/components/balance-card";
 import { BankConnectionPanel } from "@/components/bank-connection-panel";
 import { CashFlowChart } from "@/components/charts/cash-flow-chart";
 import { SpendingBreakdownChart } from "@/components/charts/spending-breakdown-chart";
+import { CreditCardPaymentsCard } from "@/components/credit-card-payments-card";
 import { InsightCard } from "@/components/insight-card";
 import { MetricCard } from "@/components/metric-card";
 import { OnboardingModal } from "@/components/onboarding-modal";
@@ -33,13 +34,21 @@ export default async function DashboardPage() {
       <OnboardingModal />
       <BankConnectionPanel />
 
-      <section className="grid gap-4 xl:grid-cols-[1.6fr_1fr_1fr]">
+      <section className="grid gap-4 xl:grid-cols-2">
         <BalanceCard
           currentBalance={data.currentBalance}
           monthOverMonthChange={data.monthOverMonthChange}
           balanceTrend={data.balanceTrend}
           accountsBreakdown={data.accountsBreakdown}
         />
+        <CreditCardPaymentsCard
+          totalOutstanding={data.creditCardBalance ?? 0}
+          detailsAvailable={data.creditCardDetailsAvailable}
+          cards={data.creditCards}
+        />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
         <MetricCard
           label={data.incomeCard?.label ?? "Monthly income"}
           value={formatCurrency(data.incomeCard?.value ?? data.monthlyIncome)}

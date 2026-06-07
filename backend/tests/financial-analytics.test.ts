@@ -137,6 +137,88 @@ describe("summarizeDashboard", () => {
     expect(dashboard.savingsRate).toBe(75);
   });
 
+  it("uses only depository accounts for current cash balance", () => {
+    const dashboard = summarizeDashboard([
+      makeAccount({ currentBalance: 8824 as unknown as Account["currentBalance"] }),
+      makeAccount({
+        id: "credit-1",
+        plaidAccountId: "plaid-credit-1",
+        name: "Business Gold Card",
+        mask: "1009",
+        type: "credit",
+        subtype: "credit card",
+        currentBalance: 239 as unknown as Account["currentBalance"],
+      }),
+      makeAccount({
+        id: "credit-2",
+        plaidAccountId: "plaid-credit-2",
+        name: "American Express Gold Card",
+        mask: "2001",
+        type: "credit",
+        subtype: "credit card",
+        currentBalance: 408 as unknown as Account["currentBalance"],
+      }),
+      makeAccount({
+        id: "investment-1",
+        plaidAccountId: "plaid-investment-1",
+        name: "Brokerage",
+        type: "investment",
+        subtype: "brokerage",
+        currentBalance: 12000 as unknown as Account["currentBalance"],
+      }),
+    ], []);
+
+    expect(dashboard.currentBalance).toBe(8824);
+    expect(dashboard.accountsBreakdown).toEqual([
+      { name: "Checking", mask: "0000", currentBalance: 8824 },
+    ]);
+  });
+
+  it("summarizes credit card balances separately using Plaid account type", () => {
+    const dashboard = summarizeDashboard([
+      makeAccount(),
+      makeAccount({
+        id: "credit-1",
+        plaidAccountId: "plaid-credit-1",
+        name: "Business Gold Card",
+        mask: "1009",
+        type: "credit",
+        subtype: "credit card",
+        currentBalance: 239 as unknown as Account["currentBalance"],
+      }),
+      makeAccount({
+        id: "credit-2",
+        plaidAccountId: "plaid-credit-2",
+        name: "American Express Gold Card",
+        mask: "2001",
+        type: "credit",
+        subtype: "credit card",
+        currentBalance: 408 as unknown as Account["currentBalance"],
+      }),
+    ], []);
+
+    expect(dashboard.creditCardBalance).toBe(647);
+    expect(dashboard.creditCardDetailsAvailable).toBe(false);
+    expect(dashboard.creditCards).toEqual([
+      {
+        name: "Business Gold Card",
+        mask: "1009",
+        outstandingBalance: 239,
+        statementBalance: null,
+        minimumPayment: null,
+        dueDate: null,
+      },
+      {
+        name: "American Express Gold Card",
+        mask: "2001",
+        outstandingBalance: 408,
+        statementBalance: null,
+        minimumPayment: null,
+        dueDate: null,
+      },
+    ]);
+  });
+
   it("uses declared salary as monthly income when employed", () => {
     const dashboard = summarizeDashboard([makeAccount()], [], {
       employmentStatus: "employed",
@@ -209,5 +291,38 @@ describe("summarizeDashboard", () => {
     expect(dashboard.accountsBreakdown).toEqual([
       { name: "Checking", mask: "0000", currentBalance: 5000 },
     ]);
+  });
+
+  it("does not use credit-card transactions to reconstruct cash balance history", () => {
+    const now = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 5, 12);
+    const dashboard = summarizeDashboard(
+      [
+        makeAccount(),
+        makeAccount({
+          id: "credit-1",
+          plaidAccountId: "plaid-credit-1",
+          type: "credit",
+          subtype: "credit card",
+          currentBalance: 500 as unknown as Account["currentBalance"],
+        }),
+      ],
+      [
+        makeTransaction({
+          accountId: "acct-1",
+          direction: "inflow",
+          amount: 100 as unknown as Transaction["amount"],
+          occurredAt: thisMonth,
+        }),
+        makeTransaction({
+          accountId: "credit-1",
+          amount: 300 as unknown as Transaction["amount"],
+          occurredAt: thisMonth,
+        }),
+      ],
+    );
+
+    expect(dashboard.monthOverMonthChange?.amount).toBe(100);
+    expect(dashboard.balanceTrend.at(-1)?.balance).toBe(5000);
   });
 });
