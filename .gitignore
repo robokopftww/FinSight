@@ -16,3 +16,4 @@ ai-service/.venv
 ai-service/__pycache__
 ai-service/.pytest_cache
 **/__pycache__
+.superpowers/
