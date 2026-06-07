@@ -35,6 +35,44 @@ def test_forecast_projects_key_horizons_from_cash_flow() -> None:
     assert [point["label"] for point in forecast["keyPoints"]] == ["Today", "Day 7", "Day 30", "Day 90"]
 
 
+def test_forecast_treats_positive_outflow_amounts_as_money_leaving() -> None:
+    transactions = [
+        {
+            "amount": 100,
+            "direction": "outflow",
+            "occurred_at": f"2026-05-{day:02d}T12:00:00Z",
+        }
+        for day in range(1, 15)
+    ]
+
+    forecast = build_forecast(
+        current_balance=8_824,
+        monthly_income=0,
+        monthly_spending=1_400,
+        transactions=transactions,
+    )
+
+    assert forecast["dailyDelta"] < 0
+    assert forecast["projectedBalance"] < 8_824
+
+
+def test_forecast_averages_activity_over_calendar_days() -> None:
+    transactions = [
+        {"amount": 1_000, "direction": "inflow", "occurred_at": "2026-05-01T12:00:00Z"},
+        {"amount": 100, "direction": "outflow", "occurred_at": "2026-05-30T12:00:00Z"},
+    ]
+
+    forecast = build_forecast(
+        current_balance=8_824,
+        monthly_income=1_000,
+        monthly_spending=100,
+        transactions=transactions,
+    )
+
+    assert forecast["dailyDelta"] == 30
+    assert forecast["projectedBalance"] == 9_724
+
+
 def test_top_spending_category_ignores_transfer_noise_when_possible() -> None:
     transactions = [
         {"direction": "outflow", "category": "TRANSFER_OUT", "amount": 20_000},

@@ -197,7 +197,7 @@ export async function requestAiWeeklyReport({
   }
 }
 
-function buildAnalyticsPayload({
+export function buildAnalyticsPayload({
   accounts,
   transactions,
   monthlyIncome,
@@ -212,12 +212,14 @@ function buildAnalyticsPayload({
   currentBalance: number;
   monthlySubscriptionCost: number;
 }) {
+  const cashAccountIds = new Set(accounts.filter((account) => account.type === "depository").map((account) => account.id));
+
   return {
     current_balance: currentBalance,
     monthly_income: monthlyIncome,
     monthly_spending: monthlySpending,
     monthly_subscription_cost: monthlySubscriptionCost,
-    transactions: transactions.slice(0, 300).map((transaction) => ({
+    transactions: transactions.filter((transaction) => cashAccountIds.has(transaction.accountId)).slice(0, 300).map((transaction) => ({
       amount: Number(transaction.amount),
       direction: transaction.direction,
       category: transaction.categoryPrimary,

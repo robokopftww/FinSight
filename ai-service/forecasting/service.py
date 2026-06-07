@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
 
 
 def build_forecast(
@@ -45,22 +43,20 @@ def _estimate_daily_delta(monthly_income: float, monthly_spending: float, transa
     fallback_delta = (monthly_income - monthly_spending) / 30
     frame = _transactions_frame(transactions)
 
-    if frame.empty or frame["date"].nunique() < 3:
+    if frame.empty:
         return fallback_delta
 
-    daily = frame.groupby("date", as_index=False)["signed_amount"].sum().sort_values("date")
-    daily["index"] = (daily["date"] - daily["date"].min()).dt.days
+    calendar_days = int((frame["date"].max() - frame["date"].min()).days) + 1
 
-    if daily["index"].nunique() < 3:
+    if calendar_days < 7:
         return fallback_delta
 
-    model = LinearRegression()
-    model.fit(daily[["index"]], daily["signed_amount"])
-    regression_delta = float(model.predict(pd.DataFrame({"index": [daily["index"].max() + 1]}))[0])
-    observed_delta = float(daily["signed_amount"].tail(14).mean())
+    observed_delta = float(frame["signed_amount"].sum() / calendar_days)
 
-    # Blend model output with simple observed cash flow so small sandbox samples stay stable.
-    return round(float(np.mean([fallback_delta, observed_delta, regression_delta])), 2)
+    # Once enough history exists, forecast directly from observed cash movement
+    # spread across calendar days. Monthly spending may include credit-card
+    # purchases, so blending it into a cash forecast would mix two concepts.
+    return round(observed_delta, 2)
 
 
 def _risk_probability(lowest_balance: float, current_balance: float, daily_delta: float) -> float:
@@ -82,7 +78,7 @@ def _transactions_frame(transactions: list[dict]) -> pd.DataFrame:
     for transaction in transactions:
         amount = float(transaction.get("amount", 0))
         direction = transaction.get("direction")
-        signed_amount = amount if direction == "inflow" or amount > 0 else -abs(amount)
+        signed_amount = abs(amount) if direction == "inflow" else -abs(amount)
         occurred_at = transaction.get("occurred_at")
 
         try:
