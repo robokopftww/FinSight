@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 
 import { AppShell } from "@/components/app-shell";
 import { Panel } from "@/components/ui/panel";
+import { SubscriptionActions } from "@/components/subscription-actions";
 import { getSubscriptions } from "@/lib/api";
 
 function formatCurrency(value: number) {
@@ -78,6 +79,7 @@ export default async function SubscriptionsPage() {
                 <p className="mt-6 text-sm leading-7 text-slate-300">
                   {item.note ?? "Recurring charge detected from historical transaction cadence."}
                 </p>
+                <SubscriptionActions id={item.id} status={item.status} />
               </div>
             ))}
           </div>

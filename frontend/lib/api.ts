@@ -78,6 +78,7 @@ export type SubscriptionsResponse = {
     confidence?: number;
     lastChargedAt?: string;
     category?: string;
+    status?: "active" | "paused" | "cancelled";
   }>;
   summary?: {
     count: number;
