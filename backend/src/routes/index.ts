@@ -299,11 +299,53 @@ export async function registerRoutes(app: FastifyInstance) {
       return reply;
     }
 
+    const stored = await prisma.subscription.findMany({
+      where: { userId: user.id },
+      orderBy: { monthlyCost: "desc" },
+    });
+
+    if (stored.length) {
+      const data = stored.map((sub) => {
+        const monthlyCost = Number(sub.monthlyCost);
+        const yearlyCost = Number(sub.yearlyCost);
+        return {
+          id: sub.id,
+          name: sub.merchantName,
+          merchantName: sub.merchantName,
+          monthlyCost: currency(monthlyCost),
+          yearlyCost: currency(yearlyCost),
+          opportunity: monthlyCost > 25 ? "Review" : "Keep",
+          note:
+            monthlyCost > 25
+              ? "Recurring charge detected with meaningful annual cost."
+              : "Recurring charge detected from transaction cadence.",
+          confidence: sub.confidence,
+          lastChargedAt: sub.lastChargedAt ?? undefined,
+          category: sub.category ?? undefined,
+          status: sub.status,
+        };
+      });
+      const reviewMonthly = data
+        .filter((sub) => sub.opportunity === "Review" && sub.status !== "cancelled")
+        .reduce((total, sub) => total + sub.monthlyCost, 0);
+      const activeData = data.filter((sub) => sub.status !== "cancelled");
+
+      return reply.send({
+        data,
+        summary: {
+          count: data.length,
+          totalMonthly: currency(activeData.reduce((total, sub) => total + sub.monthlyCost, 0)),
+          totalYearly: currency(activeData.reduce((total, sub) => total + sub.yearlyCost, 0)),
+          reviewMonthly: currency(reviewMonthly),
+          reviewYearly: currency(reviewMonthly * 12),
+        },
+      });
+    }
+
     const transactions = await prisma.transaction.findMany({
       where: { userId: user.id },
       orderBy: { occurredAt: "desc" },
     });
-
     const subscriptions = detectSubscriptions(transactions);
     const reviewMonthly = subscriptions
       .filter((subscription) => subscription.opportunity === "Review")
