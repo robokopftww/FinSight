@@ -416,6 +416,18 @@ export async function registerRoutes(app: FastifyInstance) {
       return reply;
     }
 
+    const latestForecast = await prisma.forecast.findFirst({
+      where: { userId: user.id },
+      orderBy: { generatedAt: "desc" },
+    });
+
+    if (latestForecast) {
+      return reply.send({
+        data: latestForecast.data,
+        source: "persisted-snapshot",
+      });
+    }
+
     const [accounts, transactions] = await Promise.all([
       prisma.account.findMany({ where: { userId: user.id } }),
       prisma.transaction.findMany({
