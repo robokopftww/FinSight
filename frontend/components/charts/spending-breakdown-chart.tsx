@@ -27,7 +27,7 @@ export function SpendingBreakdownChart({
             <Tooltip
               cursor={false}
               contentStyle={{
-                backgroundColor: "#08111d",
+                backgroundColor: "#0a1222",
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 16,
                 color: "white",

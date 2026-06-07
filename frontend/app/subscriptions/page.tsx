@@ -66,7 +66,7 @@ export default async function SubscriptionsPage() {
                     className={
                       item.opportunity === "Review"
                         ? "rounded-full bg-amber-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-100"
-                        : "rounded-full bg-emerald-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100"
+                        : "rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]"
                     }
                   >
                     {item.opportunity}

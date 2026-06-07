@@ -29,7 +29,7 @@ export function DashboardAdvisor() {
       <aside
         aria-label="WealthLens Advisor"
         aria-hidden={!open}
-        className={`fixed inset-y-0 right-0 z-40 flex w-[min(100%,30rem)] flex-col border-l border-emerald-300/20 bg-[#091120] shadow-[-24px_0_80px_rgba(0,0,0,0.55)] transition-transform duration-300 ${open ? "translate-x-0" : "pointer-events-none translate-x-full"}`}
+        className={`fixed inset-y-0 right-0 z-40 flex w-[min(100%,30rem)] flex-col border-l border-[var(--color-accent-border)] bg-[var(--color-surface)] shadow-[-24px_0_80px_rgba(0,0,0,0.55)] transition-transform duration-300 ${open ? "translate-x-0" : "pointer-events-none translate-x-full"}`}
       >
         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
           <div className="flex items-center gap-3">
@@ -56,11 +56,11 @@ export function DashboardAdvisor() {
         <button
           type="button"
           aria-label="Open WealthLens Advisor"
-          className="fixed bottom-6 right-6 z-30 flex size-16 items-center justify-center rounded-full border border-emerald-200/30 bg-[var(--color-accent)] text-slate-950 shadow-[0_18px_60px_rgba(44,194,156,0.35)] transition hover:scale-105 hover:bg-[var(--color-accent-strong)]"
+          className="fixed bottom-6 right-6 z-30 flex size-16 items-center justify-center rounded-full border border-[var(--color-accent-border)] bg-[var(--color-accent)] text-slate-950 shadow-[0_18px_60px_rgba(167,195,255,0.35)] transition hover:scale-105 hover:bg-[var(--color-accent-strong)]"
           onClick={() => setOpen(true)}
         >
           <MessageCircle className="size-7" />
-          <span className="absolute right-0 top-0 size-4 rounded-full border-2 border-[#07111f] bg-rose-400" />
+          <span className="absolute right-0 top-0 size-4 rounded-full border-2 border-[var(--background)] bg-rose-400" />
         </button>
       ) : null}
     </>

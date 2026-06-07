@@ -21,8 +21,8 @@ export function CashFlowChart({
           <AreaChart data={data}>
             <defs>
               <linearGradient id="cash-flow-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#8ef0d1" stopOpacity={0.45} />
-                <stop offset="95%" stopColor="#8ef0d1" stopOpacity={0.03} />
+                <stop offset="5%" stopColor="#a7c3ff" stopOpacity={0.45} />
+                <stop offset="95%" stopColor="#a7c3ff" stopOpacity={0.03} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
@@ -31,13 +31,13 @@ export function CashFlowChart({
             <Tooltip
               cursor={false}
               contentStyle={{
-                backgroundColor: "#08111d",
+                backgroundColor: "#0a1222",
                 border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 16,
                 color: "white",
               }}
             />
-            <Area type="monotone" dataKey="balance" stroke="#8ef0d1" strokeWidth={2.5} fill="url(#cash-flow-fill)" />
+            <Area type="monotone" dataKey="balance" stroke="#a7c3ff" strokeWidth={2.5} fill="url(#cash-flow-fill)" />
           </AreaChart>
         </ResponsiveContainer>
       ) : null}

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Bot, ChartNoAxesCombined, CreditCard, FileText, House, Settings, ShieldCheck, Sparkles } from "lucide-react";
+import { Bot, ChartNoAxesCombined, CreditCard, FileText, House, Landmark, Settings, ShieldCheck, Sparkles } from "lucide-react";
 
 import { AppUserControls } from "@/components/app-user-controls";
 import { UserSync } from "@/components/user-sync";
@@ -32,13 +32,13 @@ export function AppShell({
   const isClerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(44,194,156,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(76,125,255,0.18),transparent_24%),#07111f] text-white">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(167,195,255,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(124,199,245,0.14),transparent_24%),var(--background)] text-white">
       {isClerkConfigured && !demoMode ? <UserSync /> : null}
       <div className="mx-auto grid min-h-screen max-w-7xl gap-6 px-6 py-6 lg:grid-cols-[250px_minmax(0,1fr)] lg:px-8">
         <aside className="rounded-[28px] border border-white/8 bg-white/4 p-5 backdrop-blur-xl">
           <Link href="/" className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-white">
             <span className="flex size-10 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
-              F
+              <Landmark className="size-5" aria-hidden="true" />
             </span>
             WealthLens
           </Link>
@@ -53,7 +53,7 @@ export function AppShell({
                   className={cn(
                     "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition",
                     currentPath === item.href
-                      ? "border border-emerald-300/16 bg-emerald-300/12 text-emerald-100"
+                      ? "border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]"
                       : "text-slate-300 hover:bg-white/6 hover:text-white",
                   )}
                 >
@@ -64,8 +64,8 @@ export function AppShell({
             })}
           </div>
 
-          <div className="mt-10 rounded-3xl border border-emerald-300/16 bg-emerald-300/8 p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
+          <div className="mt-10 rounded-3xl border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-4">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]">
               <ChartNoAxesCombined className="size-4" />
               Analyst mode
             </div>
@@ -86,7 +86,7 @@ export function AppShell({
                 </p>
               </div>
               {demoMode ? (
-                <span className="rounded-full border border-emerald-300/16 bg-emerald-300/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+                <span className="rounded-full border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]">
                   Demo data
                 </span>
               ) : isClerkConfigured ? (

@@ -13,7 +13,7 @@ const severityStyles = {
   },
   low: {
     icon: Sparkles,
-    badge: "bg-emerald-300/14 text-emerald-100",
+    badge: "bg-[var(--color-accent-soft-strong)] text-[var(--color-accent-text)]",
   },
 };
 

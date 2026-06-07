@@ -35,7 +35,7 @@ export function BalanceCard({
       <div className="mt-3 flex flex-wrap items-baseline gap-3">
         <div className="text-3xl font-semibold text-white">{formatCurrency(currentBalance)}</div>
         {monthOverMonthChange ? (
-          <div className={`flex items-center gap-1 text-sm ${positive ? "text-emerald-400" : "text-rose-400"}`}>
+          <div className={`flex items-center gap-1 text-sm ${positive ? "text-[var(--color-accent)]" : "text-rose-400"}`}>
             <Icon className="size-4" />
             {formatCurrency(Math.abs(monthOverMonthChange.amount))} ({monthOverMonthChange.percent}%)
           </div>
@@ -47,7 +47,7 @@ export function BalanceCard({
           {balanceTrend.map((point) => (
             <div key={point.label} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
               <div
-                className="w-full rounded-t bg-emerald-400/70"
+                className="w-full rounded-t bg-[var(--color-accent)]/70"
                 style={{ height: `${Math.max(((point.balance - minBalance) / balanceRange) * 100, 5)}%` }}
               />
               <span className="text-[10px] text-slate-500">{point.label}</span>

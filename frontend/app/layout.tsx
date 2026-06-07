@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { IBM_Plex_Mono, Manrope } from "next/font/google";
+
+import { clerkAppearance } from "@/lib/clerk-appearance";
+
 import "./globals.css";
 
 const manrope = Manrope({
@@ -39,5 +42,5 @@ export default function RootLayout({
     return page;
   }
 
-  return <ClerkProvider>{page}</ClerkProvider>;
+  return <ClerkProvider appearance={clerkAppearance}>{page}</ClerkProvider>;
 }

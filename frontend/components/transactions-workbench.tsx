@@ -164,11 +164,11 @@ export function TransactionsWorkbench({
               value={category}
               onChange={(event) => setCategory(event.target.value)}
             >
-              <option className="bg-slate-950" value="all">
+              <option className="bg-[var(--color-surface)]" value="all">
                 All categories
               </option>
               {categoryOptions.map((option) => (
-                <option key={option.raw} className="bg-slate-950" value={option.raw}>
+                <option key={option.raw} className="bg-[var(--color-surface)]" value={option.raw}>
                   {option.label}
                 </option>
               ))}
@@ -180,13 +180,13 @@ export function TransactionsWorkbench({
               value={direction}
               onChange={(event) => setDirection(event.target.value)}
             >
-              <option className="bg-slate-950" value="all">
+              <option className="bg-[var(--color-surface)]" value="all">
                 All money flow
               </option>
-              <option className="bg-slate-950" value="outflow">
+              <option className="bg-[var(--color-surface)]" value="outflow">
                 Spending only
               </option>
-              <option className="bg-slate-950" value="inflow">
+              <option className="bg-[var(--color-surface)]" value="inflow">
                 Income only
               </option>
             </select>
@@ -233,13 +233,13 @@ export function TransactionsWorkbench({
                   }}
                 >
                   {categoryOptions.map((option) => (
-                    <option key={option.raw} className="bg-slate-950" value={option.raw}>
+                    <option key={option.raw} className="bg-[var(--color-surface)]" value={option.raw}>
                       {option.label}
                     </option>
                   ))}
                 </select>
               </div>
-              <div className={`font-medium md:text-right ${transaction.amount > 0 ? "text-emerald-300" : "text-white"}`}>
+              <div className={`font-medium md:text-right ${transaction.amount > 0 ? "text-[var(--color-accent)]" : "text-white"}`}>
                 {formatAmount(transaction.amount)}
               </div>
               <div className="text-slate-400 md:text-right">

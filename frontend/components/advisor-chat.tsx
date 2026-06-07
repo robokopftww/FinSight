@@ -187,7 +187,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className={compact ? "flex min-h-0 flex-1 flex-col" : "grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]"}>
-      <section className={compact ? "flex min-h-0 flex-1 flex-col overflow-hidden bg-[#091120]" : "overflow-hidden rounded-[28px] border border-white/8 bg-[#091120]"}>
+      <section className={compact ? "flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--color-surface)]" : "overflow-hidden rounded-[28px] border border-white/8 bg-[var(--color-surface)]"}>
         {!compact ? <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
@@ -200,7 +200,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
           </div>
           <div className="flex items-center gap-2">
             {isLoadingHistory ? <Loader2 className="size-4 animate-spin text-slate-400" /> : null}
-            <span className="hidden rounded-full bg-emerald-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100 sm:inline-flex">
+            <span className="hidden rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)] sm:inline-flex">
               Gemini + Python
             </span>
           </div>
@@ -246,7 +246,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
             return (
               <div key={message.id} className={`flex gap-3 ${isAssistant ? "" : "justify-end"}`}>
                 {isAssistant ? (
-                  <span className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/16 text-emerald-100">
+                  <span className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/16 text-[var(--color-accent-text)]">
                     <Bot className="size-4" />
                   </span>
                 ) : null}
@@ -269,7 +269,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
                     </div>
                   ) : null}
                   {isAssistant && message.source ? (
-                    <div className="mt-4 inline-flex rounded-full bg-emerald-300/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                    <div className="mt-4 inline-flex rounded-full bg-[var(--color-accent-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-text)]">
                       {formatSourceLabel(message.source)}
                     </div>
                   ) : null}
@@ -329,8 +329,8 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-emerald-300/16 bg-emerald-300/8 p-5">
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">Context sources</div>
+        <div className="rounded-[28px] border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-5">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]">Context sources</div>
           <div className="mt-4 space-y-3 text-sm leading-6 text-slate-200">
             <p>Synced account balances</p>
             <p>Recent Plaid transactions</p>

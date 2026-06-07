@@ -29,7 +29,7 @@ const demoForecast = [
 ];
 
 const demoSpending = [
-  { category: "Food", amount: 840, fill: "#8ef0d1" },
+  { category: "Food", amount: 840, fill: "#a7c3ff" },
   { category: "Bills", amount: 780, fill: "#58b8ff" },
   { category: "Shopping", amount: 670, fill: "#ffb65e" },
   { category: "Entertainment", amount: 543, fill: "#ff7b72" },
@@ -133,7 +133,7 @@ export default function DemoPage() {
               <h2 className="text-xl font-semibold text-white">Cash flow forecast</h2>
               <p className="mt-2 text-sm text-slate-300">Projected balances across the next 7, 30, and 90 days.</p>
             </div>
-            <span className="rounded-full bg-emerald-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+            <span className="rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]">
               Safe to spend {formatCurrency(demoOverview.safeToSpend)}
             </span>
           </div>
@@ -190,7 +190,7 @@ export default function DemoPage() {
               <p className="mt-2 text-sm text-slate-300">What Gemini explains after Python calculates the numbers.</p>
             </div>
           </div>
-          <div className="mt-6 space-y-4 rounded-[28px] border border-white/8 bg-[#091120] p-5">
+          <div className="mt-6 space-y-4 rounded-[28px] border border-white/8 bg-[var(--color-surface)] p-5">
             <div className="ml-auto max-w-xl rounded-3xl bg-[var(--color-accent)] px-4 py-3 text-sm text-slate-950">
               Can I afford a $400 monitor this month?
             </div>
@@ -198,7 +198,7 @@ export default function DemoPage() {
               A $400 purchase is affordable based on your forecast. Your safe-to-spend buffer would move from $650 to $250,
               so WealthLens would recommend keeping discretionary dining below $140 this week to protect your savings target.
             </div>
-            <div className="inline-flex rounded-full bg-emerald-300/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100">
+            <div className="inline-flex rounded-full bg-[var(--color-accent-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-text)]">
               Gemini + Python analytics
             </div>
           </div>
@@ -239,7 +239,7 @@ export default function DemoPage() {
               <div key={day.label} className="flex min-w-0 flex-1 flex-col items-center gap-3">
                 <div className="flex h-40 w-full items-end rounded-t-2xl bg-white/4">
                   <div
-                    className="w-full rounded-t-2xl bg-[linear-gradient(180deg,var(--color-accent),rgba(142,240,209,0.18))]"
+                    className="w-full rounded-t-2xl bg-[linear-gradient(180deg,var(--color-accent),rgba(167,195,255,0.18))]"
                     style={{ height: `${Math.max((day.amount / maxWeeklySpend) * 100, 8)}%` }}
                   />
                 </div>
@@ -247,7 +247,7 @@ export default function DemoPage() {
               </div>
             ))}
           </div>
-          <div className="mt-5 rounded-[24px] border border-emerald-300/16 bg-emerald-300/8 p-4 text-sm leading-7 text-emerald-50">
+          <div className="mt-5 rounded-[24px] border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-4 text-sm leading-7 text-[var(--color-accent-text)]">
             Spending increased 12% this week, led by food and weekend entertainment. Your forecast remains stable, but holding
             dining spend flat would keep the 30-day balance above $6,300.
           </div>
@@ -291,7 +291,7 @@ export default function DemoPage() {
                 <div className="mt-1 text-slate-500">{transaction.description}</div>
               </div>
               <div className="text-slate-300">{transaction.category}</div>
-              <div className={transaction.amount < 0 ? "font-medium text-white" : "font-medium text-emerald-100"}>
+              <div className={transaction.amount < 0 ? "font-medium text-white" : "font-medium text-[var(--color-accent-text)]"}>
                 {formatSignedCurrency(transaction.amount)}
               </div>
               <div className="text-slate-400">{transaction.date}</div>

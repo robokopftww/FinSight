@@ -87,7 +87,7 @@ export default async function DashboardPage() {
               <h2 className="text-xl font-semibold text-white">Cash flow forecast</h2>
               <p className="mt-2 text-sm text-slate-300">Projected balances across your next 7, 30, and 90 days.</p>
             </div>
-            <span className="rounded-full bg-emerald-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+            <span className="rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]">
               Safe to spend {formatCurrency(data.safeToSpend)}
             </span>
           </div>

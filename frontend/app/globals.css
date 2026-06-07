@@ -1,11 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07111f;
+  --background: #070d1a;
   --foreground: #f8fafc;
   --muted: #94a3b8;
-  --color-accent: #8ef0d1;
-  --color-accent-strong: #7ae1c0;
+  --color-surface: #0a1222;
+  --color-accent: #a7c3ff;
+  --color-accent-strong: #8fb0ff;
+  --color-accent-soft: rgba(167, 195, 255, 0.12);
+  --color-accent-soft-strong: rgba(167, 195, 255, 0.18);
+  --color-accent-border: rgba(167, 195, 255, 0.22);
+  --color-accent-text: #dbe6ff;
 }
 
 @theme inline {
@@ -21,9 +26,9 @@
 
 html {
   background:
-    radial-gradient(circle at top left, rgba(44, 194, 156, 0.16), transparent 24%),
-    radial-gradient(circle at top right, rgba(76, 125, 255, 0.16), transparent 20%),
-    #07111f;
+    radial-gradient(circle at top left, rgba(167, 195, 255, 0.16), transparent 24%),
+    radial-gradient(circle at top right, rgba(124, 199, 245, 0.14), transparent 20%),
+    var(--background);
 }
 
 body {
@@ -43,7 +48,7 @@ input::placeholder {
 }
 
 ::selection {
-  background: rgba(142, 240, 209, 0.24);
+  background: rgba(167, 195, 255, 0.24);
 }
 
 .wl-landing {

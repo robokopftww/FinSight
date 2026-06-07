@@ -92,7 +92,7 @@ const subscriptions: Subscription[] = [
 ];
 
 const spendingBreakdown: SpendingCategory[] = [
-  { category: "Food", amount: 840, fill: "#8ef0d1" },
+  { category: "Food", amount: 840, fill: "#a7c3ff" },
   { category: "Shopping", amount: 670, fill: "#58b8ff" },
   { category: "Bills", amount: 780, fill: "#ffb65e" },
   { category: "Transportation", amount: 292, fill: "#ff7b72" },

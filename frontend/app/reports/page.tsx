@@ -63,7 +63,7 @@ export default async function ReportsPage() {
               <div key={day.label} className="flex min-w-0 flex-1 flex-col items-center gap-3">
                 <div className="flex h-56 w-full items-end rounded-t-2xl bg-white/4">
                   <div
-                    className="w-full rounded-t-2xl bg-[linear-gradient(180deg,var(--color-accent),rgba(142,240,209,0.18))]"
+                    className="w-full rounded-t-2xl bg-[linear-gradient(180deg,var(--color-accent),rgba(167,195,255,0.18))]"
                     style={{ height: `${Math.max((day.amount / maxSpend) * 100, day.amount > 0 ? 8 : 0)}%` }}
                   />
                 </div>
@@ -103,7 +103,7 @@ export default async function ReportsPage() {
 
       <Panel className="p-6">
         <div className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-emerald-100">
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-[var(--color-accent-text)]">
             <FileText className="size-5" />
           </span>
           <div>
@@ -112,7 +112,7 @@ export default async function ReportsPage() {
           </div>
         </div>
         {report.llmSummary ? (
-          <div className="mt-6 rounded-[24px] border border-emerald-300/16 bg-emerald-300/8 p-5 text-sm leading-7 text-emerald-50">
+          <div className="mt-6 rounded-[24px] border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-5 text-sm leading-7 text-[var(--color-accent-text)]">
             {report.llmSummary}
           </div>
         ) : null}

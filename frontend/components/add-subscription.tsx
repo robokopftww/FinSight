@@ -101,7 +101,7 @@ export function AddSubscription({ transactions }: { transactions: TransactionRow
   }
 
   const inputClass =
-    "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-300/40";
+    "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-[var(--color-accent-border)]";
 
   if (!open) {
     return (
@@ -113,7 +113,7 @@ export function AddSubscription({ transactions }: { transactions: TransactionRow
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950 p-6 shadow-2xl">
+      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[var(--color-surface)] p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-white">Add a subscription</h2>

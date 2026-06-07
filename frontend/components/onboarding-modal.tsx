@@ -55,11 +55,11 @@ export function OnboardingModal() {
     }
   }
 
-  const inputClass = "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-300/40";
+  const inputClass = "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-[var(--color-accent-border)]";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-950 p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[var(--color-surface)] p-6 shadow-2xl">
         <h2 className="text-xl font-semibold text-white">Tell us about your income</h2>
         <p className="mt-2 text-sm leading-6 text-slate-400">This personalizes your dashboard. You can change it anytime in Settings.</p>
 

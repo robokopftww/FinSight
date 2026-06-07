@@ -63,7 +63,7 @@ const payFrequencies: Array<NonNullable<UserProfile["payFrequency"]>> = [
   "monthly",
   "annually",
 ];
-const profileInputClass = "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-300/40";
+const profileInputClass = "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-[var(--color-accent-border)]";
 
 async function authenticatedFetch(path: string, token: string | null, init?: RequestInit) {
   if (!apiBaseUrl) {
@@ -104,7 +104,7 @@ function StatusPill({ active, label }: { active: boolean; label: string }) {
     <span
       className={
         active
-          ? "rounded-full bg-emerald-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100"
+          ? "rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-text)]"
           : "rounded-full bg-amber-300/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-100"
       }
     >
@@ -401,7 +401,7 @@ export function SettingsControlCenter() {
 
       <Panel className="p-6">
         <div className="flex gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-emerald-100">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-[var(--color-accent-text)]">
             <BriefcaseBusiness className="size-5" />
           </span>
           <div>
@@ -470,7 +470,7 @@ export function SettingsControlCenter() {
 
       <Panel className="p-6">
         <div className="flex items-start gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-emerald-100">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-[var(--color-accent-text)]">
             <Database className="size-5" />
           </span>
           <div>

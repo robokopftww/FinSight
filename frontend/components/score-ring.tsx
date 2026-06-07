@@ -11,7 +11,7 @@ export function ScoreRing({ score }: { score: number }) {
   );
 
   const data = [
-    { name: "score", value: score, fill: "#8ef0d1" },
+    { name: "score", value: score, fill: "#a7c3ff" },
     { name: "remaining", value: 100 - score, fill: "rgba(255,255,255,0.08)" },
   ];
 
