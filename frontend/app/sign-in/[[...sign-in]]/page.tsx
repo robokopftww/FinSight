@@ -1,6 +1,8 @@
 import { SignIn } from "@clerk/nextjs";
 
+import { AuthOverlayShell } from "@/components/auth-overlay-shell";
 import { clerkAppearance } from "@/lib/clerk-appearance";
+import { clerkLocalization } from "@/lib/clerk-localization";
 
 const isClerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -19,8 +21,13 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--background)] px-6">
-      <SignIn appearance={clerkAppearance} fallbackRedirectUrl="/dashboard" signUpUrl="/sign-up" />
-    </main>
+    <AuthOverlayShell label="sign in">
+      <SignIn
+        appearance={clerkAppearance}
+        localization={clerkLocalization}
+        fallbackRedirectUrl="/dashboard"
+        signUpUrl="/sign-up"
+      />
+    </AuthOverlayShell>
   );
 }

@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { IBM_Plex_Mono, Manrope } from "next/font/google";
 
 import { clerkAppearance } from "@/lib/clerk-appearance";
+import { clerkLocalization } from "@/lib/clerk-localization";
 
 import "./globals.css";
 
@@ -42,5 +43,9 @@ export default function RootLayout({
     return page;
   }
 
-  return <ClerkProvider appearance={clerkAppearance}>{page}</ClerkProvider>;
+  return (
+    <ClerkProvider appearance={clerkAppearance} localization={clerkLocalization}>
+      {page}
+    </ClerkProvider>
+  );
 }
