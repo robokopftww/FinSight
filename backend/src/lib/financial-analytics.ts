@@ -70,13 +70,19 @@ export function summarizeDashboard(accounts: Account[], transactions: Transactio
   const recentTransactions = transactions.filter((transaction) => transaction.occurredAt >= start);
   const outflows = recentTransactions.filter((transaction) => transaction.direction === "outflow");
   const inflows = recentTransactions.filter((transaction) => transaction.direction === "inflow");
-  const monthlySpending = currency(outflows.reduce((total, transaction) => total + toNumber(transaction.amount), 0));
-  const monthlyIncome = currency(inflows.reduce((total, transaction) => total + toNumber(transaction.amount), 0));
-  const savingsRate = monthlyIncome > 0 ? currency(((monthlyIncome - monthlySpending) / monthlyIncome) * 100) : 0;
-  const displaySavingsRate = clamp(savingsRate, -100, 100);
   const flexibleOutflows = outflows.filter((transaction) => !isInternalTransfer(transaction));
+  const flexibleInflows = inflows.filter((transaction) => !isInternalTransfer(transaction));
   const transferOutflows = outflows.filter((transaction) => isInternalTransfer(transaction));
   const internalTransferTotal = currency(transferOutflows.reduce((total, transaction) => total + toNumber(transaction.amount), 0));
+  // Spending and income exclude internal transfers (own-account moves, loan
+  // payments) so they reflect real cash flow rather than money shuffled between
+  // accounts. Plaid sandbox data is heavy with these transfers, which otherwise
+  // pushed monthlySpending far above income and forced the savings rate to its
+  // -100% display cap.
+  const monthlySpending = currency(flexibleOutflows.reduce((total, transaction) => total + toNumber(transaction.amount), 0));
+  const monthlyIncome = currency(flexibleInflows.reduce((total, transaction) => total + toNumber(transaction.amount), 0));
+  const savingsRate = monthlyIncome > 0 ? currency(((monthlyIncome - monthlySpending) / monthlyIncome) * 100) : 0;
+  const displaySavingsRate = clamp(savingsRate, -100, 100);
 
   const byCategory = new Map<string, number>();
   for (const transaction of flexibleOutflows.length ? flexibleOutflows : outflows) {
