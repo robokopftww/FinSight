@@ -1,12 +1,51 @@
 import Link from "next/link";
-import { ArrowRight, ChartSpline, CircleDollarSign, CreditCard, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  ChartSpline,
+  ChevronDown,
+  CircleDollarSign,
+  CreditCard,
+  Landmark,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 
-import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
-import { Panel } from "@/components/ui/panel";
-import { insights, overview, spendingBreakdown, subscriptions } from "@/lib/api";
+type Feature = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
 
-const features = [
+type Subscription = {
+  name: string;
+  monthlyCost: number;
+  yearlyCost: number;
+  note: string;
+};
+
+type SpendingCategory = {
+  category: string;
+  amount: number;
+  fill: string;
+};
+
+type Testimonial = {
+  name: string;
+  role: string;
+  quote: string;
+};
+
+type PricingTier = {
+  name: string;
+  price: string;
+  blurb: string;
+  cta: string;
+  featured?: boolean;
+};
+
+const features: Feature[] = [
   {
     icon: ChartSpline,
     title: "Spending intelligence",
@@ -29,7 +68,36 @@ const features = [
   },
 ];
 
-const testimonials = [
+const subscriptions: Subscription[] = [
+  {
+    name: "Netflix",
+    monthlyCost: 15.49,
+    yearlyCost: 185.88,
+    note: "Steady weekly usage detected.",
+  },
+  {
+    name: "Spotify",
+    monthlyCost: 10.99,
+    yearlyCost: 131.88,
+    note: "Recent activity is lower than your normal listening pattern.",
+  },
+  {
+    name: "Climbing Gym",
+    monthlyCost: 49,
+    yearlyCost: 588,
+    note: "High annual cost relative to visit frequency.",
+  },
+];
+
+const spendingBreakdown: SpendingCategory[] = [
+  { category: "Food", amount: 840, fill: "#8ef0d1" },
+  { category: "Shopping", amount: 670, fill: "#58b8ff" },
+  { category: "Bills", amount: 780, fill: "#ffb65e" },
+  { category: "Transportation", amount: 292, fill: "#ff7b72" },
+  { category: "Entertainment", amount: 543, fill: "#d0a2ff" },
+];
+
+const testimonials: Testimonial[] = [
   {
     name: "Avery Chen",
     role: "Product designer",
@@ -47,235 +115,366 @@ const testimonials = [
   },
 ];
 
-const pricingTiers = [
+const pricingTiers: PricingTier[] = [
   {
     name: "Starter",
     price: "$0",
     blurb: "For individual users exploring cash flow awareness.",
+    cta: "Choose plan",
   },
   {
     name: "Growth",
     price: "$12",
     blurb: "For proactive users who want deeper insights, forecasting, and advisor chat.",
+    cta: "Start Growth",
+    featured: true,
   },
   {
     name: "Plus",
     price: "$24",
     blurb: "For premium analytics, multi-account views, and advanced planning workflows.",
+    cta: "Choose plan",
   },
 ];
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
+const usd0 = (value: number) =>
+  new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(value);
+
+const usd2 = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+
+function LandingButton({
+  href,
+  children,
+  variant = "primary",
+  size = "default",
+  block = false,
+}: {
+  href: string;
+  children: React.ReactNode;
+  variant?: "primary" | "secondary" | "ghost";
+  size?: "default" | "large";
+  block?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={[
+        "wl-landing-btn",
+        `wl-landing-btn-${variant}`,
+        size === "large" ? "wl-landing-btn-lg" : "",
+        block ? "wl-landing-btn-block" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function Brand() {
+  return (
+    <Link href="/" className="wl-landing-brand" aria-label="WealthLens home">
+      <span className="wl-landing-brand-mark">
+        <Landmark size={20} aria-hidden="true" />
+      </span>
+      <span className="wl-landing-brand-word">WealthLens</span>
+    </Link>
+  );
+}
+
+function Header() {
+  return (
+    <header className="wl-landing-header">
+      <div className="wl-landing-header-inner">
+        <Brand />
+        <nav className="wl-landing-nav" aria-label="Landing page">
+          <Link href="#features">Features</Link>
+          <Link href="#intelligence">Intelligence</Link>
+          <Link href="#pricing">Pricing</Link>
+          <Link href="/demo">Demo</Link>
+        </nav>
+        <div className="wl-landing-header-cta">
+          <LandingButton href="/sign-in" variant="ghost">
+            Sign in
+          </LandingButton>
+          <LandingButton href="/demo">Get started</LandingButton>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Hero() {
+  return (
+    <section className="wl-landing-hero" id="top">
+      <div className="wl-landing-video-layer" aria-hidden="true">
+        <video src="/uploads/14968848_1920_1080_30fps.mp4" muted playsInline autoPlay loop preload="metadata" />
+        <div className="wl-landing-video-wash" />
+        <div className="wl-landing-brand-glow" />
+        <div className="wl-landing-grain" />
+      </div>
+
+      <div className="wl-landing-hero-content">
+        <div className="wl-landing-badge wl-landing-fade-rise">
+          <Sparkles size={14} aria-hidden="true" />
+          AI Financial Copilot
+        </div>
+        <h1 className="wl-landing-headline wl-landing-fade-rise wl-landing-d1">
+          Predict spending before it becomes <span>a problem.</span>
+        </h1>
+        <p className="wl-landing-desc wl-landing-fade-rise wl-landing-d2">
+          WealthLens connects your accounts, models your cash flow, and turns financial behavior into grounded, useful
+          advice before the risk hits.
+        </p>
+        <div className="wl-landing-cta-row wl-landing-fade-rise wl-landing-d3">
+          <LandingButton href="/demo" size="large">
+            Open product demo <ArrowRight className="wl-landing-arrow" size={16} aria-hidden="true" />
+          </LandingButton>
+          <LandingButton href="#pricing" variant="secondary" size="large">
+            View pricing
+          </LandingButton>
+        </div>
+
+        <div className="wl-landing-metrics wl-landing-fade-rise wl-landing-d4">
+          <div className="wl-landing-metric">
+            <div className="wl-landing-label">Current balance</div>
+            <div className="wl-landing-value">$8,420</div>
+            <div className="wl-landing-pill">Safe to spend $650</div>
+          </div>
+          <div className="wl-landing-metric">
+            <div className="wl-landing-label">Health score</div>
+            <div className="wl-landing-value">
+              82<span> / 100</span>
+            </div>
+            <div className="wl-landing-sub">
+              <span className="wl-landing-dot" /> Savings rate holding at 18.6%
+            </div>
+          </div>
+          <div className="wl-landing-metric">
+            <div className="wl-landing-label">Forecast signal</div>
+            <div className="wl-landing-value">11 days</div>
+            <div className="wl-landing-sub">
+              <span className="wl-landing-dot wl-landing-dot-warning" /> Low-balance risk detected early
+            </div>
+          </div>
+        </div>
+
+        <Link className="wl-landing-scroll-cue wl-landing-fade-rise wl-landing-d4" href="#features">
+          Explore
+          <ChevronDown size={18} aria-hidden="true" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function Features() {
+  return (
+    <section id="features" className="wl-landing-section wl-landing-section-alt">
+      <div className="wl-landing-wrap">
+        <div className="wl-landing-section-head">
+          <div className="wl-landing-overline">Features</div>
+          <h2 className="wl-landing-section-title">A full financial analyst layer over your daily money data.</h2>
+        </div>
+        <div className="wl-landing-feature-grid">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <article key={feature.title} className="wl-landing-panel wl-landing-feature">
+                <span className="wl-landing-feature-icon">
+                  <Icon size={22} aria-hidden="true" />
+                </span>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Intelligence() {
+  return (
+    <section id="intelligence" className="wl-landing-section">
+      <div className="wl-landing-wrap">
+        <div className="wl-landing-two-up">
+          <article className="wl-landing-panel wl-landing-intelligence-card">
+            <div className="wl-landing-overline">Subscription intelligence</div>
+            <h2 className="wl-landing-card-title">Recurring spend, annualized and easy to challenge.</h2>
+            <div className="wl-landing-subscription-list">
+              {subscriptions.map((subscription) => (
+                <div key={subscription.name} className="wl-landing-sub-row">
+                  <div>
+                    <div className="wl-landing-sub-name">{subscription.name}</div>
+                    <div className="wl-landing-sub-note">{subscription.note}</div>
+                  </div>
+                  <div>
+                    <div className="wl-landing-sub-cost">{usd2(subscription.monthlyCost)}</div>
+                    <div className="wl-landing-sub-year">{usd2(subscription.yearlyCost)} yearly</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="wl-landing-panel wl-landing-intelligence-card">
+            <div className="wl-landing-overline">Spending mix</div>
+            <h2 className="wl-landing-card-title">See where spending pressure is actually forming.</h2>
+            <div className="wl-landing-mix-grid">
+              {spendingBreakdown.map((item) => (
+                <div key={item.category} className="wl-landing-mix">
+                  <div className="wl-landing-mix-cat">
+                    <span className="wl-landing-swatch" style={{ background: item.fill }} />
+                    {item.category}
+                  </div>
+                  <div className="wl-landing-mix-amount">{usd0(item.amount)}</div>
+                </div>
+              ))}
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  return (
+    <section className="wl-landing-section wl-landing-section-alt">
+      <div className="wl-landing-wrap">
+        <div className="wl-landing-testimonial-top">
+          <div className="wl-landing-section-head">
+            <div className="wl-landing-overline">Testimonials</div>
+            <h2 className="wl-landing-section-title">Built for people who want clarity without spreadsheet fatigue.</h2>
+          </div>
+          <div className="wl-landing-chip">
+            <CircleDollarSign size={16} aria-hidden="true" />
+            Mock user stories for MVP positioning
+          </div>
+        </div>
+        <div className="wl-landing-testimonial-grid">
+          {testimonials.map((testimonial) => (
+            <article key={testimonial.name} className="wl-landing-panel wl-landing-testimonial-card">
+              <p>{testimonial.quote}</p>
+              <div>
+                <div className="wl-landing-testimonial-name">{testimonial.name}</div>
+                <div className="wl-landing-testimonial-role">{testimonial.role}</div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Pricing() {
+  return (
+    <section id="pricing" className="wl-landing-section">
+      <div className="wl-landing-wrap">
+        <div className="wl-landing-price-head">
+          <div className="wl-landing-overline">Pricing</div>
+          <h2 className="wl-landing-section-title">Simple plans for a product that earns trust with numbers.</h2>
+        </div>
+        <div className="wl-landing-price-grid">
+          {pricingTiers.map((tier) => (
+            <article
+              key={tier.name}
+              className={`wl-landing-panel wl-landing-tier${tier.featured ? " wl-landing-tier-featured" : ""}`}
+            >
+              <div className="wl-landing-tier-name">
+                {tier.name}
+                {tier.featured ? <span>Popular</span> : null}
+              </div>
+              <div className="wl-landing-price">
+                <span>{tier.price}</span>
+                <span>/ month</span>
+              </div>
+              <p>{tier.blurb}</p>
+              <LandingButton href="/demo" variant={tier.featured ? "primary" : "secondary"} block>
+                {tier.cta}
+              </LandingButton>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function GetStarted() {
+  return (
+    <section id="demo" className="wl-landing-section wl-landing-getstarted">
+      <div className="wl-landing-wrap">
+        <div className="wl-landing-panel">
+          <div className="wl-landing-getstarted-grid">
+            <div>
+              <div className="wl-landing-overline">Get started</div>
+              <h2>Move from reactive budgeting to proactive financial control.</h2>
+              <p>
+                Connect your accounts, sync transaction history, and let WealthLens explain what is changing before it
+                becomes expensive.
+              </p>
+            </div>
+            <div className="wl-landing-actions">
+              <LandingButton href="/dashboard" size="large">
+                Explore dashboard <ArrowRight className="wl-landing-arrow" size={16} aria-hidden="true" />
+              </LandingButton>
+              <LandingButton href="/financial-health" variant="secondary" size="large">
+                View health score
+              </LandingButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="wl-landing-footer">
+      <div className="wl-landing-footer-inner">
+        <Brand />
+        <div className="wl-landing-footer-links">
+          <Link href="#features">Features</Link>
+          <Link href="#intelligence">Intelligence</Link>
+          <Link href="#pricing">Pricing</Link>
+          <Link href="/demo">Demo</Link>
+          <Link href="/settings">Privacy</Link>
+        </div>
+        <div className="wl-landing-copy">2026 WealthLens / AI financial copilot</div>
+      </div>
+    </footer>
+  );
 }
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(44,194,156,0.2),transparent_24%),radial-gradient(circle_at_top_right,rgba(76,125,255,0.18),transparent_22%),#07111f] text-white">
-      <SiteHeader />
-
+    <div className="wl-landing">
+      <Header />
       <main>
-        <section className="mx-auto max-w-7xl px-6 pb-20 pt-14 lg:px-8 lg:pt-20">
-          <div className="grid gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">
-                <Sparkles className="size-4 text-[var(--color-accent)]" />
-                AI Financial Copilot
-              </div>
-              <h1 className="mt-8 max-w-3xl text-5xl font-semibold leading-[1.02] tracking-tight text-white lg:text-7xl">
-                Predict spending before it becomes a problem.
-              </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-                WealthLens connects your accounts, models your cash flow, and turns financial behavior into grounded, useful advice before the risk hits.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button asChild className="h-12">
-                  <Link href="/demo">
-                    Open product demo
-                    <ArrowRight className="ml-2 size-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="secondary" className="h-12">
-                  <Link href="#pricing">View pricing</Link>
-                </Button>
-              </div>
-            </div>
-
-            <Panel className="overflow-hidden p-6 lg:p-8">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-[28px] border border-white/8 bg-white/5 p-5">
-                  <div className="text-sm text-slate-400">Current balance</div>
-                  <div className="mt-4 text-3xl font-semibold text-white">{formatCurrency(overview.currentBalance)}</div>
-                  <div className="mt-6 rounded-full bg-emerald-300/14 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
-                    Safe to spend {formatCurrency(overview.safeToSpend)}
-                  </div>
-                </div>
-                <div className="rounded-[28px] border border-white/8 bg-white/5 p-5">
-                  <div className="text-sm text-slate-400">Health score</div>
-                  <div className="mt-4 flex items-end gap-3">
-                    <div className="text-4xl font-semibold text-white">{overview.healthScore}</div>
-                    <div className="pb-2 text-sm text-slate-400">out of 100</div>
-                  </div>
-                  <div className="mt-6 text-sm text-slate-300">Savings rate is holding at {overview.savingsRate}% this month.</div>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-[28px] border border-white/8 bg-[#091120] p-5">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Insight preview</div>
-                <div className="mt-4 space-y-3">
-                  {insights.map((insight) => (
-                    <div key={insight.title} className="rounded-2xl border border-white/8 bg-white/4 p-4">
-                      <div className="font-medium text-white">{insight.title}</div>
-                      <div className="mt-2 text-sm leading-6 text-slate-300">{insight.summary}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Panel>
-          </div>
-        </section>
-
-        <section id="features" className="border-t border-white/6 bg-black/12">
-          <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-            <div className="max-w-2xl">
-              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Features</div>
-              <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">A full financial analyst layer over your daily money data.</h2>
-            </div>
-            <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {features.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <Panel key={feature.title} className="p-5">
-                    <span className="flex size-12 items-center justify-center rounded-2xl bg-white/8">
-                      <Icon className="size-5 text-[var(--color-accent)]" />
-                    </span>
-                    <h3 className="mt-6 text-xl font-semibold text-white">{feature.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-300">{feature.description}</p>
-                  </Panel>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-            <Panel className="p-6">
-              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Subscription intelligence</div>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">Recurring spend, annualized and easy to challenge.</h2>
-              <div className="mt-8 space-y-4">
-                {subscriptions.map((subscription) => (
-                  <div key={subscription.name} className="flex items-center justify-between rounded-[24px] border border-white/8 bg-white/4 px-4 py-4">
-                    <div>
-                      <div className="font-medium text-white">{subscription.name}</div>
-                      <div className="mt-1 text-sm text-slate-400">{subscription.note}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium text-white">{formatCurrency(subscription.monthlyCost)}</div>
-                      <div className="mt-1 text-sm text-slate-400">{formatCurrency(subscription.yearlyCost)} yearly</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Panel>
-
-            <Panel className="p-6">
-              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Spending mix</div>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">See where spending pressure is actually forming.</h2>
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {spendingBreakdown.map((item) => (
-                  <div key={item.category} className="rounded-[24px] border border-white/8 bg-white/4 p-5">
-                    <div className="flex items-center gap-3 text-sm text-slate-300">
-                      <span className="size-3 rounded-full" style={{ backgroundColor: item.fill }} />
-                      {item.category}
-                    </div>
-                    <div className="mt-5 text-3xl font-semibold text-white">{formatCurrency(item.amount)}</div>
-                  </div>
-                ))}
-              </div>
-            </Panel>
-          </div>
-        </section>
-
-        <section className="border-t border-white/6 bg-black/12">
-          <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Testimonials</div>
-                <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">Built for people who want clarity without spreadsheet fatigue.</h2>
-              </div>
-              <div className="flex items-center gap-2 rounded-full border border-white/8 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                <CircleDollarSign className="size-4 text-[var(--color-accent)]" />
-                Mock user stories for MVP positioning
-              </div>
-            </div>
-            <div className="mt-10 grid gap-4 lg:grid-cols-3">
-              {testimonials.map((testimonial) => (
-                <Panel key={testimonial.name} className="p-6">
-                  <p className="text-base leading-8 text-slate-100">{testimonial.quote}</p>
-                  <div className="mt-8">
-                    <div className="font-medium text-white">{testimonial.name}</div>
-                    <div className="mt-1 text-sm text-slate-400">{testimonial.role}</div>
-                  </div>
-                </Panel>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="pricing" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-          <div className="text-center">
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Pricing</div>
-            <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">Simple plans for a product that earns trust with numbers.</h2>
-          </div>
-          <div className="mt-10 grid gap-4 lg:grid-cols-3">
-            {pricingTiers.map((tier, index) => (
-              <Panel key={tier.name} className={index === 1 ? "border-emerald-300/18 p-6" : "p-6"}>
-                <div className="text-sm font-medium text-slate-300">{tier.name}</div>
-                <div className="mt-4 flex items-end gap-2">
-                  <div className="text-5xl font-semibold text-white">{tier.price}</div>
-                  <div className="pb-2 text-sm text-slate-400">/ month</div>
-                </div>
-                <p className="mt-4 text-sm leading-7 text-slate-300">{tier.blurb}</p>
-                <Button className="mt-8 h-12 w-full" variant={index === 1 ? "primary" : "secondary"}>
-                  {index === 1 ? "Start Growth" : "Choose plan"}
-                </Button>
-              </Panel>
-            ))}
-          </div>
-        </section>
-
-        <section className="pb-20">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <Panel className="overflow-hidden p-8 lg:p-10">
-              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Get started</div>
-                  <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">Move from reactive budgeting to proactive financial control.</h2>
-                  <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-                    Connect your accounts, sync transaction history, and let WealthLens explain what is changing before it becomes expensive.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-                  <Button asChild className="h-12">
-                    <Link href="/demo">
-                      Explore dashboard
-                      <ArrowRight className="ml-2 size-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="secondary" className="h-12">
-                    <Link href="/demo">View health score</Link>
-                  </Button>
-                </div>
-              </div>
-            </Panel>
-          </div>
-        </section>
+        <Hero />
+        <Features />
+        <Intelligence />
+        <Testimonials />
+        <Pricing />
+        <GetStarted />
       </main>
+      <Footer />
     </div>
   );
 }
