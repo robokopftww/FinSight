@@ -52,13 +52,19 @@ persisted instead, so a snapshot is always written.
 | Endpoint | Source | Fallback |
 | --- | --- | --- |
 | `GET /api/subscriptions` | DB (`Subscription` rows) | live `detectSubscriptions` if no rows |
-| `GET /api/dashboard/overview` | latest `FinancialScore` + `Forecast` + `Insight` | live compute if no snapshot |
-| `GET /api/financial-health` | latest `FinancialScore` | live compute if no snapshot |
 | `GET /api/forecast` | latest `Forecast` | live compute if no snapshot |
+| `GET /api/financial-health` | live (unchanged) | — |
+| `GET /api/dashboard/overview` | live (unchanged) | — |
 
 The existing live-compute functions are kept as the fallback path, so the app
 still works for users who have never synced (e.g. demo / mock-data mode). No page
 breaks if the snapshot is missing.
+
+`financial-health` and `dashboard` stay on their live paths: both surface rich
+fields (factors, recommendations, AI insight merge) that the snapshot tables do
+not store. Their rows are still persisted on sync, so the schema is honest and a
+future round can add the missing columns and switch the reads. Forecast and
+subscriptions switch to stored-first now because their stored shape is complete.
 
 ## Schema change
 
