@@ -11,6 +11,7 @@ import {
 } from "../../lib/financial-analytics.js";
 import { persistAnalyticsSnapshot } from "../../lib/analytics-persistence.js";
 import { getPlaidClient, isPlaidConfigured } from "../../lib/plaid.js";
+import { deleteOwnedPlaidItem } from "../../lib/plaid-items.js";
 import { prisma } from "../../lib/prisma.js";
 
 const exchangeTokenSchema = z.object({
@@ -47,8 +48,17 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
       return reply;
     }
 
-    const [itemsCount, accountsCount, transactionsCount] = await Promise.all([
-      prisma.plaidItem.count({ where: { userId: user.id } }),
+    const [plaidItems, accountsCount, transactionsCount] = await Promise.all([
+      prisma.plaidItem.findMany({
+        where: { userId: user.id },
+        select: {
+          id: true,
+          institutionName: true,
+          lastSyncedAt: true,
+          _count: { select: { accounts: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
       prisma.account.count({ where: { userId: user.id } }),
       prisma.transaction.count({ where: { userId: user.id } }),
     ]);
@@ -57,10 +67,48 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
       configured: isPlaidConfigured(),
       environment: env.PLAID_ENV,
       connected: accountsCount > 0,
-      itemsCount,
+      itemsCount: plaidItems.length,
       accountsCount,
       transactionsCount,
+      institutions: plaidItems.map((item) => ({
+        id: item.id,
+        name: item.institutionName,
+        accountsCount: item._count.accounts,
+        lastSyncedAt: item.lastSyncedAt,
+      })),
     });
+  });
+
+  app.delete("/api/plaid/items/:itemId", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const { itemId } = request.params as { itemId: string };
+    let deleted;
+
+    try {
+      const plaid = getPlaidClient();
+      deleted = await deleteOwnedPlaidItem(prisma, user.id, itemId, (accessToken) =>
+        plaid.itemRemove({ access_token: accessToken }),
+      );
+    } catch (error) {
+      const plaidError = getPlaidError(error);
+      request.log.warn({ plaidError, itemId }, "Plaid item removal failed");
+
+      return reply.status(409).send({
+        error: "Unable to disconnect this institution from Plaid right now.",
+        plaidErrorCode: plaidError.code,
+      });
+    }
+
+    if (!deleted) {
+      return reply.status(404).send({ error: "Connected institution not found" });
+    }
+
+    return reply.send({ disconnected: true, itemId: deleted.id });
   });
 
   app.post("/api/plaid/link-token", async (request, reply) => {

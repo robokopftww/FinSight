@@ -34,6 +34,12 @@ type SettingsStatus = {
     institutions: string[];
     lastSyncedAt: string | null;
     latestTransactionAt: string | null;
+    institutionConnections: Array<{
+      id: string;
+      name: string;
+      accountsCount: number;
+      lastSyncedAt: string | null;
+    }>;
   };
   ai: {
     online: boolean;
@@ -215,16 +221,16 @@ export function SettingsControlCenter() {
     );
   }
 
-  async function disconnectPlaid() {
-    if (!window.confirm("Disconnect Plaid and remove synced accounts, transactions, and detected subscriptions for this user?")) {
+  async function disconnectInstitution(institution: SettingsStatus["plaid"]["institutionConnections"][number]) {
+    if (!window.confirm(`Disconnect ${institution.name} and remove its synced accounts and transactions?`)) {
       return;
     }
 
     await runAction(
       "disconnecting",
-      "/api/settings/plaid-connection",
+      `/api/plaid/items/${institution.id}`,
       { method: "DELETE" },
-      "Plaid connection removed for this user.",
+      `${institution.name} disconnected. Other institutions remain connected.`,
     );
   }
 
@@ -298,10 +304,28 @@ export function SettingsControlCenter() {
                 {action === "syncing" ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
                 Sync transactions
               </Button>
-              <Button type="button" variant="secondary" onClick={disconnectPlaid} disabled={busy || !status.plaid.connected} className="gap-2">
-                {action === "disconnecting" ? <Loader2 className="size-4 animate-spin" /> : <Unplug className="size-4" />}
-                Disconnect bank
-              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {status.plaid.institutionConnections.map((institution) => (
+                <div key={institution.id} className="flex flex-col gap-3 rounded-[24px] border border-white/8 bg-white/4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="font-medium text-white">{institution.name}</div>
+                    <div className="mt-1 text-sm text-slate-400">
+                      {institution.accountsCount} account{institution.accountsCount === 1 ? "" : "s"} · Last synced {formatDate(institution.lastSyncedAt)}
+                    </div>
+                  </div>
+                  <Button type="button" variant="secondary" onClick={() => void disconnectInstitution(institution)} disabled={busy} className="gap-2">
+                    {action === "disconnecting" ? <Loader2 className="size-4 animate-spin" /> : <Unplug className="size-4" />}
+                    Disconnect
+                  </Button>
+                </div>
+              ))}
+              {status.plaid.institutionConnections.length === 0 ? (
+                <div className="rounded-[24px] border border-white/8 bg-white/4 p-4 text-sm text-slate-400">
+                  No institutions connected yet. Add one from the dashboard.
+                </div>
+              ) : null}
             </div>
           </div>
         </Panel>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Landmark, Loader2, RefreshCcw, ShieldCheck, Unplug } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Landmark, Loader2, Plus, RefreshCcw, ShieldCheck } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { usePlaidLink } from "react-plaid-link";
 
@@ -47,6 +47,7 @@ export function BankConnectionPanel() {
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const openWhenReady = useRef(false);
 
   const refreshStatus = useCallback(async () => {
     if (!isSignedIn) {
@@ -102,6 +103,7 @@ export function BankConnectionPanel() {
           setMessage("Account connected and transactions synced.");
         }
 
+        setLinkToken(null);
         await refreshStatus();
       } catch (error) {
         setMessage(error instanceof Error ? error.message : "Unable to connect bank account");
@@ -110,6 +112,13 @@ export function BankConnectionPanel() {
       }
     },
   });
+
+  useEffect(() => {
+    if (openWhenReady.current && linkToken && plaid.ready) {
+      openWhenReady.current = false;
+      plaid.open();
+    }
+  }, [linkToken, plaid]);
 
   async function createLinkToken() {
     setLoading(true);
@@ -134,7 +143,7 @@ export function BankConnectionPanel() {
 
       const body = (await response.json()) as { linkToken: string };
       setLinkToken(body.linkToken);
-      setMessage("Plaid Link is ready. Click Connect again to open it.");
+      setMessage("Opening Plaid Link...");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to start Plaid Link");
     } finally {
@@ -167,32 +176,12 @@ export function BankConnectionPanel() {
     }
   }
 
-  async function disconnectBank() {
-    if (!window.confirm("Disconnect this bank and remove synced accounts and transactions for this user?")) {
-      return;
-    }
-
-    setLoading(true);
-    setMessage("Disconnecting bank...");
-
-    try {
-      const token = await getToken();
-      const response = await authenticatedFetch("/api/settings/plaid-connection", token, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(body?.error ?? "Unable to disconnect bank");
-      }
-
-      setLinkToken(null);
-      setMessage("Bank disconnected. You can now connect again.");
-      await refreshStatus();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to disconnect bank");
-    } finally {
-      setLoading(false);
+  function openOrCreateLink() {
+    if (linkToken && plaid.ready) {
+      plaid.open();
+    } else {
+      openWhenReady.current = true;
+      void createLinkToken();
     }
   }
 
@@ -233,24 +222,14 @@ export function BankConnectionPanel() {
                 {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <RefreshCcw className="mr-2 size-4" />}
                 Sync
               </Button>
-              <Button type="button" variant="secondary" onClick={disconnectBank} disabled={loading}>
-                <Unplug className="mr-2 size-4" />
-                Disconnect
+              <Button type="button" variant="secondary" onClick={openOrCreateLink} disabled={loading}>
+                <Plus className="mr-2 size-4" />
+                Add another institution
               </Button>
             </>
           ) : (
-            <Button
-              type="button"
-              onClick={() => {
-                if (linkToken && plaid.ready) {
-                  plaid.open();
-                } else {
-                  void createLinkToken();
-                }
-              }}
-              disabled={loading}
-            >
-              {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Unplug className="mr-2 size-4" />}
+            <Button type="button" onClick={openOrCreateLink} disabled={loading}>
+              {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Landmark className="mr-2 size-4" />}
               Connect bank
             </Button>
           )}

@@ -48,9 +48,11 @@ export async function registerRoutes(app: FastifyInstance) {
       prisma.plaidItem.findMany({
         where: { userId: user.id },
         select: {
+          id: true,
           institutionName: true,
           lastSyncedAt: true,
           createdAt: true,
+          _count: { select: { accounts: true } },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -92,6 +94,12 @@ export async function registerRoutes(app: FastifyInstance) {
         accountsCount,
         transactionsCount,
         institutions: plaidItems.map((item) => item.institutionName),
+        institutionConnections: plaidItems.map((item) => ({
+          id: item.id,
+          name: item.institutionName,
+          accountsCount: item._count.accounts,
+          lastSyncedAt: item.lastSyncedAt,
+        })),
         lastSyncedAt: latestAccount?.lastSyncedAt ?? plaidItems[0]?.lastSyncedAt ?? null,
         latestTransactionAt: latestTransaction?.occurredAt ?? null,
       },
