@@ -2,11 +2,13 @@ import { ArrowRight, Bot, Sparkles } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 
 import { AppShell } from "@/components/app-shell";
+import { BalanceCard } from "@/components/balance-card";
 import { BankConnectionPanel } from "@/components/bank-connection-panel";
 import { CashFlowChart } from "@/components/charts/cash-flow-chart";
 import { SpendingBreakdownChart } from "@/components/charts/spending-breakdown-chart";
 import { InsightCard } from "@/components/insight-card";
 import { MetricCard } from "@/components/metric-card";
+import { OnboardingModal } from "@/components/onboarding-modal";
 import { Panel } from "@/components/ui/panel";
 import { getDashboardOverview } from "@/lib/api";
 
@@ -28,23 +30,43 @@ export default async function DashboardPage() {
 
   return (
     <AppShell currentPath="/dashboard" eyebrow="Financial overview" title="See your cash flow before it becomes a problem">
+      <OnboardingModal />
       <BankConnectionPanel />
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Current balance" value={formatCurrency(data.currentBalance)} delta={data.metricCopy?.currentBalance ?? "Synced balance"} />
-        <MetricCard
-          label="Monthly spending"
-          value={formatCurrency(data.monthlySpending)}
-          delta={data.metricCopy?.monthlySpending ?? "Based on synced transactions"}
-          trend="down"
+      <section className="grid gap-4 xl:grid-cols-[1.6fr_1fr_1fr]">
+        <BalanceCard
+          currentBalance={data.currentBalance}
+          monthOverMonthChange={data.monthOverMonthChange}
+          balanceTrend={data.balanceTrend}
+          accountsBreakdown={data.accountsBreakdown}
         />
-        <MetricCard label="Monthly income" value={formatCurrency(data.monthlyIncome)} delta={data.metricCopy?.monthlyIncome ?? "Detected from inflows"} />
+        <MetricCard
+          label={data.incomeCard?.label ?? "Monthly income"}
+          value={formatCurrency(data.incomeCard?.value ?? data.monthlyIncome)}
+          delta={data.incomeCard?.subtitle ?? "Detected from inflows"}
+          trend={(data.incomeCard?.value ?? data.monthlyIncome) >= 0 ? "up" : "down"}
+        />
         <MetricCard
           label="Savings rate"
           value={formatSavingsRate(data)}
           delta={data.metricCopy?.savingsRate ?? "Income minus spending"}
           trend={data.savingsRate < 0 ? "down" : "up"}
         />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <MetricCard
+          label="This month's spending"
+          value={formatCurrency(data.spendingThisMonth ?? data.monthlySpending)}
+          delta={(data.spendingThisMonth ?? 0) > (data.spendingAvgMonthly ?? 0) ? "Above your average" : "At or below average"}
+          trend={(data.spendingThisMonth ?? 0) > (data.spendingAvgMonthly ?? 0) ? "down" : "up"}
+        />
+        <MetricCard
+          label="This year (YTD)"
+          value={formatCurrency(data.spendingYearToDate ?? 0)}
+          delta={`Across ${data.monthsOfHistory ?? 0} month${(data.monthsOfHistory ?? 0) === 1 ? "" : "s"}`}
+        />
+        <MetricCard label="Average / month" value={formatCurrency(data.spendingAvgMonthly ?? 0)} delta="Baseline pace" />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">

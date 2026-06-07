@@ -31,6 +31,24 @@ export type DashboardOverview = {
     monthlyIncome: string;
     savingsRate: string;
   };
+  incomeMode?: "income" | "surplus";
+  incomeCard?: { label: string; value: number; subtitle: string };
+  netCashFlow?: number;
+  spendingThisMonth?: number;
+  spendingYearToDate?: number;
+  spendingAvgMonthly?: number;
+  monthsOfHistory?: number;
+  monthOverMonthChange?: { amount: number; percent: number } | null;
+  balanceTrend?: Array<{ label: string; balance: number }>;
+  accountsBreakdown?: Array<{ name: string; mask: string | null; currentBalance: number }>;
+};
+
+export type UserProfile = {
+  employmentStatus: "employed" | "unemployed" | "unknown";
+  jobTitle: string | null;
+  grossPay: number | null;
+  payFrequency: "weekly" | "biweekly" | "semimonthly" | "monthly" | "annually" | null;
+  onboardedAt: string | null;
 };
 
 export type TransactionCategoryOption = {
@@ -152,6 +170,36 @@ export async function getDashboardOverview(token?: string | null) {
     forecast: cashFlowForecast,
     insightHighlights: insights,
   }, token);
+}
+
+export async function getProfile(token?: string | null) {
+  return getJson<UserProfile>(
+    "/api/profile",
+    { employmentStatus: "unknown", jobTitle: null, grossPay: null, payFrequency: null, onboardedAt: null },
+    token,
+  );
+}
+
+export async function updateProfile(profile: Partial<UserProfile>, token: string | null) {
+  if (!apiBaseUrl) {
+    throw new Error("API base URL is not configured");
+  }
+
+  const response = await fetch(`${apiBaseUrl}/api/profile`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    cache: "no-store",
+    body: JSON.stringify(profile),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update profile");
+  }
+
+  return (await response.json()) as UserProfile;
 }
 
 export async function getTransactions(token?: string | null) {
