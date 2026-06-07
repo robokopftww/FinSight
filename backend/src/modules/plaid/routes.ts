@@ -191,6 +191,13 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
       let cursor = plaidItem.transactionsCursor ?? undefined;
       let hasMore = true;
 
+      // Account → id map is stable for the duration of a sync, so fetch it once
+      // per item instead of on every page.
+      const accounts = await prisma.account.findMany({
+        where: { itemId: plaidItem.id },
+      });
+      const accountIdByPlaidId = new Map(accounts.map((account) => [account.plaidAccountId, account.id]));
+
       while (hasMore) {
         let response;
 
@@ -214,19 +221,22 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
           });
         }
 
-        const accounts = await prisma.account.findMany({
-          where: { itemId: plaidItem.id },
-        });
-        const accountIdByPlaidId = new Map(accounts.map((account) => [account.plaidAccountId, account.id]));
+        const addable = response.data.added.filter((transaction) => accountIdByPlaidId.has(transaction.account_id));
 
-        for (const transaction of response.data.added) {
-          const accountId = accountIdByPlaidId.get(transaction.account_id);
-
-          if (!accountId) {
-            continue;
-          }
-
+        await runInChunks(addable, 10, async (transaction) => {
+          const accountId = accountIdByPlaidId.get(transaction.account_id)!;
           const category = mapTransactionCategory(transaction);
+          const fields = {
+            merchantName: transaction.merchant_name,
+            description: transaction.name,
+            amount: Math.abs(transaction.amount),
+            direction: transaction.amount >= 0 ? "outflow" : "inflow",
+            categoryPrimary: category.primary,
+            categoryDetailed: category.detailed,
+            occurredAt: new Date(transaction.date),
+            pending: transaction.pending,
+            raw: toJson(transaction),
+          };
 
           await prisma.transaction.upsert({
             where: { plaidTransactionId: transaction.transaction_id },
@@ -234,32 +244,14 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
               userId: user.id,
               accountId,
               plaidTransactionId: transaction.transaction_id,
-              merchantName: transaction.merchant_name,
-              description: transaction.name,
-              amount: Math.abs(transaction.amount),
-              direction: transaction.amount >= 0 ? "outflow" : "inflow",
-              categoryPrimary: category.primary,
-              categoryDetailed: category.detailed,
-              occurredAt: new Date(transaction.date),
-              pending: transaction.pending,
-              raw: toJson(transaction),
+              ...fields,
             },
-            update: {
-              merchantName: transaction.merchant_name,
-              description: transaction.name,
-              amount: Math.abs(transaction.amount),
-              direction: transaction.amount >= 0 ? "outflow" : "inflow",
-              categoryPrimary: category.primary,
-              categoryDetailed: category.detailed,
-              occurredAt: new Date(transaction.date),
-              pending: transaction.pending,
-              raw: toJson(transaction),
-            },
+            update: fields,
           });
-          addedCount += 1;
-        }
+        });
+        addedCount += addable.length;
 
-        for (const transaction of response.data.modified) {
+        await runInChunks(response.data.modified, 10, async (transaction) => {
           const category = mapTransactionCategory(transaction);
 
           await prisma.transaction.updateMany({
@@ -279,17 +271,21 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
               raw: toJson(transaction),
             },
           });
-          modifiedCount += 1;
-        }
+        });
+        modifiedCount += response.data.modified.length;
 
-        for (const transaction of response.data.removed) {
-          await prisma.transaction.deleteMany({
+        const removedIds = response.data.removed
+          .map((transaction) => transaction.transaction_id)
+          .filter((id): id is string => Boolean(id));
+
+        if (removedIds.length) {
+          const deleted = await prisma.transaction.deleteMany({
             where: {
               userId: user.id,
-              plaidTransactionId: transaction.transaction_id,
+              plaidTransactionId: { in: removedIds },
             },
           });
-          removedCount += 1;
+          removedCount += deleted.count;
         }
 
         cursor = response.data.next_cursor;
@@ -311,6 +307,13 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
       removedCount,
     });
   });
+}
+
+async function runInChunks<T>(items: T[], size: number, task: (item: T) => Promise<void>) {
+  for (let index = 0; index < items.length; index += size) {
+    const chunk = items.slice(index, index + size);
+    await Promise.all(chunk.map(task));
+  }
 }
 
 function getPlaidError(error: unknown) {

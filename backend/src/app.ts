@@ -2,6 +2,8 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import type { OriginFunction } from "@fastify/cors";
 import helmet from "@fastify/helmet";
+import rateLimit from "@fastify/rate-limit";
+import { getAuth } from "@clerk/fastify";
 import { clerkPlugin } from "@clerk/fastify";
 
 import { env } from "./config/env.js";
@@ -32,6 +34,28 @@ export async function buildServer() {
     });
   }
 
+  // Global rate limit. Keyed per Clerk user when authenticated, else per IP.
+  // Registered after Clerk so getAuth can resolve the user. Per-route overrides
+  // (e.g. the LLM-backed advisor/report routes) tighten this further.
+  await app.register(rateLimit, {
+    global: true,
+    max: 120,
+    timeWindow: "1 minute",
+    keyGenerator: (request) => {
+      if (env.CLERK_SECRET_KEY) {
+        try {
+          const auth = getAuth(request);
+          if (auth.userId) {
+            return `user:${auth.userId}`;
+          }
+        } catch {
+          // getAuth can throw if Clerk has not processed the request yet.
+        }
+      }
+      return request.ip;
+    },
+  });
+
   await registerAuthRoutes(app);
   await registerPlaidRoutes(app);
   await registerRoutes(app);
@@ -41,7 +65,12 @@ export async function buildServer() {
 
 function buildCorsOrigin(): OriginFunction {
   const configuredOrigin = env.FRONTEND_URL.replace(/\/$/, "");
-  const allowedOrigins = new Set([env.FRONTEND_URL, configuredOrigin]);
+  const extraOrigins = (env.CORS_EXTRA_ORIGINS ?? "")
+    .split(",")
+    .map((value) => value.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+  const allowedOrigins = new Set([env.FRONTEND_URL, configuredOrigin, ...extraOrigins]);
+  const originRegex = new RegExp(env.CORS_ORIGIN_REGEX);
 
   return (origin: string | undefined, callback: (error: Error | null, allow: boolean) => void) => {
     if (!origin) {
@@ -50,8 +79,7 @@ function buildCorsOrigin(): OriginFunction {
     }
 
     const normalizedOrigin = origin.replace(/\/$/, "");
-    const isAllowedVercelDeployment = /^https:\/\/fin-sight-frontend-[a-z0-9-]+\.vercel\.app$/.test(normalizedOrigin);
 
-    callback(null, allowedOrigins.has(normalizedOrigin) || isAllowedVercelDeployment);
+    callback(null, allowedOrigins.has(normalizedOrigin) || originRegex.test(normalizedOrigin));
   };
 }

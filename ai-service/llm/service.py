@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any
 
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "gemini-2.5-flash"
 
@@ -124,6 +127,7 @@ def _generate_text(prompt: str) -> str | None:
 
         return " ".join(text.strip().split())
     except Exception:
+        logger.exception("Gemini text generation failed; falling back to deterministic output")
         return None
 
 

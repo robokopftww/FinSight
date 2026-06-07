@@ -49,8 +49,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate Prisma client
+        run: npm run db:generate --workspace backend
+
       - name: Typecheck backend
         run: npm run typecheck:backend
+
+      - name: Test backend
+        run: npm run test:backend
 
       - name: Build backend
         run: npm run build:backend

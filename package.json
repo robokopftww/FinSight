@@ -14,6 +14,7 @@
     "build:backend": "npm run build --workspace backend",
     "lint:frontend": "npm run lint --workspace frontend",
     "typecheck:backend": "npm run typecheck --workspace backend",
+    "test:backend": "npm run test --workspace backend",
     "test:ai": "cd ai-service && python -m pytest"
   }
 }
