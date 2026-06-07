@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-07
 **Status:** Approved (design)
-**Context:** FinSight currently recomputes the financial score, forecast, insights,
+**Context:** WealthLens currently recomputes the financial score, forecast, insights,
 and subscriptions on every request and never writes the matching Prisma models
 (`FinancialScore`, `Forecast`, `Insight`, `Subscription`). Those tables are dead,
 and the settings "delete data" actions clear empty tables. This work makes the

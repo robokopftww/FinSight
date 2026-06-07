@@ -209,8 +209,8 @@ export function BankConnectionPanel() {
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-300">
               {connected
-                ? "FinSight can now use synced accounts and transactions as the source for forecasts, scoring, and AI insights."
-                : `Connect a ${plaidEnvironment === "production" ? "bank account" : "Plaid sandbox account"} so FinSight can replace demo data with real account, balance, and transaction records.`}
+                ? "WealthLens can now use synced accounts and transactions as the source for forecasts, scoring, and AI insights."
+                : `Connect a ${plaidEnvironment === "production" ? "bank account" : "Plaid sandbox account"} so WealthLens can replace demo data with real account, balance, and transaction records.`}
             </p>
           </div>
         </div>

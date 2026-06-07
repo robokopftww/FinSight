@@ -18,7 +18,7 @@ export function SiteHeader() {
           <span className="flex size-9 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
             F
           </span>
-          FinSight
+          WealthLens
         </Link>
         <nav className="hidden items-center gap-2 md:flex">
           {links.map((link) => (

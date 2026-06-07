@@ -34,7 +34,7 @@ const editableCategories = [
 export async function registerRoutes(app: FastifyInstance) {
   app.get("/health", async () => ({
     status: "ok",
-    service: "finsight-backend",
+    service: "wealthlens-backend",
   }));
 
   app.get("/api/settings/status", async (request, reply) => {
@@ -983,7 +983,7 @@ async function getAiRuntimeStatus() {
 
     return {
       online: true,
-      service: body.service ?? "finsight-ai-service",
+      service: body.service ?? "wealthlens-ai-service",
       analytics: "python-analytics-v1",
       llmProvider: body.llm?.provider ?? "gemini",
       llmModel: body.llm?.model ?? "gemini-2.5-flash",

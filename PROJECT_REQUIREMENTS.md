@@ -1,8 +1,8 @@
-# FinSight Product Requirements
+# WealthLens Product Requirements
 
 ## Vision
 
-FinSight is an AI financial copilot for college students, young professionals, and first-time budgeters who want proactive help managing money.
+WealthLens is an AI financial copilot for college students, young professionals, and first-time budgeters who want proactive help managing money.
 
 The product should feel like a modern startup SaaS platform, not a classroom prototype.
 

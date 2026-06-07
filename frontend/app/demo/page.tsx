@@ -95,7 +95,7 @@ export default function DemoPage() {
   const maxWeeklySpend = Math.max(...weeklySpend.map((day) => day.amount), 1);
 
   return (
-    <AppShell currentPath="/demo" eyebrow="Recruiter-ready demo" title="Explore FinSight with polished sample data" demoMode>
+    <AppShell currentPath="/demo" eyebrow="Recruiter-ready demo" title="Explore WealthLens with polished sample data" demoMode>
       <Panel className="p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3">
@@ -196,7 +196,7 @@ export default function DemoPage() {
             </div>
             <div className="max-w-2xl rounded-3xl border border-white/8 bg-white/6 px-4 py-4 text-sm leading-7 text-slate-100">
               A $400 purchase is affordable based on your forecast. Your safe-to-spend buffer would move from $650 to $250,
-              so FinSight would recommend keeping discretionary dining below $140 this week to protect your savings target.
+              so WealthLens would recommend keeping discretionary dining below $140 this week to protect your savings target.
             </div>
             <div className="inline-flex rounded-full bg-emerald-300/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100">
               Gemini + Python analytics

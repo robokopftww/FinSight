@@ -2,7 +2,7 @@
 
 ## Goal
 
-Make FinSight Advisor an immediately visible dashboard chatbot instead of a separate application page.
+Make WealthLens Advisor an immediately visible dashboard chatbot instead of a separate application page.
 
 ## Interaction
 

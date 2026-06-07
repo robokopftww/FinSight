@@ -18,7 +18,7 @@ NOISE_CATEGORIES = {"TRANSFER_OUT", "TRANSFER_IN", "LOAN_PAYMENTS"}
 
 @router.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "finsight-ai-service", "llm": llm_status()}
+    return {"status": "ok", "service": "wealthlens-ai-service", "llm": llm_status()}
 
 
 @router.post("/analytics/score")

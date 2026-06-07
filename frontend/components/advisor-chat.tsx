@@ -26,7 +26,7 @@ const welcomeMessage: AdvisorMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "Ask me about affordability, spending spikes, savings goals, or cash-flow risk. I will answer from your synced Plaid transactions and FinSight forecast.",
+    "Ask me about affordability, spending spikes, savings goals, or cash-flow risk. I will answer from your synced Plaid transactions and WealthLens forecast.",
   decision: "ready",
 };
 

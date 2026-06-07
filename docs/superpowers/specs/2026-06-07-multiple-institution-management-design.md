@@ -2,7 +2,7 @@
 
 ## Goal
 
-Allow a FinSight user who already connected one institution to add more institutions and disconnect each institution independently.
+Allow a WealthLens user who already connected one institution to add more institutions and disconnect each institution independently.
 
 ## User Experience
 

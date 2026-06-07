@@ -1,6 +1,6 @@
-# FinSight Architecture
+# WealthLens Architecture
 
-FinSight is a three-service financial analytics product. The frontend handles product experience, the backend owns auth-aware data orchestration, and the Python service owns forecasting, scoring, anomaly detection, and LLM grounding.
+WealthLens is a three-service financial analytics product. The frontend handles product experience, the backend owns auth-aware data orchestration, and the Python service owns forecasting, scoring, anomaly detection, and LLM grounding.
 
 ## High-Level System
 
@@ -216,7 +216,7 @@ The LLM receives only a compact context object with calculated facts and is inst
 
 ## Fallback Strategy
 
-FinSight is designed to keep working during local development:
+WealthLens is designed to keep working during local development:
 
 - If Gemini is missing, Python returns deterministic local explanations.
 - If the AI service is offline, the backend uses TypeScript analytics fallbacks.

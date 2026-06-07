@@ -1,8 +1,8 @@
-# FinSight
+# WealthLens
 
-![CI](https://github.com/robokopftww/FinSight/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/robokopftww/WealthLens/actions/workflows/ci.yml/badge.svg)
 
-FinSight is an AI-powered financial copilot that connects to Plaid sandbox bank data, analyzes spending behavior, forecasts cash flow, and uses Gemini to explain financial decisions in plain English.
+WealthLens is an AI-powered financial copilot that connects to Plaid sandbox bank data, analyzes spending behavior, forecasts cash flow, and uses Gemini to explain financial decisions in plain English.
 
 The product is built like a startup MVP: real authentication, real persistence, real Plaid sync, a separate Python analytics service, and a polished fintech dashboard experience.
 
@@ -76,12 +76,12 @@ flowchart TD
     A --> G["Gemini LLM"]
 ```
 
-FinSight is intentionally analytics-first. Python computes the numeric truth first: balances, spending deltas, forecasts, safe-to-spend, subscription burden, goal gaps, and risk indicators. Gemini then turns that grounded context into a concise explanation. That keeps the product from becoming a generic chatbot wrapper.
+WealthLens is intentionally analytics-first. Python computes the numeric truth first: balances, spending deltas, forecasts, safe-to-spend, subscription burden, goal gaps, and risk indicators. Gemini then turns that grounded context into a concise explanation. That keeps the product from becoming a generic chatbot wrapper.
 
 ## Repository Structure
 
 ```text
-FinSight/
+WealthLens/
 ├── frontend/      # Next.js product UI, auth pages, demo mode, charts
 ├── backend/       # Fastify API, Clerk auth, Prisma, Plaid sync, orchestration
 ├── ai-service/    # FastAPI analytics, scoring, forecasting, Gemini prompts
@@ -139,7 +139,7 @@ For the full local setup, see `SETUP.md`.
 
 ## Environment Variables
 
-FinSight needs local env files for:
+WealthLens needs local env files for:
 
 - Clerk publishable and secret keys
 - PostgreSQL `DATABASE_URL`
@@ -177,4 +177,4 @@ The checked-in `.env.example` files show the required names without exposing sec
 
 ## Disclaimer
 
-FinSight is an educational MVP and should not be treated as professional financial advice.
+WealthLens is an educational MVP and should not be treated as professional financial advice.

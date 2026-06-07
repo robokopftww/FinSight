@@ -127,7 +127,7 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
 
     const plaid = getPlaidClient();
     const response = await plaid.linkTokenCreate({
-      client_name: "FinSight",
+      client_name: "WealthLens",
       language: "en",
       country_codes: [CountryCode.Us],
       products: [Products.Transactions],

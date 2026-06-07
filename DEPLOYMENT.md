@@ -1,6 +1,6 @@
-# FinSight Deployment Checklist
+# WealthLens Deployment Checklist
 
-This is the practical path to move FinSight from local development to a public MVP.
+This is the practical path to move WealthLens from local development to a public MVP.
 
 ## Recommended Hosting
 
@@ -53,7 +53,7 @@ Make sure the repo is pushed and `.env` files are not committed. GitHub Actions 
 ```bash
 git status
 git add .
-git commit -m "Prepare FinSight MVP for deployment"
+git commit -m "Prepare WealthLens MVP for deployment"
 git push
 ```
 

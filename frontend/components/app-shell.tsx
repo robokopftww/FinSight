@@ -40,7 +40,7 @@ export function AppShell({
             <span className="flex size-10 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
               F
             </span>
-            FinSight
+            WealthLens
           </Link>
 
           <div className="mt-10 space-y-2">

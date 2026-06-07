@@ -15,7 +15,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FinSight",
+  title: "WealthLens",
   description: "AI financial copilot for proactive spending intelligence.",
 };
 

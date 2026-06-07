@@ -25,9 +25,9 @@ export function DashboardAdvisor() {
 
   return (
     <>
-      {open ? <button type="button" aria-label="Close FinSight Advisor" className="fixed inset-0 z-40 cursor-default bg-black/45 backdrop-blur-[2px]" onClick={() => setOpen(false)} /> : null}
+      {open ? <button type="button" aria-label="Close WealthLens Advisor" className="fixed inset-0 z-40 cursor-default bg-black/45 backdrop-blur-[2px]" onClick={() => setOpen(false)} /> : null}
       <aside
-        aria-label="FinSight Advisor"
+        aria-label="WealthLens Advisor"
         aria-hidden={!open}
         className={`fixed inset-y-0 right-0 z-40 flex w-[min(100%,30rem)] flex-col border-l border-emerald-300/20 bg-[#091120] shadow-[-24px_0_80px_rgba(0,0,0,0.55)] transition-transform duration-300 ${open ? "translate-x-0" : "pointer-events-none translate-x-full"}`}
       >
@@ -37,13 +37,13 @@ export function DashboardAdvisor() {
               <Bot className="size-5" />
             </span>
             <div>
-              <div className="font-semibold text-white">FinSight Advisor</div>
+              <div className="font-semibold text-white">WealthLens Advisor</div>
               <div className="text-xs text-slate-400">Ask about your synced finances</div>
             </div>
           </div>
           <button
             type="button"
-            aria-label="Close FinSight Advisor"
+            aria-label="Close WealthLens Advisor"
             className="rounded-full border border-white/8 p-2 text-slate-300 transition hover:bg-white/8 hover:text-white"
             onClick={() => setOpen(false)}
           >
@@ -55,7 +55,7 @@ export function DashboardAdvisor() {
       {!open ? (
         <button
           type="button"
-          aria-label="Open FinSight Advisor"
+          aria-label="Open WealthLens Advisor"
           className="fixed bottom-6 right-6 z-30 flex size-16 items-center justify-center rounded-full border border-emerald-200/30 bg-[var(--color-accent)] text-slate-950 shadow-[0_18px_60px_rgba(44,194,156,0.35)] transition hover:scale-105 hover:bg-[var(--color-accent-strong)]"
           onClick={() => setOpen(true)}
         >

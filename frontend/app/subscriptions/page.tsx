@@ -95,7 +95,7 @@ export default async function SubscriptionsPage() {
           <div className="rounded-[28px] border border-white/8 bg-white/4 p-8 text-center">
             <h2 className="text-xl font-semibold text-white">No recurring charges detected yet</h2>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-300">
-              Sync more Plaid transactions and FinSight will group repeated merchants by amount and cadence.
+              Sync more Plaid transactions and WealthLens will group repeated merchants by amount and cadence.
             </p>
           </div>
         )}

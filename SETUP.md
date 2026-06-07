@@ -1,11 +1,11 @@
-# FinSight Local Setup
+# WealthLens Local Setup
 
 Use this guide when you have closed everything and want to boot the app again from scratch.
 
 ## 1. Open The Project
 
 ```bash
-cd /Users/keshavtyagi/Documents/FinSight
+cd /Users/keshavtyagi/Documents/WealthLens
 ```
 
 ## 2. Install Dependencies
@@ -102,7 +102,7 @@ GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
-FinSight still runs without Gemini. If the key is missing, advisor chat and reports fall back to deterministic Python analytics.
+WealthLens still runs without Gemini. If the key is missing, advisor chat and reports fall back to deterministic Python analytics.
 
 ## 8. Start The App
 
@@ -180,7 +180,7 @@ ai-service/.venv/bin/python -m pytest ai-service/tests
 You are not in the project directory.
 
 ```bash
-cd /Users/keshavtyagi/Documents/FinSight
+cd /Users/keshavtyagi/Documents/WealthLens
 ```
 
 ### `Port 3000 is in use`

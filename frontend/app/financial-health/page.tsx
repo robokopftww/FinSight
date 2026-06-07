@@ -18,7 +18,7 @@ export default async function FinancialHealthPage() {
           <ScoreRing score={data.score} />
           <p className="mt-6 max-w-sm text-center text-sm leading-7 text-slate-300">
             {data.summary ??
-              "FinSight scores savings momentum, spending consistency, subscription burden, and cash runway to explain what is helping or hurting your money habits."}
+              "WealthLens scores savings momentum, spending consistency, subscription burden, and cash runway to explain what is helping or hurting your money habits."}
           </p>
         </Panel>
 

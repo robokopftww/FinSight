@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "0.1.0",
-  "description": "FinSight backend API",
+  "description": "WealthLens backend API",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,7 +15,7 @@
     "db:studio": "prisma studio"
   },
   "keywords": [
-    "finsight",
+    "wealthlens",
     "fintech",
     "api"
   ],

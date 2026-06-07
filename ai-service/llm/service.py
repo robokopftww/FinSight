@@ -31,7 +31,7 @@ def refine_advisor_answer(
     top_category: tuple[str, float] | None,
 ) -> tuple[str, str]:
     prompt = f"""
-You are FinSight, an AI financial copilot. Rewrite the draft answer into a clear,
+You are WealthLens, an AI financial copilot. Rewrite the draft answer into a clear,
 professional response for a consumer finance dashboard.
 
 Rules:
@@ -73,7 +73,7 @@ def build_weekly_summary(
     forecast: dict[str, Any],
 ) -> tuple[str | None, str]:
     prompt = f"""
-You are FinSight, an AI financial copilot. Write a weekly financial summary for
+You are WealthLens, an AI financial copilot. Write a weekly financial summary for
 the user based only on these analytics.
 
 Rules:

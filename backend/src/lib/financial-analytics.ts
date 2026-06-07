@@ -430,8 +430,8 @@ export function calculateHealthScore({
     emergencyFundDays,
     subscriptionBurden: currency(subscriptionBurden),
     summary: savingsRateIsExtreme
-      ? "Plaid sandbox data can contain large transfers and loan-style outflows, so FinSight caps the displayed savings rate while keeping the score grounded in the synced transactions."
-      : "FinSight scores your recent savings momentum, spending consistency, subscription burden, and cash runway from synced account activity.",
+      ? "Plaid sandbox data can contain large transfers and loan-style outflows, so WealthLens caps the displayed savings rate while keeping the score grounded in the synced transactions."
+      : "WealthLens scores your recent savings momentum, spending consistency, subscription burden, and cash runway from synced account activity.",
     factors: [
       { label: "Savings rate", value: Math.round(savingsComponent * 100) },
       { label: "Spending consistency", value: Math.round(spendingConsistency * 100) },

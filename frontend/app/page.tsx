@@ -33,7 +33,7 @@ const testimonials = [
   {
     name: "Avery Chen",
     role: "Product designer",
-    quote: "FinSight feels like having a calm, numbers-first financial analyst in my pocket.",
+    quote: "WealthLens feels like having a calm, numbers-first financial analyst in my pocket.",
   },
   {
     name: "Jordan Patel",
@@ -90,7 +90,7 @@ export default function Home() {
                 Predict spending before it becomes a problem.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-                FinSight connects your accounts, models your cash flow, and turns financial behavior into grounded, useful advice before the risk hits.
+                WealthLens connects your accounts, models your cash flow, and turns financial behavior into grounded, useful advice before the risk hits.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button asChild className="h-12">
@@ -257,7 +257,7 @@ export default function Home() {
                   <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Get started</div>
                   <h2 className="mt-4 text-4xl font-semibold tracking-tight text-white">Move from reactive budgeting to proactive financial control.</h2>
                   <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
-                    Connect your accounts, sync transaction history, and let FinSight explain what is changing before it becomes expensive.
+                    Connect your accounts, sync transaction history, and let WealthLens explain what is changing before it becomes expensive.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
