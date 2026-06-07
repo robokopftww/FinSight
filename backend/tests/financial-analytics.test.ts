@@ -136,4 +136,78 @@ describe("summarizeDashboard", () => {
     expect(dashboard.monthlySpending).toBe(1000);
     expect(dashboard.savingsRate).toBe(75);
   });
+
+  it("uses declared salary as monthly income when employed", () => {
+    const dashboard = summarizeDashboard([makeAccount()], [], {
+      employmentStatus: "employed",
+      jobTitle: "Engineer",
+      grossPay: 3000,
+      payFrequency: "monthly",
+    });
+
+    expect(dashboard.incomeMode).toBe("income");
+    expect(dashboard.incomeCard).toEqual({
+      label: "Monthly income",
+      value: 3000,
+      subtitle: "Engineer · paid monthly",
+    });
+  });
+
+  it("falls back to surplus when no job is declared", () => {
+    const now = Date.now();
+    const transactions = [
+      makeTransaction({ direction: "inflow", amount: 200 as unknown as Transaction["amount"], occurredAt: new Date(now - 2 * DAY_MS) }),
+      makeTransaction({ direction: "outflow", amount: 1000 as unknown as Transaction["amount"], occurredAt: new Date(now - DAY_MS) }),
+    ];
+
+    const dashboard = summarizeDashboard([makeAccount()], transactions, {
+      employmentStatus: "unemployed",
+      jobTitle: null,
+      grossPay: null,
+      payFrequency: null,
+    });
+
+    expect(dashboard.incomeMode).toBe("surplus");
+    expect(dashboard.incomeCard.value).toBe(-800);
+  });
+
+  it("computes calendar spending windows excluding internal transfers", () => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 12);
+    const earlierThisYear = new Date(now.getFullYear(), 0, 15, 12);
+    const transactions = [
+      makeTransaction({ amount: 300 as unknown as Transaction["amount"], occurredAt: startOfMonth }),
+      makeTransaction({ amount: 700 as unknown as Transaction["amount"], occurredAt: earlierThisYear }),
+      makeTransaction({
+        amount: 5000 as unknown as Transaction["amount"],
+        categoryPrimary: "TRANSFER_OUT",
+        occurredAt: startOfMonth,
+      }),
+    ];
+
+    const dashboard = summarizeDashboard([makeAccount()], transactions);
+
+    expect(dashboard.spendingThisMonth).toBe(300);
+    expect(dashboard.spendingYearToDate).toBe(1000);
+    expect(dashboard.spendingAvgMonthly).toBe(500);
+    expect(dashboard.monthsOfHistory).toBe(2);
+  });
+
+  it("reconstructs balance history and month-over-month change", () => {
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 15, 12);
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 5, 12);
+    const transactions = [
+      makeTransaction({ direction: "inflow", amount: 1000 as unknown as Transaction["amount"], occurredAt: thisMonth }),
+      makeTransaction({ amount: 200 as unknown as Transaction["amount"], occurredAt: lastMonth }),
+    ];
+
+    const dashboard = summarizeDashboard([makeAccount()], transactions);
+
+    expect(dashboard.monthOverMonthChange?.amount).toBe(1000);
+    expect(dashboard.balanceTrend).toHaveLength(6);
+    expect(dashboard.accountsBreakdown).toEqual([
+      { name: "Checking", mask: "0000", currentBalance: 5000 },
+    ]);
+  });
 });

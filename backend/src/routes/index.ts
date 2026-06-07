@@ -11,6 +11,7 @@ import {
 import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { isPlaidConfigured } from "../lib/plaid.js";
+import { profileUpdateSchema } from "../lib/profile.js";
 
 const editableCategories = [
   "FOOD_AND_DRINK",
@@ -172,7 +173,18 @@ export async function registerRoutes(app: FastifyInstance) {
       }),
     ]);
 
-    const dashboard = summarizeDashboard(accounts, transactions);
+    const dashboard = summarizeDashboard(accounts, transactions, {
+      employmentStatus: (user.employmentStatus ?? "unknown") as "employed" | "unemployed" | "unknown",
+      jobTitle: user.jobTitle ?? null,
+      grossPay: user.grossPay ? Number(user.grossPay) : null,
+      payFrequency: (user.payFrequency ?? null) as
+        | "weekly"
+        | "biweekly"
+        | "semimonthly"
+        | "monthly"
+        | "annually"
+        | null,
+    });
     const subscriptions = detectSubscriptions(transactions);
     const monthlySubscriptionCost = subscriptions.reduce(
       (total, subscription) => total + subscription.monthlyCost,
@@ -188,6 +200,44 @@ export async function registerRoutes(app: FastifyInstance) {
     });
 
     return reply.send(mergeDashboardAnalytics(dashboard, aiSummary));
+  });
+
+  app.get("/api/profile", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    return reply.send(serializeProfile(user));
+  });
+
+  app.patch("/api/profile", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const parsed = profileUpdateSchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return reply.status(422).send({ error: "Invalid profile", details: parsed.error.flatten() });
+    }
+
+    const data = parsed.data;
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        employmentStatus: data.employmentStatus,
+        jobTitle: data.employmentStatus === "employed" ? data.jobTitle ?? null : null,
+        grossPay: data.employmentStatus === "employed" ? data.grossPay ?? null : null,
+        payFrequency: data.employmentStatus === "employed" ? data.payFrequency ?? null : null,
+        onboardedAt: user.onboardedAt ?? new Date(),
+      },
+    });
+
+    return reply.send(serializeProfile(updated));
   });
 
   app.get("/api/transactions", async (request, reply) => {
@@ -687,6 +737,22 @@ export function parseSubscriptionStatus(value: unknown): "active" | "paused" | "
 
 function currency(value: number) {
   return Math.round(value * 100) / 100;
+}
+
+function serializeProfile(profile: {
+  employmentStatus: string;
+  jobTitle: string | null;
+  grossPay: unknown;
+  payFrequency: string | null;
+  onboardedAt: Date | null;
+}) {
+  return {
+    employmentStatus: profile.employmentStatus,
+    jobTitle: profile.jobTitle,
+    grossPay: profile.grossPay ? Number(profile.grossPay) : null,
+    payFrequency: profile.payFrequency,
+    onboardedAt: profile.onboardedAt,
+  };
 }
 
 function mergeDashboardAnalytics(

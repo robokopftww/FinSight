@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { AlertTriangle, Database, Loader2, PlugZap, RefreshCw, ServerCog, ShieldCheck, Trash2, Unplug, UserRound } from "lucide-react";
+import { AlertTriangle, BriefcaseBusiness, Database, Loader2, PlugZap, RefreshCw, ServerCog, ShieldCheck, Trash2, Unplug, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
+import { getProfile, updateProfile, type UserProfile } from "@/lib/api";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -49,6 +50,14 @@ type SettingsStatus = {
 };
 
 type ActionState = "idle" | "syncing" | "disconnecting" | "clearing" | "refreshing";
+const payFrequencies: Array<NonNullable<UserProfile["payFrequency"]>> = [
+  "weekly",
+  "biweekly",
+  "semimonthly",
+  "monthly",
+  "annually",
+];
+const profileInputClass = "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-300/40";
 
 async function authenticatedFetch(path: string, token: string | null, init?: RequestInit) {
   if (!apiBaseUrl) {
@@ -113,6 +122,8 @@ export function SettingsControlCenter() {
   const [status, setStatus] = useState<SettingsStatus | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [action, setAction] = useState<ActionState>("idle");
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileSaving, setProfileSaving] = useState(false);
 
   const refreshStatus = useCallback(async () => {
     if (!isSignedIn) {
@@ -144,6 +155,34 @@ export function SettingsControlCenter() {
 
     return () => window.clearTimeout(timeout);
   }, [refreshStatus]);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      return;
+    }
+
+    void (async () => {
+      setProfile(await getProfile(await getToken()));
+    })();
+  }, [getToken, isSignedIn]);
+
+  async function saveProfile() {
+    if (!profile) {
+      return;
+    }
+
+    setProfileSaving(true);
+    setMessage(null);
+    try {
+      const updated = await updateProfile(profile, await getToken());
+      setProfile(updated);
+      setMessage("Employment profile saved. Your dashboard metrics will use the updated values.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to save employment profile.");
+    } finally {
+      setProfileSaving(false);
+    }
+  }
 
   async function runAction(nextAction: ActionState, path: string, init: RequestInit, successMessage: string) {
     setAction(nextAction);
@@ -335,6 +374,75 @@ export function SettingsControlCenter() {
           </div>
         </Panel>
       </section>
+
+      <Panel className="p-6">
+        <div className="flex gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-emerald-100">
+            <BriefcaseBusiness className="size-5" />
+          </span>
+          <div>
+            <h2 className="text-xl font-semibold text-white">Employment profile</h2>
+            <p className="mt-2 text-sm leading-7 text-slate-300">
+              Declare pay details to show monthly income. Without them, the dashboard shows transaction-based surplus.
+            </p>
+          </div>
+        </div>
+
+        {profile ? (
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <label className="space-y-2 text-sm text-slate-300">
+              <span>Employment status</span>
+              <select
+                className={profileInputClass}
+                value={profile.employmentStatus}
+                onChange={(event) => {
+                  const employmentStatus = event.target.value as UserProfile["employmentStatus"];
+                  setProfile({
+                    ...profile,
+                    employmentStatus,
+                    ...(employmentStatus === "employed" ? {} : { jobTitle: null, grossPay: null, payFrequency: null }),
+                  });
+                }}
+              >
+                <option value="employed">Employed</option>
+                <option value="unemployed">Unemployed</option>
+                <option value="unknown">Prefer not to say</option>
+              </select>
+            </label>
+
+            {profile.employmentStatus === "employed" ? (
+              <>
+                <label className="space-y-2 text-sm text-slate-300">
+                  <span>Job title</span>
+                  <input className={profileInputClass} value={profile.jobTitle ?? ""} onChange={(event) => setProfile({ ...profile, jobTitle: event.target.value || null })} />
+                </label>
+                <label className="space-y-2 text-sm text-slate-300">
+                  <span>Gross pay per period</span>
+                  <input className={profileInputClass} min="0" type="number" value={profile.grossPay ?? ""} onChange={(event) => setProfile({ ...profile, grossPay: event.target.value ? Number(event.target.value) : null })} />
+                </label>
+                <label className="space-y-2 text-sm text-slate-300">
+                  <span>Pay frequency</span>
+                  <select className={profileInputClass} value={profile.payFrequency ?? "monthly"} onChange={(event) => setProfile({ ...profile, payFrequency: event.target.value as NonNullable<UserProfile["payFrequency"]> })}>
+                    {payFrequencies.map((frequency) => <option key={frequency} value={frequency}>{frequency}</option>)}
+                  </select>
+                </label>
+              </>
+            ) : null}
+
+            <div className="flex items-end">
+              <Button type="button" onClick={() => void saveProfile()} disabled={profileSaving || (profile.employmentStatus === "employed" && (!profile.grossPay || !profile.payFrequency))} className="gap-2">
+                {profileSaving ? <Loader2 className="size-4 animate-spin" /> : <BriefcaseBusiness className="size-4" />}
+                Save employment profile
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-6 flex items-center gap-3 text-sm text-slate-400">
+            <Loader2 className="size-4 animate-spin" />
+            Loading employment profile
+          </div>
+        )}
+      </Panel>
 
       <Panel className="p-6">
         <div className="flex items-start gap-3">

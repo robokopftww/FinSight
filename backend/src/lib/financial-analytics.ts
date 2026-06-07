@@ -1,5 +1,7 @@
 import type { Account, Transaction } from "@prisma/client";
 
+import { hasDeclaredIncome, normalizeMonthlyPay, type UserFinancialProfile } from "./profile.js";
+
 const chartColors = ["#8ef0d1", "#58b8ff", "#ffb65e", "#ff7b72", "#d0a2ff", "#f7d154"];
 const internalTransferCategories = new Set(["TRANSFER_OUT", "TRANSFER_IN", "LOAN_PAYMENTS"]);
 
@@ -25,6 +27,18 @@ function currency(value: number) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function signedFlow(transaction: Transaction) {
+  const amount = toNumber(transaction.amount);
+  return transaction.direction === "inflow" ? amount : -amount;
+}
+
+function balanceAsOf(currentBalance: number, transactions: Transaction[], boundary: Date) {
+  const futureFlow = transactions
+    .filter((transaction) => transaction.occurredAt > boundary)
+    .reduce((total, transaction) => total + signedFlow(transaction), 0);
+  return currency(currentBalance - futureFlow);
 }
 
 function toDisplayCategory(category: string) {
@@ -64,7 +78,7 @@ function getAnalysisWindow(transactions: Transaction[]) {
   return { start, latest };
 }
 
-export function summarizeDashboard(accounts: Account[], transactions: Transaction[]) {
+export function summarizeDashboard(accounts: Account[], transactions: Transaction[], profile?: UserFinancialProfile) {
   const currentBalance = currency(accounts.reduce((total, account) => total + toNumber(account.currentBalance), 0));
   const { start } = getAnalysisWindow(transactions);
   const recentTransactions = transactions.filter((transaction) => transaction.occurredAt >= start);
@@ -83,6 +97,75 @@ export function summarizeDashboard(accounts: Account[], transactions: Transactio
   const monthlyIncome = currency(flexibleInflows.reduce((total, transaction) => total + toNumber(transaction.amount), 0));
   const savingsRate = monthlyIncome > 0 ? currency(((monthlyIncome - monthlySpending) / monthlyIncome) * 100) : 0;
   const displaySavingsRate = clamp(savingsRate, -100, 100);
+  const netCashFlow = currency(monthlyIncome - monthlySpending);
+  const incomeMode: "income" | "surplus" = hasDeclaredIncome(profile) ? "income" : "surplus";
+  const incomeCard =
+    incomeMode === "income"
+      ? {
+          label: "Monthly income",
+          value: normalizeMonthlyPay(profile?.grossPay, profile?.payFrequency),
+          subtitle: profile?.jobTitle ? `${profile.jobTitle} · paid ${profile.payFrequency}` : `Paid ${profile?.payFrequency}`,
+        }
+      : {
+          label: "Monthly surplus",
+          value: netCashFlow,
+          subtitle: "Net cash flow (income minus spending)",
+        };
+
+  const now = new Date();
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfThisYear = new Date(now.getFullYear(), 0, 1);
+  const allFlexibleOutflows = transactions.filter(
+    (transaction) => transaction.direction === "outflow" && !isInternalTransfer(transaction),
+  );
+  const spendingThisMonth = currency(
+    allFlexibleOutflows
+      .filter((transaction) => transaction.occurredAt >= startOfThisMonth)
+      .reduce((total, transaction) => total + toNumber(transaction.amount), 0),
+  );
+  const spendingYearToDate = currency(
+    allFlexibleOutflows
+      .filter((transaction) => transaction.occurredAt >= startOfThisYear)
+      .reduce((total, transaction) => total + toNumber(transaction.amount), 0),
+  );
+  const monthKeys = new Set(
+    allFlexibleOutflows.map(
+      (transaction) => `${transaction.occurredAt.getFullYear()}-${transaction.occurredAt.getMonth()}`,
+    ),
+  );
+  const monthsOfHistory = monthKeys.size;
+  const totalFlexibleSpend = allFlexibleOutflows.reduce(
+    (total, transaction) => total + toNumber(transaction.amount),
+    0,
+  );
+  const spendingAvgMonthly = monthsOfHistory ? currency(totalFlexibleSpend / monthsOfHistory) : 0;
+
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  const balanceEndOfLastMonth = balanceAsOf(currentBalance, transactions, endOfLastMonth);
+  const monthOverMonthChange =
+    transactions.length > 0
+      ? {
+          amount: currency(currentBalance - balanceEndOfLastMonth),
+          percent:
+            balanceEndOfLastMonth !== 0
+              ? currency(((currentBalance - balanceEndOfLastMonth) / Math.abs(balanceEndOfLastMonth)) * 100)
+              : 0,
+        }
+      : null;
+  const balanceTrend = transactions.length
+    ? [5, 4, 3, 2, 1, 0].map((monthsAgo) => {
+        const boundary = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59, 999);
+        const label = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1).toLocaleString("en-US", {
+          month: "short",
+        });
+        return { label, balance: balanceAsOf(currentBalance, transactions, boundary) };
+      })
+    : [];
+  const accountsBreakdown = accounts.map((account) => ({
+    name: account.name,
+    mask: account.mask,
+    currentBalance: currency(toNumber(account.currentBalance)),
+  }));
 
   const byCategory = new Map<string, number>();
   for (const transaction of flexibleOutflows.length ? flexibleOutflows : outflows) {
@@ -154,6 +237,16 @@ export function summarizeDashboard(accounts: Account[], transactions: Transactio
     availableBalance: currency(accounts.reduce((total, account) => total + toNumber(account.availableBalance), 0)),
     monthlySpending,
     monthlyIncome,
+    incomeMode,
+    incomeCard,
+    netCashFlow,
+    spendingThisMonth,
+    spendingYearToDate,
+    spendingAvgMonthly,
+    monthsOfHistory,
+    monthOverMonthChange,
+    balanceTrend,
+    accountsBreakdown,
     savingsRate,
     displaySavingsRate,
     savingsRateLabel: formatPercent(savingsRate),

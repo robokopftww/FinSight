@@ -27,21 +27,26 @@ enum SubscriptionStatus {
 }
 
 model User {
-  id            String           @id @default(cuid())
-  clerkId       String           @unique
-  email         String           @unique
-  firstName     String?
-  lastName      String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  accounts      Account[]
-  plaidItems    PlaidItem[]
-  transactions  Transaction[]
-  subscriptions Subscription[]
-  scores        FinancialScore[]
-  forecasts     Forecast[]
-  insights      Insight[]
-  chatHistory   ChatHistory[]
+  id               String           @id @default(cuid())
+  clerkId          String           @unique
+  email            String           @unique
+  firstName        String?
+  lastName         String?
+  employmentStatus String           @default("unknown")
+  jobTitle         String?
+  grossPay         Decimal?         @db.Decimal(12, 2)
+  payFrequency     String?
+  onboardedAt      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  accounts         Account[]
+  plaidItems       PlaidItem[]
+  transactions     Transaction[]
+  subscriptions    Subscription[]
+  scores           FinancialScore[]
+  forecasts        Forecast[]
+  insights         Insight[]
+  chatHistory      ChatHistory[]
 }
 
 model PlaidItem {
