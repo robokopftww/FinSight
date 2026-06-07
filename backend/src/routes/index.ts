@@ -623,6 +623,33 @@ export async function registerRoutes(app: FastifyInstance) {
       categoryRaw: categoryPrimary ? normalizeCategory(categoryPrimary) : undefined,
     };
   });
+
+  app.patch("/api/subscriptions/:id", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const { id } = request.params as { id: string };
+    const body = request.body as { status?: unknown };
+    const status = parseSubscriptionStatus(body.status);
+
+    if (!status) {
+      return reply.code(400).send({ error: "status must be one of active, paused, cancelled" });
+    }
+
+    const result = await prisma.subscription.updateMany({
+      where: { id, userId: user.id },
+      data: { status },
+    });
+
+    if (result.count === 0) {
+      return reply.code(404).send({ error: "Subscription not found" });
+    }
+
+    return reply.send({ id, status });
+  });
 }
 
 function formatCategory(category: string) {
@@ -640,6 +667,10 @@ function normalizeCategory(category: string) {
     .replace(/[^a-zA-Z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
     .toUpperCase();
+}
+
+export function parseSubscriptionStatus(value: unknown): "active" | "paused" | "cancelled" | null {
+  return value === "active" || value === "paused" || value === "cancelled" ? value : null;
 }
 
 function currency(value: number) {
