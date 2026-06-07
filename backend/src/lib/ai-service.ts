@@ -51,6 +51,7 @@ export type AiWeeklyReportResponse = {
 
 const AI_CHAT_TIMEOUT_MS = 30000;
 const AI_REPORT_TIMEOUT_MS = 30000;
+const AI_SUMMARY_TIMEOUT_MS = 8000;
 
 export async function requestAiSummary({
   accounts,
@@ -68,7 +69,7 @@ export async function requestAiSummary({
   monthlySubscriptionCost: number;
 }) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 1800);
+  const timeout = setTimeout(() => controller.abort(), AI_SUMMARY_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${env.AI_SERVICE_URL}/analytics/summary`, {

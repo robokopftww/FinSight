@@ -33,12 +33,17 @@ export async function requireAppUser(request: FastifyRequest, reply: FastifyRepl
     return null;
   }
 
-  return prisma.user.create({
-    data: {
+  // Upsert (not create) so concurrent first-time requests for the same user
+  // do not race into a unique-constraint violation. Authed pages fan out
+  // multiple parallel API calls, so this path is hit concurrently.
+  return prisma.user.upsert({
+    where: { clerkId: clerkUser.id },
+    create: {
       clerkId: clerkUser.id,
       email,
       firstName: clerkUser.firstName,
       lastName: clerkUser.lastName,
     },
+    update: {},
   });
 }

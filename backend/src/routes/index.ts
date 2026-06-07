@@ -8,7 +8,6 @@ import {
   isInternalTransferCategory,
   summarizeDashboard,
 } from "../lib/financial-analytics.js";
-import { chatResponse } from "../lib/mock-data.js";
 import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { isPlaidConfigured } from "../lib/plaid.js";
@@ -383,10 +382,37 @@ export async function registerRoutes(app: FastifyInstance) {
       }),
     ]);
 
-    return reply.send({ data: summarizeDashboard(accounts, transactions).forecast });
+    const dashboard = summarizeDashboard(accounts, transactions);
+    const subscriptions = detectSubscriptions(transactions);
+    const monthlySubscriptionCost = subscriptions.reduce(
+      (total, subscription) => total + subscription.monthlyCost,
+      0,
+    );
+    const aiSummary = await requestAiSummary({
+      accounts,
+      transactions,
+      monthlyIncome: dashboard.monthlyIncome,
+      monthlySpending: dashboard.monthlySpending,
+      currentBalance: dashboard.currentBalance,
+      monthlySubscriptionCost,
+    });
+
+    // Use the AI forecast when available so this endpoint agrees with the
+    // dashboard overview, which also prefers the AI key points.
+    const forecast = aiSummary?.forecast?.keyPoints?.length
+      ? aiSummary.forecast.keyPoints
+      : dashboard.forecast;
+
+    return reply.send({
+      data: forecast,
+      source: aiSummary?.modelVersion ?? "typescript-fallback",
+    });
   });
 
-  app.get("/api/reports/weekly", async (request, reply) => {
+  app.get(
+    "/api/reports/weekly",
+    { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } },
+    async (request, reply) => {
     const user = await requireAppUser(request, reply);
 
     if (!user) {
@@ -416,9 +442,13 @@ export async function registerRoutes(app: FastifyInstance) {
     });
 
     return reply.send(aiReport ?? buildFallbackWeeklyReport(dashboard, transactions));
-  });
+    },
+  );
 
-  app.post("/api/advisor/chat", async (request, reply) => {
+  app.post(
+    "/api/advisor/chat",
+    { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } },
+    async (request, reply) => {
     const user = await requireAppUser(request, reply);
 
     if (!user) {
@@ -482,7 +512,8 @@ export async function registerRoutes(app: FastifyInstance) {
     });
 
     return reply.send(answer);
-  });
+    },
+  );
 
   app.get("/api/advisor/history", async (request, reply) => {
     const user = await requireAppUser(request, reply);
@@ -521,8 +552,6 @@ export async function registerRoutes(app: FastifyInstance) {
 
     return reply.send({ deletedCount: deleted.count });
   });
-
-  app.post("/api/chat", async () => chatResponse);
 
   app.patch("/api/transactions/:id/category", async (request, reply) => {
     const user = await requireAppUser(request, reply);
