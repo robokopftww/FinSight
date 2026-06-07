@@ -9,6 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio"
@@ -23,6 +24,7 @@
     "@clerk/fastify": "^3.1.32",
     "@fastify/cors": "^11.1.0",
     "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
     "@prisma/client": "^6.19.3",
     "dotenv": "^17.2.3",
     "fastify": "^5.6.1",
@@ -34,6 +36,7 @@
     "@types/node": "^25.9.1",
     "prisma": "^6.19.3",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   }
 }

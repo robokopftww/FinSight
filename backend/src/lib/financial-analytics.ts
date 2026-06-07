@@ -154,6 +154,9 @@ export function summarizeDashboard(accounts: Account[], transactions: Transactio
     savingsRateIsExtreme: Math.abs(savingsRate) > 100,
     healthScore,
     safeToSpend,
+    // Heuristic fallback risk score used only when the Python AI service is
+    // unavailable; the AI forecast supplies a computed riskProbability that
+    // overrides this in mergeDashboardAnalytics.
     riskProbability: lowestForecastBalance < 500 ? 0.71 : 0.22,
     spendingBreakdown,
     forecast,
@@ -164,6 +167,59 @@ export function summarizeDashboard(accounts: Account[], transactions: Transactio
       monthlyIncome: monthlyIncome > 0 ? "Detected from recent inflows" : "No recent income detected",
       savingsRate: isOutflowHeavy ? "Capped for display due to sandbox data" : "Based on recent income minus spending",
     },
+  };
+}
+
+type ChargeCadence = {
+  label: string;
+  monthlyMultiplier: number;
+  confidence: number;
+};
+
+const cadenceBands: Array<{ label: string; minDays: number; maxDays: number; monthlyMultiplier: number }> = [
+  { label: "Weekly", minDays: 5, maxDays: 9, monthlyMultiplier: 30 / 7 },
+  { label: "Biweekly", minDays: 12, maxDays: 16, monthlyMultiplier: 30 / 14 },
+  { label: "Monthly", minDays: 26, maxDays: 35, monthlyMultiplier: 1 },
+  { label: "Quarterly", minDays: 83, maxDays: 97, monthlyMultiplier: 1 / 3 },
+  { label: "Yearly", minDays: 350, maxDays: 380, monthlyMultiplier: 1 / 12 },
+];
+
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+// Returns a cadence only when charges are spaced at a recognizable recurring
+// interval (weekly..yearly) with consistent gaps. Repeated purchases at random
+// intervals (e.g. groceries) return null.
+function detectChargeCadence(sortedDescending: Transaction[]): ChargeCadence | null {
+  if (sortedDescending.length < 2) {
+    return null;
+  }
+
+  const ascending = [...sortedDescending].reverse();
+  const gaps: number[] = [];
+
+  for (let index = 1; index < ascending.length; index += 1) {
+    const gap = (ascending[index].occurredAt.getTime() - ascending[index - 1].occurredAt.getTime()) / DAY_MS;
+    gaps.push(gap);
+  }
+
+  const averageGap = gaps.reduce((total, gap) => total + gap, 0) / gaps.length;
+  const band = cadenceBands.find((candidate) => averageGap >= candidate.minDays && averageGap <= candidate.maxDays);
+
+  if (!band) {
+    return null;
+  }
+
+  // Reject merchants whose individual gaps swing wildly around the average.
+  const gapsConsistent = gaps.every((gap) => Math.abs(gap - averageGap) <= Math.max(averageGap * 0.35, 4));
+
+  if (!gapsConsistent) {
+    return null;
+  }
+
+  return {
+    label: gaps.length >= 2 ? band.label : `${band.label} (likely)`,
+    monthlyMultiplier: band.monthlyMultiplier,
+    confidence: gaps.length >= 2 ? 0.86 : 0.68,
   };
 }
 
@@ -190,15 +246,23 @@ export function detectSubscriptions(transactions: Transaction[]) {
         return null;
       }
 
+      // Require a recurring time cadence, not just a repeated price. Without this
+      // two same-priced grocery trips would be flagged as a subscription.
+      const cadence = detectChargeCadence(sortedTransactions);
+
+      if (!cadence) {
+        return null;
+      }
+
       return {
         id: merchantName,
         name: merchantName,
         merchantName,
-        monthlyCost: currency(average),
-        yearlyCost: currency(average * 12),
+        monthlyCost: currency(average * cadence.monthlyMultiplier),
+        yearlyCost: currency(average * cadence.monthlyMultiplier * 12),
         chargeCount: merchantTransactions.length,
-        cadence: merchantTransactions.length >= 3 ? "Recurring" : "Likely recurring",
-        confidence: merchantTransactions.length >= 3 ? 0.86 : 0.68,
+        cadence: cadence.label,
+        confidence: cadence.confidence,
         lastChargedAt: sortedTransactions[0]?.occurredAt,
         category: toDisplayCategory(sortedTransactions[0]?.categoryPrimary ?? "Uncategorized"),
         opportunity: average > 25 ? "Review" : "Keep",

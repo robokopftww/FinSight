@@ -128,7 +128,10 @@ async function getJson<T>(path: string, fallback: T, token?: string | null): Pro
             Authorization: `Bearer ${token}`,
           }
         : undefined,
-      next: { revalidate: 30 },
+      // Authenticated responses are per-user. The Next data cache is keyed on
+      // URL (not the Authorization header), so caching would risk serving one
+      // user's financial data to another. Never cache when a token is present.
+      ...(token ? { cache: "no-store" as const } : { next: { revalidate: 30 } }),
     });
 
     if (!response.ok) {
