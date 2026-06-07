@@ -4,6 +4,12 @@ import { z } from "zod";
 
 import { env } from "../../config/env.js";
 import { requireAppUser } from "../../lib/auth.js";
+import {
+  calculateHealthScore,
+  detectSubscriptions,
+  summarizeDashboard,
+} from "../../lib/financial-analytics.js";
+import { persistAnalyticsSnapshot } from "../../lib/analytics-persistence.js";
 import { getPlaidClient, isPlaidConfigured } from "../../lib/plaid.js";
 import { prisma } from "../../lib/prisma.js";
 
@@ -299,6 +305,55 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
           lastSyncedAt: new Date(),
         },
       });
+    }
+
+    try {
+      const [accountsForSnapshot, transactionsForSnapshot] = await Promise.all([
+        prisma.account.findMany({ where: { userId: user.id } }),
+        prisma.transaction.findMany({
+          where: { userId: user.id },
+          orderBy: { occurredAt: "desc" },
+        }),
+      ]);
+
+      const dashboard = summarizeDashboard(accountsForSnapshot, transactionsForSnapshot);
+      const detected = detectSubscriptions(transactionsForSnapshot);
+      const monthlySubscriptionCost = detected.reduce((total, sub) => total + sub.monthlyCost, 0);
+      const subscriptionBurden =
+        dashboard.monthlyIncome > 0 ? (monthlySubscriptionCost / dashboard.monthlyIncome) * 100 : 0;
+      const score = calculateHealthScore({
+        savingsRate: dashboard.savingsRate,
+        monthlyIncome: dashboard.monthlyIncome,
+        monthlySpending: dashboard.monthlySpending,
+        currentBalance: dashboard.currentBalance,
+        subscriptionBurden,
+      });
+
+      await persistAnalyticsSnapshot(prisma, user.id, {
+        score: {
+          score: score.score,
+          savingsRate: score.savingsRate,
+          spendingConsistency: score.spendingConsistency,
+          subscriptionBurden: score.subscriptionBurden,
+          emergencyFundDays: score.emergencyFundDays,
+          summary: score.summary,
+        },
+        forecast: {
+          forecast: dashboard.forecast,
+          riskProbability: dashboard.riskProbability,
+        },
+        insights: dashboard.insightHighlights,
+        subscriptions: detected.map((sub) => ({
+          merchantName: sub.merchantName,
+          category: sub.category,
+          monthlyCost: sub.monthlyCost,
+          yearlyCost: sub.yearlyCost,
+          confidence: sub.confidence,
+          lastChargedAt: sub.lastChargedAt ?? null,
+        })),
+      });
+    } catch (error) {
+      request.log.error({ error }, "Failed to persist analytics snapshot after sync");
     }
 
     return reply.send({

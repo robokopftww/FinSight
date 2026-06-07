@@ -299,11 +299,53 @@ export async function registerRoutes(app: FastifyInstance) {
       return reply;
     }
 
+    const stored = await prisma.subscription.findMany({
+      where: { userId: user.id },
+      orderBy: { monthlyCost: "desc" },
+    });
+
+    if (stored.length) {
+      const data = stored.map((sub) => {
+        const monthlyCost = Number(sub.monthlyCost);
+        const yearlyCost = Number(sub.yearlyCost);
+        return {
+          id: sub.id,
+          name: sub.merchantName,
+          merchantName: sub.merchantName,
+          monthlyCost: currency(monthlyCost),
+          yearlyCost: currency(yearlyCost),
+          opportunity: monthlyCost > 25 ? "Review" : "Keep",
+          note:
+            monthlyCost > 25
+              ? "Recurring charge detected with meaningful annual cost."
+              : "Recurring charge detected from transaction cadence.",
+          confidence: sub.confidence,
+          lastChargedAt: sub.lastChargedAt ?? undefined,
+          category: sub.category ?? undefined,
+          status: sub.status,
+        };
+      });
+      const reviewMonthly = data
+        .filter((sub) => sub.opportunity === "Review" && sub.status !== "cancelled")
+        .reduce((total, sub) => total + sub.monthlyCost, 0);
+      const activeData = data.filter((sub) => sub.status !== "cancelled");
+
+      return reply.send({
+        data,
+        summary: {
+          count: data.length,
+          totalMonthly: currency(activeData.reduce((total, sub) => total + sub.monthlyCost, 0)),
+          totalYearly: currency(activeData.reduce((total, sub) => total + sub.yearlyCost, 0)),
+          reviewMonthly: currency(reviewMonthly),
+          reviewYearly: currency(reviewMonthly * 12),
+        },
+      });
+    }
+
     const transactions = await prisma.transaction.findMany({
       where: { userId: user.id },
       orderBy: { occurredAt: "desc" },
     });
-
     const subscriptions = detectSubscriptions(transactions);
     const reviewMonthly = subscriptions
       .filter((subscription) => subscription.opportunity === "Review")
@@ -372,6 +414,18 @@ export async function registerRoutes(app: FastifyInstance) {
 
     if (!user) {
       return reply;
+    }
+
+    const latestForecast = await prisma.forecast.findFirst({
+      where: { userId: user.id },
+      orderBy: { generatedAt: "desc" },
+    });
+
+    if (latestForecast) {
+      return reply.send({
+        data: latestForecast.data,
+        source: "persisted-snapshot",
+      });
     }
 
     const [accounts, transactions] = await Promise.all([
@@ -581,6 +635,33 @@ export async function registerRoutes(app: FastifyInstance) {
       categoryRaw: categoryPrimary ? normalizeCategory(categoryPrimary) : undefined,
     };
   });
+
+  app.patch("/api/subscriptions/:id", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const { id } = request.params as { id: string };
+    const body = (request.body ?? {}) as { status?: unknown };
+    const status = parseSubscriptionStatus(body.status);
+
+    if (!status) {
+      return reply.code(400).send({ error: "status must be one of active, paused, cancelled" });
+    }
+
+    const result = await prisma.subscription.updateMany({
+      where: { id, userId: user.id },
+      data: { status },
+    });
+
+    if (result.count === 0) {
+      return reply.code(404).send({ error: "Subscription not found" });
+    }
+
+    return reply.send({ id, status });
+  });
 }
 
 function formatCategory(category: string) {
@@ -598,6 +679,10 @@ function normalizeCategory(category: string) {
     .replace(/[^a-zA-Z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
     .toUpperCase();
+}
+
+export function parseSubscriptionStatus(value: unknown): "active" | "paused" | "cancelled" | null {
+  return value === "active" || value === "paused" || value === "cancelled" ? value : null;
 }
 
 function currency(value: number) {
