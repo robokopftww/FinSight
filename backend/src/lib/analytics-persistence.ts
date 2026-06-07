@@ -59,7 +59,9 @@ export function buildScoreCreateData(input: ScoreInput) {
   return {
     score: input.score,
     savingsRate: input.savingsRate,
-    spendingVolatility: input.spendingConsistency,
+    // The column stores volatility (higher = worse). The input is a consistency
+    // metric (higher = better), so invert it to keep the persisted meaning correct.
+    spendingVolatility: 100 - input.spendingConsistency,
     subscriptionBurden: input.subscriptionBurden,
     emergencyFundDays: input.emergencyFundDays,
     explanation: input.summary ?? null,
@@ -117,23 +119,27 @@ export async function persistAnalyticsSnapshot(
     subscriptions: DetectedSubscription[];
   },
 ) {
-  await prisma.financialScore.create({
-    data: { userId, ...buildScoreCreateData(snapshot.score) },
-  });
-
-  await prisma.forecast.create({
-    data: { userId, ...buildForecastCreateData(snapshot.forecast) },
-  });
-
-  await prisma.insight.deleteMany({ where: { userId } });
-  const insightRows = buildInsightRows(snapshot.insights);
-  if (insightRows.length) {
-    await prisma.insight.createMany({
-      data: insightRows.map((row) => ({ userId, ...row })),
+  // Wrap in a transaction so a snapshot is all-or-nothing — notably the
+  // insight delete+recreate never leaves insights deleted but not rewritten.
+  await prisma.$transaction(async (tx) => {
+    await tx.financialScore.create({
+      data: { userId, ...buildScoreCreateData(snapshot.score) },
     });
-  }
 
-  for (const sub of snapshot.subscriptions) {
-    await prisma.subscription.upsert(buildSubscriptionUpsert(userId, sub));
-  }
+    await tx.forecast.create({
+      data: { userId, ...buildForecastCreateData(snapshot.forecast) },
+    });
+
+    await tx.insight.deleteMany({ where: { userId } });
+    const insightRows = buildInsightRows(snapshot.insights);
+    if (insightRows.length) {
+      await tx.insight.createMany({
+        data: insightRows.map((row) => ({ userId, ...row })),
+      });
+    }
+
+    for (const sub of snapshot.subscriptions) {
+      await tx.subscription.upsert(buildSubscriptionUpsert(userId, sub));
+    }
+  });
 }

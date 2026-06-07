@@ -644,7 +644,7 @@ export async function registerRoutes(app: FastifyInstance) {
     }
 
     const { id } = request.params as { id: string };
-    const body = request.body as { status?: unknown };
+    const body = (request.body ?? {}) as { status?: unknown };
     const status = parseSubscriptionStatus(body.status);
 
     if (!status) {

@@ -45,7 +45,7 @@ describe("buildScoreCreateData", () => {
     expect(data).toEqual({
       score: 72,
       savingsRate: 18.5,
-      spendingVolatility: 64,
+      spendingVolatility: 36,
       subscriptionBurden: 3.2,
       emergencyFundDays: 48,
       explanation: "Looks fine",

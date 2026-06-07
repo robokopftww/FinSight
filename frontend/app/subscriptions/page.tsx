@@ -79,7 +79,7 @@ export default async function SubscriptionsPage() {
                 <p className="mt-6 text-sm leading-7 text-slate-300">
                   {item.note ?? "Recurring charge detected from historical transaction cadence."}
                 </p>
-                <SubscriptionActions id={item.id} status={item.status} />
+                {item.status ? <SubscriptionActions id={item.id} status={item.status} /> : null}
               </div>
             ))}
           </div>
