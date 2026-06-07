@@ -3,7 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import { AppShell } from "@/components/app-shell";
 import { Panel } from "@/components/ui/panel";
 import { SubscriptionActions } from "@/components/subscription-actions";
-import { getSubscriptions } from "@/lib/api";
+import { AddSubscription } from "@/components/add-subscription";
+import { getSubscriptions, getTransactions } from "@/lib/api";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -14,7 +15,11 @@ function formatCurrency(value: number) {
 
 export default async function SubscriptionsPage() {
   const { getToken } = await auth();
-  const response = await getSubscriptions(await getToken());
+  const token = await getToken();
+  const [response, transactionsResponse] = await Promise.all([
+    getSubscriptions(token),
+    getTransactions(token),
+  ]);
   const totalMonthly =
     response.summary?.totalMonthly ?? response.data.reduce((total, item) => total + item.monthlyCost, 0);
   const totalYearly =
@@ -27,6 +32,9 @@ export default async function SubscriptionsPage() {
 
   return (
     <AppShell currentPath="/subscriptions" eyebrow="Recurring spend" title="Track what keeps charging you every month">
+      <div className="flex justify-end">
+        <AddSubscription transactions={transactionsResponse.data} />
+      </div>
       <section className="grid gap-4 lg:grid-cols-3">
         <Panel className="p-5">
           <div className="text-sm text-slate-400">Monthly subscription cost</div>

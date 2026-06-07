@@ -7,6 +7,7 @@ describe("parseSubscriptionStatus", () => {
     expect(parseSubscriptionStatus("active")).toBe("active");
     expect(parseSubscriptionStatus("paused")).toBe("paused");
     expect(parseSubscriptionStatus("cancelled")).toBe("cancelled");
+    expect(parseSubscriptionStatus("dismissed")).toBe("dismissed");
   });
   it("rejects anything else", () => {
     expect(parseSubscriptionStatus("deleted")).toBeNull();

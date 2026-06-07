@@ -24,6 +24,7 @@ enum SubscriptionStatus {
   active
   cancelled
   paused
+  dismissed
 }
 
 model User {

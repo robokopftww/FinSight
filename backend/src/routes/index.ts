@@ -363,7 +363,11 @@ export async function registerRoutes(app: FastifyInstance) {
     });
 
     if (stored.length) {
-      const data = stored.map((sub) => {
+      // Once any subscription is persisted we trust the stored set as the source
+      // of truth — never fall back to re-detection, which would resurrect rows the
+      // user dismissed. Dismissed rows stay in the DB but are hidden everywhere.
+      const visibleStored = stored.filter((sub) => sub.status !== "dismissed");
+      const data = visibleStored.map((sub) => {
         const monthlyCost = Number(sub.monthlyCost);
         const yearlyCost = Number(sub.yearlyCost);
         return {
@@ -694,6 +698,88 @@ export async function registerRoutes(app: FastifyInstance) {
     };
   });
 
+  app.post("/api/subscriptions", async (request, reply) => {
+    const user = await requireAppUser(request, reply);
+
+    if (!user) {
+      return reply;
+    }
+
+    const body = (request.body ?? {}) as {
+      transactionId?: unknown;
+      merchantName?: unknown;
+      monthlyCost?: unknown;
+      category?: unknown;
+    };
+
+    let merchantName: string | undefined;
+    let monthlyCost: number | undefined;
+    let category: string | null = typeof body.category === "string" ? body.category : null;
+
+    if (typeof body.transactionId === "string" && body.transactionId.length) {
+      // Promote a real transaction's merchant into a subscription. Cost is the
+      // average outflow for that merchant so a single click reflects real spend.
+      const transaction = await prisma.transaction.findFirst({
+        where: { id: body.transactionId, userId: user.id },
+      });
+
+      if (!transaction) {
+        return reply.code(404).send({ error: "Transaction not found" });
+      }
+
+      merchantName = transaction.merchantName ?? transaction.description;
+      category = category ?? transaction.categoryPrimary ?? null;
+
+      const merchantTransactions = await prisma.transaction.findMany({
+        where: { userId: user.id, merchantName, direction: "outflow" },
+      });
+      const amounts = (merchantTransactions.length ? merchantTransactions : [transaction]).map((tx) =>
+        Math.abs(Number(tx.amount)),
+      );
+      monthlyCost = amounts.reduce((total, amount) => total + amount, 0) / amounts.length;
+    } else if (typeof body.merchantName === "string" && body.merchantName.trim().length) {
+      merchantName = body.merchantName.trim();
+      const parsedCost = Number(body.monthlyCost);
+      if (!Number.isFinite(parsedCost) || parsedCost <= 0) {
+        return reply.code(400).send({ error: "monthlyCost must be a positive number" });
+      }
+      monthlyCost = parsedCost;
+    } else {
+      return reply
+        .code(400)
+        .send({ error: "Provide either a transactionId or a merchantName with monthlyCost" });
+    }
+
+    const normalizedMonthly = currency(monthlyCost);
+    const normalizedYearly = currency(normalizedMonthly * 12);
+    const shared = {
+      category,
+      monthlyCost: normalizedMonthly,
+      yearlyCost: normalizedYearly,
+      confidence: 1,
+    };
+
+    // Manual add doubles as "un-dismiss": upserting on the merchant flips a
+    // previously dismissed/cancelled row back to active.
+    const subscription = await prisma.subscription.upsert({
+      where: { userId_merchantName: { userId: user.id, merchantName } },
+      create: { userId: user.id, merchantName, status: "active", ...shared },
+      update: { status: "active", ...shared },
+    });
+
+    return reply.code(201).send({
+      id: subscription.id,
+      name: subscription.merchantName,
+      merchantName: subscription.merchantName,
+      monthlyCost: currency(Number(subscription.monthlyCost)),
+      yearlyCost: currency(Number(subscription.yearlyCost)),
+      opportunity: Number(subscription.monthlyCost) > 25 ? "Review" : "Keep",
+      confidence: subscription.confidence,
+      category: subscription.category ?? undefined,
+      status: subscription.status,
+    });
+  });
+
   app.patch("/api/subscriptions/:id", async (request, reply) => {
     const user = await requireAppUser(request, reply);
 
@@ -739,8 +825,12 @@ function normalizeCategory(category: string) {
     .toUpperCase();
 }
 
-export function parseSubscriptionStatus(value: unknown): "active" | "paused" | "cancelled" | null {
-  return value === "active" || value === "paused" || value === "cancelled" ? value : null;
+export function parseSubscriptionStatus(
+  value: unknown,
+): "active" | "paused" | "cancelled" | "dismissed" | null {
+  return value === "active" || value === "paused" || value === "cancelled" || value === "dismissed"
+    ? value
+    : null;
 }
 
 function currency(value: number) {

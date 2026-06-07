@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-type Status = "active" | "paused" | "cancelled";
+type Status = "active" | "paused" | "cancelled" | "dismissed";
 
 export function SubscriptionActions({ id, status }: { id?: string; status?: Status }) {
   const { getToken } = useAuth();
@@ -62,6 +62,14 @@ export function SubscriptionActions({ id, status }: { id?: string; status?: Stat
           Reactivate
         </Button>
       ) : null}
+      <Button
+        variant="ghost"
+        disabled={pending}
+        onClick={() => update("dismissed")}
+        title="Not a subscription? Remove it from this list."
+      >
+        Remove
+      </Button>
     </div>
   );
 }
