@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Bot, ChartNoAxesCombined, CreditCard, FileText, House, MessageCircle, Settings, ShieldCheck, Sparkles } from "lucide-react";
+import { Bot, ChartNoAxesCombined, CreditCard, FileText, House, Settings, ShieldCheck, Sparkles } from "lucide-react";
 
 import { AppUserControls } from "@/components/app-user-controls";
 import { UserSync } from "@/components/user-sync";
@@ -12,7 +12,6 @@ const navItems = [
   { href: "/transactions", label: "Transactions", icon: CreditCard },
   { href: "/subscriptions", label: "Subscriptions", icon: Bot },
   { href: "/financial-health", label: "Financial health", icon: ShieldCheck },
-  { href: "/advisor", label: "Advisor", icon: MessageCircle },
   { href: "/reports", label: "Reports", icon: FileText },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 
 import { AppShell } from "@/components/app-shell";
@@ -7,6 +7,7 @@ import { BankConnectionPanel } from "@/components/bank-connection-panel";
 import { CashFlowChart } from "@/components/charts/cash-flow-chart";
 import { SpendingBreakdownChart } from "@/components/charts/spending-breakdown-chart";
 import { CreditCardPaymentsCard } from "@/components/credit-card-payments-card";
+import { DashboardAdvisor } from "@/components/dashboard-advisor";
 import { InsightCard } from "@/components/insight-card";
 import { MetricCard } from "@/components/metric-card";
 import { OnboardingModal } from "@/components/onboarding-modal";
@@ -32,6 +33,7 @@ export default async function DashboardPage() {
   return (
     <AppShell currentPath="/dashboard" eyebrow="Financial overview" title="See your cash flow before it becomes a problem">
       <OnboardingModal />
+      <DashboardAdvisor />
       <BankConnectionPanel />
 
       <section className="grid gap-4 xl:grid-cols-2">
@@ -119,7 +121,7 @@ export default async function DashboardPage() {
         </Panel>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <section>
         <Panel className="p-6">
           <div className="flex items-center gap-3">
             <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
@@ -139,32 +141,6 @@ export default async function DashboardPage() {
                 severity={insight.severity as "high" | "medium" | "low"}
               />
             ))}
-          </div>
-        </Panel>
-
-        <Panel className="p-6">
-          <div className="flex items-center gap-3">
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-white/8 text-white">
-              <Bot className="size-5" />
-            </span>
-            <div>
-              <h2 className="text-xl font-semibold text-white">Advisor chat preview</h2>
-              <p className="mt-2 text-sm text-slate-300">Grounded answers based on transactions, forecast, and savings behavior.</p>
-            </div>
-          </div>
-
-          <div className="mt-6 space-y-4 rounded-[28px] border border-white/8 bg-[#091120] p-5">
-            <div className="rounded-3xl bg-white/7 px-4 py-3 text-sm text-slate-200">
-              Can I afford a $400 gaming monitor this month?
-            </div>
-            <div className="rounded-3xl bg-[var(--color-accent)]/16 px-4 py-4 text-sm leading-7 text-slate-100">
-              Based on your projected balance of $1,240 after bills, a $400 purchase looks affordable, but it would cut your monthly savings rate from 18.6% to about 10.2%.
-            </div>
-          </div>
-
-          <div className="mt-5 flex items-center gap-2 text-sm text-slate-300">
-            View full chat workflow
-            <ArrowRight className="size-4" />
           </div>
         </Panel>
       </section>

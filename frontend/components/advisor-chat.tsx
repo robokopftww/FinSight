@@ -37,7 +37,7 @@ const starterPrompts = [
   "What is my biggest cash flow risk?",
 ];
 
-export function AdvisorChat() {
+export function AdvisorChat({ compact = false }: { compact?: boolean }) {
   const { getToken, isSignedIn } = useAuth();
   const [messages, setMessages] = useState<AdvisorMessage[]>([welcomeMessage]);
   const [question, setQuestion] = useState("");
@@ -186,9 +186,9 @@ export function AdvisorChat() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]">
-      <section className="overflow-hidden rounded-[28px] border border-white/8 bg-[#091120]">
-        <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+    <div className={compact ? "flex min-h-0 flex-1 flex-col" : "grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]"}>
+      <section className={compact ? "flex min-h-0 flex-1 flex-col overflow-hidden bg-[#091120]" : "overflow-hidden rounded-[28px] border border-white/8 bg-[#091120]"}>
+        {!compact ? <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
               <Sparkles className="size-5" />
@@ -200,13 +200,40 @@ export function AdvisorChat() {
           </div>
           <div className="flex items-center gap-2">
             {isLoadingHistory ? <Loader2 className="size-4 animate-spin text-slate-400" /> : null}
-            <span className="rounded-full bg-emerald-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+            <span className="hidden rounded-full bg-emerald-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100 sm:inline-flex">
               Gemini + Python
             </span>
           </div>
-        </div>
+        </div> : null}
 
-        <div className="max-h-[34rem] space-y-4 overflow-y-auto px-5 py-5">
+        {compact ? (
+          <div className="flex items-center gap-2 border-b border-white/8 px-4 py-3">
+            <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
+              {starterPrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  className="shrink-0 rounded-full border border-white/8 bg-white/4 px-3 py-2 text-xs text-slate-300 transition hover:border-[var(--color-accent)] hover:text-white"
+                  onClick={() => void sendQuestion(prompt)}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="shrink-0 rounded-full border border-white/8 p-2 text-slate-300 transition hover:border-amber-300/30 hover:bg-amber-300/10 hover:text-amber-100 disabled:opacity-50"
+              onClick={() => void clearHistory()}
+              disabled={isSending || isLoadingHistory}
+              aria-label="Clear advisor history"
+              title="Clear advisor history"
+            >
+              {isLoadingHistory ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+            </button>
+          </div>
+        ) : null}
+
+        <div className={compact ? "min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4" : "max-h-[34rem] space-y-4 overflow-y-auto px-5 py-5"}>
           {historyMessage ? (
             <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-white/8 bg-white/5 px-3 py-2 text-xs text-slate-300">
               <Clock3 className="size-3.5" />
@@ -273,7 +300,7 @@ export function AdvisorChat() {
         </form>
       </section>
 
-      <aside className="space-y-4">
+      {!compact ? <aside className="space-y-4">
         <div className="rounded-[28px] border border-white/8 bg-white/5 p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-semibold text-white">Try asking</h2>
@@ -312,7 +339,7 @@ export function AdvisorChat() {
             <p>Gemini explanation layer</p>
           </div>
         </div>
-      </aside>
+      </aside> : null}
     </div>
   );
 }
