@@ -12,6 +12,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { LandingEffects } from "@/components/landing-effects";
+
 type Feature = {
   icon: LucideIcon;
   title: string;
@@ -219,7 +221,7 @@ function Hero() {
   return (
     <section className="wl-landing-hero" id="top">
       <div className="wl-landing-video-layer" aria-hidden="true">
-        <video src="/uploads/14968848_1920_1080_30fps.mp4" muted playsInline autoPlay loop preload="metadata" />
+        <video src="/uploads/14968848_1920_1080_30fps.mp4" muted playsInline autoPlay preload="metadata" />
         <div className="wl-landing-video-wash" />
         <div className="wl-landing-brand-glow" />
         <div className="wl-landing-grain" />
@@ -291,7 +293,12 @@ function Features() {
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
-              <article key={feature.title} className="wl-landing-panel wl-landing-feature">
+              <article
+                key={feature.title}
+                className="wl-landing-panel wl-landing-feature"
+                data-reveal
+                style={{ "--wl-reveal-delay": `${features.indexOf(feature) * 70}ms` } as React.CSSProperties}
+              >
                 <span className="wl-landing-feature-icon">
                   <Icon size={22} aria-hidden="true" />
                 </span>
@@ -311,7 +318,7 @@ function Intelligence() {
     <section id="intelligence" className="wl-landing-section">
       <div className="wl-landing-wrap">
         <div className="wl-landing-two-up">
-          <article className="wl-landing-panel wl-landing-intelligence-card">
+          <article className="wl-landing-panel wl-landing-intelligence-card" data-reveal>
             <div className="wl-landing-overline">Subscription intelligence</div>
             <h2 className="wl-landing-card-title">Recurring spend, annualized and easy to challenge.</h2>
             <div className="wl-landing-subscription-list">
@@ -330,7 +337,11 @@ function Intelligence() {
             </div>
           </article>
 
-          <article className="wl-landing-panel wl-landing-intelligence-card">
+          <article
+            className="wl-landing-panel wl-landing-intelligence-card"
+            data-reveal
+            style={{ "--wl-reveal-delay": "90ms" } as React.CSSProperties}
+          >
             <div className="wl-landing-overline">Spending mix</div>
             <h2 className="wl-landing-card-title">See where spending pressure is actually forming.</h2>
             <div className="wl-landing-mix-grid">
@@ -366,8 +377,13 @@ function Testimonials() {
           </div>
         </div>
         <div className="wl-landing-testimonial-grid">
-          {testimonials.map((testimonial) => (
-            <article key={testimonial.name} className="wl-landing-panel wl-landing-testimonial-card">
+          {testimonials.map((testimonial, index) => (
+            <article
+              key={testimonial.name}
+              className="wl-landing-panel wl-landing-testimonial-card"
+              data-reveal
+              style={{ "--wl-reveal-delay": `${index * 70}ms` } as React.CSSProperties}
+            >
               <p>{testimonial.quote}</p>
               <div>
                 <div className="wl-landing-testimonial-name">{testimonial.name}</div>
@@ -390,10 +406,12 @@ function Pricing() {
           <h2 className="wl-landing-section-title">Simple plans for a product that earns trust with numbers.</h2>
         </div>
         <div className="wl-landing-price-grid">
-          {pricingTiers.map((tier) => (
+          {pricingTiers.map((tier, index) => (
             <article
               key={tier.name}
               className={`wl-landing-panel wl-landing-tier${tier.featured ? " wl-landing-tier-featured" : ""}`}
+              data-reveal
+              style={{ "--wl-reveal-delay": `${index * 70}ms` } as React.CSSProperties}
             >
               <div className="wl-landing-tier-name">
                 {tier.name}
@@ -419,7 +437,7 @@ function GetStarted() {
   return (
     <section id="demo" className="wl-landing-section wl-landing-getstarted">
       <div className="wl-landing-wrap">
-        <div className="wl-landing-panel">
+        <div className="wl-landing-panel" data-reveal>
           <div className="wl-landing-getstarted-grid">
             <div>
               <div className="wl-landing-overline">Get started</div>
@@ -465,6 +483,7 @@ function Footer() {
 export default function Home() {
   return (
     <div className="wl-landing">
+      <LandingEffects />
       <Header />
       <main>
         <Hero />
