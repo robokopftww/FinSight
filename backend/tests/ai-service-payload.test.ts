@@ -1,7 +1,28 @@
 import type { Account, Transaction } from "@prisma/client";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { buildAnalyticsPayload } from "../src/lib/ai-service.js";
+import { buildAnalyticsPayload, fetchAiService } from "../src/lib/ai-service.js";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("fetchAiService", () => {
+  it("retries a connection failure while the AI service is waking", async () => {
+    const response = new Response(JSON.stringify({ service: "wealthlens-ai-service" }), {
+      headers: { "Content-Type": "application/json" },
+    });
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockRejectedValueOnce(new TypeError("fetch failed"))
+      .mockResolvedValueOnce(response);
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchAiService("/health", {}, [0])).resolves.toBe(response);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
 
 describe("buildAnalyticsPayload", () => {
   it("sends only depository-account transactions to cash forecasting", () => {

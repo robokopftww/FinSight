@@ -52,6 +52,27 @@ export type AiWeeklyReportResponse = {
 const AI_CHAT_TIMEOUT_MS = 30000;
 const AI_REPORT_TIMEOUT_MS = 30000;
 const AI_SUMMARY_TIMEOUT_MS = 8000;
+const AI_COLD_START_RETRY_DELAYS_MS = [500, 1500, 3000];
+
+export async function fetchAiService(
+  path: string,
+  init: RequestInit,
+  retryDelaysMs = AI_COLD_START_RETRY_DELAYS_MS,
+) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await fetch(`${env.AI_SERVICE_URL}${path}`, init);
+    } catch (error) {
+      const retryDelay = retryDelaysMs[attempt];
+
+      if (retryDelay === undefined || init.signal?.aborted) {
+        throw error;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
+  }
+}
 
 export async function requestAiSummary({
   accounts,
@@ -72,7 +93,7 @@ export async function requestAiSummary({
   const timeout = setTimeout(() => controller.abort(), AI_SUMMARY_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${env.AI_SERVICE_URL}/analytics/summary`, {
+    const response = await fetchAiService("/analytics/summary", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -121,7 +142,7 @@ export async function requestAiChat({
   const timeout = setTimeout(() => controller.abort(), AI_CHAT_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${env.AI_SERVICE_URL}/analytics/chat`, {
+    const response = await fetchAiService("/analytics/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -169,7 +190,7 @@ export async function requestAiWeeklyReport({
   const timeout = setTimeout(() => controller.abort(), AI_REPORT_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${env.AI_SERVICE_URL}/analytics/report`, {
+    const response = await fetchAiService("/analytics/report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(
