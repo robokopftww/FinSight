@@ -43,7 +43,7 @@ export function AppShell({
             WealthLens
           </Link>
 
-          <div className="mt-10 space-y-2">
+          <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:mt-10 lg:block lg:space-y-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -64,7 +64,7 @@ export function AppShell({
             })}
           </div>
 
-          <div className="mt-10 rounded-3xl border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-4">
+          <div className="mt-10 hidden rounded-3xl border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-4 lg:block">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]">
               <ChartNoAxesCombined className="size-4" />
               Analyst mode

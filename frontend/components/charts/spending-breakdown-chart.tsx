@@ -17,7 +17,7 @@ export function SpendingBreakdownChart({
   return (
     <div className="h-72 w-full">
       {mounted ? (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 1, height: 1 }}>
           <PieChart>
             <Pie data={data} dataKey="amount" innerRadius={70} outerRadius={102} paddingAngle={3} stroke="none">
               {data.map((entry) => (

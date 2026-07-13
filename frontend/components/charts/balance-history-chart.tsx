@@ -18,6 +18,15 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+function formatCompactCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
 function formatSignedCurrency(value: number) {
   return `${value >= 0 ? "+" : "-"}${formatCurrency(Math.abs(value))}`;
 }
@@ -56,8 +65,15 @@ export function BalanceHistoryChart({ data }: { data: BalanceHistoryPoint[] }) {
 
       {change ? (
         <div className="mt-6 h-80 w-full">
+          <ul className="sr-only" aria-label="Balance history values">
+            {data.map((point, index) => (
+              <li key={`${point.label}-${index}`}>
+                {point.label}: {formatCurrency(point.balance)}
+              </li>
+            ))}
+          </ul>
           {mounted ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 1, height: 1 }}>
               <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
                 <defs>
                   <linearGradient id="balance-history-fill" x1="0" y1="0" x2="0" y2="1">
@@ -71,12 +87,12 @@ export function BalanceHistoryChart({ data }: { data: BalanceHistoryPoint[] }) {
                   tickLine={false}
                   axisLine={false}
                   tick={{ fill: "#64748b", fontSize: 12 }}
-                  tickFormatter={(value) => formatCurrency(Number(value))}
+                  tickFormatter={(value) => formatCompactCurrency(Number(value))}
                   width={84}
                 />
                 <Tooltip
                   cursor={{ stroke: "#93c5fd", strokeDasharray: "4 4" }}
-                  formatter={(value) => [formatCurrency(Number(value)), "Balance"]}
+                  formatter={(value) => [formatCompactCurrency(Number(value)), "Balance"]}
                   contentStyle={{
                     backgroundColor: "#ffffff",
                     border: "1px solid #dbe4f0",

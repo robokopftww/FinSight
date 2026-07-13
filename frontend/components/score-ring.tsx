@@ -18,7 +18,7 @@ export function ScoreRing({ score }: { score: number }) {
   return (
     <div className="relative h-56 w-56">
       {mounted ? (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 1, height: 1 }}>
           <PieChart>
             <Pie data={data} dataKey="value" innerRadius={72} outerRadius={92} stroke="none" startAngle={90} endAngle={-270} />
           </PieChart>

@@ -123,7 +123,13 @@ function StatTile({ label, value, detail }: { label: string; value: string | num
   );
 }
 
-export function SettingsControlCenter() {
+export function SettingsControlCenter({
+  onPlaidStatusChanged,
+  refreshVersion = 0,
+}: {
+  onPlaidStatusChanged?: () => void;
+  refreshVersion?: number;
+}) {
   const { getToken, isSignedIn } = useAuth();
   const [status, setStatus] = useState<SettingsStatus | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -160,7 +166,7 @@ export function SettingsControlCenter() {
     }, 0);
 
     return () => window.clearTimeout(timeout);
-  }, [refreshStatus]);
+  }, [refreshStatus, refreshVersion]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -190,7 +196,13 @@ export function SettingsControlCenter() {
     }
   }
 
-  async function runAction(nextAction: ActionState, path: string, init: RequestInit, successMessage: string) {
+  async function runAction(
+    nextAction: ActionState,
+    path: string,
+    init: RequestInit,
+    successMessage: string,
+    plaidStatusChanged = false,
+  ) {
     setAction(nextAction);
     setMessage(null);
 
@@ -204,6 +216,9 @@ export function SettingsControlCenter() {
       }
 
       setMessage(successMessage);
+      if (plaidStatusChanged) {
+        onPlaidStatusChanged?.();
+      }
       await refreshStatus();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Action failed.");
@@ -222,6 +237,7 @@ export function SettingsControlCenter() {
       `/api/plaid/items/${institution.id}`,
       { method: "DELETE" },
       `${institution.name} disconnected. Other institutions remain connected.`,
+      true,
     );
   }
 
@@ -235,6 +251,7 @@ export function SettingsControlCenter() {
       "/api/settings/sandbox-data",
       { method: "DELETE" },
       "Sandbox data cleared for this user.",
+      true,
     );
   }
 

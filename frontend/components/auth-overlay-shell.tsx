@@ -13,7 +13,7 @@ export function AuthOverlayShell({ children, label }: { children: ReactNode; lab
         </div>
       </div>
 
-      <main className="fixed inset-0 z-50 flex min-h-screen items-center justify-center overflow-y-auto bg-slate-1002 px-4 py-8 backdrop-blur-md sm:px-6">
+      <main className="fixed inset-0 z-50 flex min-h-screen items-center justify-center overflow-y-auto bg-white/80 px-4 py-8 backdrop-blur-md sm:px-6">
         <div className="relative w-full max-w-md">
           <Link
             href="/"

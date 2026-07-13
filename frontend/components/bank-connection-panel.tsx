@@ -40,7 +40,13 @@ async function authenticatedFetch(path: string, token: string | null, init?: Req
   });
 }
 
-export function BankConnectionPanel() {
+export function BankConnectionPanel({
+  onStatusChanged,
+  refreshVersion = 0,
+}: {
+  onStatusChanged?: () => void;
+  refreshVersion?: number;
+}) {
   const { getToken, isSignedIn } = useAuth();
   const [status, setStatus] = useState<PlaidStatus | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -71,7 +77,7 @@ export function BankConnectionPanel() {
     }, 0);
 
     return () => window.clearTimeout(timeout);
-  }, [refreshStatus]);
+  }, [refreshStatus, refreshVersion]);
 
   const plaid = usePlaidLink({
     token: linkToken,
@@ -104,6 +110,7 @@ export function BankConnectionPanel() {
         }
 
         setLinkToken(null);
+        onStatusChanged?.();
         await refreshStatus();
       } catch (error) {
         setMessage(error instanceof Error ? error.message : "Unable to connect bank account");
@@ -168,6 +175,7 @@ export function BankConnectionPanel() {
 
       const body = (await response.json()) as { addedCount: number; modifiedCount: number; removedCount: number };
       setMessage(`Synced ${body.addedCount} new, ${body.modifiedCount} updated, and ${body.removedCount} removed transactions.`);
+      onStatusChanged?.();
       await refreshStatus();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to sync transactions");
