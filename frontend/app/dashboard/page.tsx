@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 
 import { AppShell } from "@/components/app-shell";
 import { BalanceCard } from "@/components/balance-card";
-import { BankConnectionPanel } from "@/components/bank-connection-panel";
+import { BalanceHistoryChart } from "@/components/charts/balance-history-chart";
 import { CashFlowChart } from "@/components/charts/cash-flow-chart";
 import { SpendingBreakdownChart } from "@/components/charts/spending-breakdown-chart";
 import { CreditCardPaymentsCard } from "@/components/credit-card-payments-card";
@@ -34,13 +34,11 @@ export default async function DashboardPage() {
     <AppShell currentPath="/dashboard" eyebrow="Financial overview" title="See your cash flow before it becomes a problem">
       <OnboardingModal />
       <DashboardAdvisor />
-      <BankConnectionPanel />
 
       <section className="grid gap-4 xl:grid-cols-2">
         <BalanceCard
           currentBalance={data.currentBalance}
           monthOverMonthChange={data.monthOverMonthChange}
-          balanceTrend={data.balanceTrend}
           accountsBreakdown={data.accountsBreakdown}
         />
         <CreditCardPaymentsCard
@@ -49,6 +47,8 @@ export default async function DashboardPage() {
           cards={data.creditCards}
         />
       </section>
+
+      <BalanceHistoryChart data={data.balanceTrend ?? []} />
 
       <section className="grid gap-4 md:grid-cols-2">
         <MetricCard

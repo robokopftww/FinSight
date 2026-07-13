@@ -13,21 +13,16 @@ function formatCurrency(value: number) {
 type BalanceCardProps = {
   currentBalance: number;
   monthOverMonthChange?: { amount: number; percent: number } | null;
-  balanceTrend?: Array<{ label: string; balance: number }>;
   accountsBreakdown?: Array<{ name: string; mask: string | null; currentBalance: number }>;
 };
 
 export function BalanceCard({
   currentBalance,
   monthOverMonthChange,
-  balanceTrend = [],
   accountsBreakdown = [],
 }: BalanceCardProps) {
   const positive = (monthOverMonthChange?.amount ?? 0) >= 0;
   const Icon = positive ? ArrowUpRight : ArrowDownRight;
-  const balances = balanceTrend.map((point) => point.balance);
-  const minBalance = Math.min(...balances, 0);
-  const balanceRange = Math.max(Math.max(...balances, 1) - minBalance, 1);
 
   return (
     <Panel className="p-5">
@@ -35,26 +30,12 @@ export function BalanceCard({
       <div className="mt-3 flex flex-wrap items-baseline gap-3">
         <div className="text-3xl font-semibold text-white">{formatCurrency(currentBalance)}</div>
         {monthOverMonthChange ? (
-          <div className={`flex items-center gap-1 text-sm ${positive ? "text-[var(--color-accent)]" : "text-rose-400"}`}>
+          <div className={`flex items-center gap-1 text-sm ${positive ? "text-emerald-600" : "text-red-600"}`}>
             <Icon className="size-4" />
             {formatCurrency(Math.abs(monthOverMonthChange.amount))} ({monthOverMonthChange.percent}%)
           </div>
         ) : null}
       </div>
-
-      {balanceTrend.length > 0 ? (
-        <div className="mt-5 flex h-16 items-end gap-2">
-          {balanceTrend.map((point) => (
-            <div key={point.label} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-              <div
-                className="w-full rounded-t bg-[var(--color-accent)]/70"
-                style={{ height: `${Math.max(((point.balance - minBalance) / balanceRange) * 100, 5)}%` }}
-              />
-              <span className="text-[10px] text-slate-500">{point.label}</span>
-            </div>
-          ))}
-        </div>
-      ) : null}
 
       {accountsBreakdown.length > 1 ? (
         <div className="mt-5 space-y-2 border-t border-white/8 pt-4">
