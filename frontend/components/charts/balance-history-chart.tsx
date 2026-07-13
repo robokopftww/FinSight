@@ -36,8 +36,8 @@ export function BalanceHistoryChart({ data }: { data: BalanceHistoryPoint[] }) {
     <Panel className="p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Balance over time</h2>
-          <p className="mt-2 text-sm text-slate-300">
+          <h2 className="text-xl font-semibold text-slate-950">Balance over time</h2>
+          <p className="mt-2 text-sm text-slate-600">
             Estimated cash balance across your last six months of synced activity.
           </p>
         </div>

@@ -32,11 +32,11 @@ export default async function ReportsPage() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {report.cards.map((card) => (
           <Panel key={card.label} className="min-w-0 overflow-hidden p-5">
-            <div className="text-sm text-slate-400">{card.label}</div>
-            <div className="mt-4 break-words text-2xl font-semibold leading-tight text-white lg:text-3xl xl:text-2xl">
+            <div className="text-sm text-slate-500">{card.label}</div>
+            <div className="mt-4 break-words text-2xl font-semibold leading-tight text-slate-950 lg:text-3xl xl:text-2xl">
               {card.value}
             </div>
-            <div className="mt-4 break-words text-sm leading-6 text-slate-300">{card.detail}</div>
+            <div className="mt-4 break-words text-sm leading-6 text-slate-600">{card.detail}</div>
           </Panel>
         ))}
       </section>
@@ -45,29 +45,29 @@ export default async function ReportsPage() {
         <Panel className="p-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
                 <CalendarDays className="size-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold text-white">Spending cadence</h2>
-                <p className="mt-2 text-sm text-slate-300">{report.periodLabel}</p>
+                <h2 className="text-xl font-semibold text-slate-950">Spending cadence</h2>
+                <p className="mt-2 text-sm text-slate-600">{report.periodLabel}</p>
               </div>
             </div>
-            <span className="rounded-full bg-white/7 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
               {report.source ?? "analytics"}
             </span>
           </div>
 
-          <div className="mt-8 flex h-72 items-end gap-3 border-b border-white/8 pb-4">
+          <div className="mt-8 flex h-72 items-end gap-3 border-b border-slate-200 pb-4">
             {report.weeklySpend.map((day) => (
               <div key={day.label} className="flex min-w-0 flex-1 flex-col items-center gap-3">
-                <div className="flex h-56 w-full items-end rounded-t-2xl bg-white/4">
+                <div className="flex h-56 w-full items-end rounded-t-2xl bg-slate-50">
                   <div
                     className="w-full rounded-t-2xl bg-[linear-gradient(180deg,var(--color-accent),rgba(167,195,255,0.18))]"
                     style={{ height: `${Math.max((day.amount / maxSpend) * 100, day.amount > 0 ? 8 : 0)}%` }}
                   />
                 </div>
-                <div className="text-xs font-medium text-slate-400">{day.label}</div>
+                <div className="text-xs font-medium text-slate-500">{day.label}</div>
               </div>
             ))}
           </div>
@@ -75,27 +75,27 @@ export default async function ReportsPage() {
 
         <Panel className="p-6">
           <div className="flex items-center gap-3">
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-white/8 text-white">
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-950">
               <ShieldCheck className="size-5" />
             </span>
             <div>
-              <h2 className="text-xl font-semibold text-white">Forecast context</h2>
-              <p className="mt-2 text-sm text-slate-300">How the week affects your short-term runway.</p>
+              <h2 className="text-xl font-semibold text-slate-950">Forecast context</h2>
+              <p className="mt-2 text-sm text-slate-600">How the week affects your short-term runway.</p>
             </div>
           </div>
 
           <div className="mt-6 grid gap-3">
-            <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Projected balance</div>
-              <div className="mt-3 text-2xl font-semibold text-white">{formatCurrency(report.forecast?.projectedBalance ?? 0)}</div>
+              <div className="mt-3 text-2xl font-semibold text-slate-950">{formatCurrency(report.forecast?.projectedBalance ?? 0)}</div>
             </div>
-            <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Safe to spend</div>
-              <div className="mt-3 text-2xl font-semibold text-white">{formatCurrency(report.forecast?.safeToSpend ?? 0)}</div>
+              <div className="mt-3 text-2xl font-semibold text-slate-950">{formatCurrency(report.forecast?.safeToSpend ?? 0)}</div>
             </div>
-            <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Risk probability</div>
-              <div className="mt-3 text-2xl font-semibold text-white">{formatPercent(report.forecast?.riskProbability)}</div>
+              <div className="mt-3 text-2xl font-semibold text-slate-950">{formatPercent(report.forecast?.riskProbability)}</div>
             </div>
           </div>
         </Panel>
@@ -103,12 +103,12 @@ export default async function ReportsPage() {
 
       <Panel className="p-6">
         <div className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-[var(--color-accent-text)]">
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-blue-600/16 text-[var(--color-accent-text)]">
             <FileText className="size-5" />
           </span>
           <div>
-            <h2 className="text-xl font-semibold text-white">AI weekly brief</h2>
-            <p className="mt-2 text-sm text-slate-300">Generated from synced transactions, Python analytics, and the Gemini explanation layer.</p>
+            <h2 className="text-xl font-semibold text-slate-950">AI weekly brief</h2>
+            <p className="mt-2 text-sm text-slate-600">Generated from synced transactions, Python analytics, and the Gemini explanation layer.</p>
           </div>
         </div>
         {report.llmSummary ? (
@@ -130,12 +130,12 @@ export default async function ReportsPage() {
 
       <Panel className="p-6">
         <div className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-white/8 text-white">
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-950">
             <Activity className="size-5" />
           </span>
           <div>
-            <h2 className="text-xl font-semibold text-white">Next actions</h2>
-            <p className="mt-2 text-sm text-slate-300">Keep this report useful by syncing after new transactions post.</p>
+            <h2 className="text-xl font-semibold text-slate-950">Next actions</h2>
+            <p className="mt-2 text-sm text-slate-600">Keep this report useful by syncing after new transactions post.</p>
           </div>
         </div>
       </Panel>

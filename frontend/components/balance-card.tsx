@@ -26,9 +26,9 @@ export function BalanceCard({
 
   return (
     <Panel className="p-5">
-      <div className="text-sm text-slate-400">Current balance</div>
+      <div className="text-sm text-slate-500">Current balance</div>
       <div className="mt-3 flex flex-wrap items-baseline gap-3">
-        <div className="text-3xl font-semibold text-white">{formatCurrency(currentBalance)}</div>
+        <div className="text-3xl font-semibold text-slate-950">{formatCurrency(currentBalance)}</div>
         {monthOverMonthChange ? (
           <div className={`flex items-center gap-1 text-sm ${positive ? "text-emerald-600" : "text-red-600"}`}>
             <Icon className="size-4" />
@@ -38,11 +38,11 @@ export function BalanceCard({
       </div>
 
       {accountsBreakdown.length > 1 ? (
-        <div className="mt-5 space-y-2 border-t border-white/8 pt-4">
+        <div className="mt-5 space-y-2 border-t border-slate-200 pt-4">
           {accountsBreakdown.map((account) => (
-            <div key={`${account.name}-${account.mask}`} className="flex justify-between text-xs text-slate-400">
+            <div key={`${account.name}-${account.mask}`} className="flex justify-between text-xs text-slate-500">
               <span>{account.name}{account.mask ? ` ·${account.mask}` : ""}</span>
-              <span className="text-slate-200">{formatCurrency(account.currentBalance)}</span>
+              <span className="text-slate-700">{formatCurrency(account.currentBalance)}</span>
             </div>
           ))}
         </div>

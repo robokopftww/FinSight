@@ -11,8 +11,8 @@ export function ScoreRing({ score }: { score: number }) {
   );
 
   const data = [
-    { name: "score", value: score, fill: "#a7c3ff" },
-    { name: "remaining", value: 100 - score, fill: "rgba(255,255,255,0.08)" },
+    { name: "score", value: score, fill: "#2563eb" },
+    { name: "remaining", value: 100 - score, fill: "#e2e8f0" },
   ];
 
   return (
@@ -25,8 +25,8 @@ export function ScoreRing({ score }: { score: number }) {
         </ResponsiveContainer>
       ) : null}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-5xl font-semibold text-white">{score}</div>
-        <div className="mt-2 text-xs uppercase tracking-[0.22em] text-slate-400">Health score</div>
+        <div className="text-5xl font-semibold text-slate-950">{score}</div>
+        <div className="mt-2 text-xs uppercase tracking-[0.22em] text-slate-500">Health score</div>
       </div>
     </div>
   );

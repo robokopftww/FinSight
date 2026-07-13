@@ -128,39 +128,39 @@ export function TransactionsWorkbench({
   return (
     <div className="space-y-5">
       <div className="grid gap-4 lg:grid-cols-4">
-        <div className="rounded-[24px] border border-white/8 bg-white/4 p-5">
-          <div className="text-sm text-slate-400">Loaded transactions</div>
-          <div className="mt-3 text-2xl font-semibold text-white">{summary?.count ?? transactions.length}</div>
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+          <div className="text-sm text-slate-500">Loaded transactions</div>
+          <div className="mt-3 text-2xl font-semibold text-slate-950">{summary?.count ?? transactions.length}</div>
         </div>
-        <div className="rounded-[24px] border border-white/8 bg-white/4 p-5">
-          <div className="text-sm text-slate-400">Visible results</div>
-          <div className="mt-3 text-2xl font-semibold text-white">{visibleTransactions.length}</div>
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+          <div className="text-sm text-slate-500">Visible results</div>
+          <div className="mt-3 text-2xl font-semibold text-slate-950">{visibleTransactions.length}</div>
         </div>
-        <div className="rounded-[24px] border border-white/8 bg-white/4 p-5">
-          <div className="text-sm text-slate-400">Visible spending</div>
-          <div className="mt-3 text-2xl font-semibold text-white">{formatAmount(visibleSpending)}</div>
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+          <div className="text-sm text-slate-500">Visible spending</div>
+          <div className="mt-3 text-2xl font-semibold text-red-600">{formatAmount(visibleSpending)}</div>
         </div>
-        <div className="rounded-[24px] border border-white/8 bg-white/4 p-5">
-          <div className="text-sm text-slate-400">Visible income</div>
-          <div className="mt-3 text-2xl font-semibold text-white">{formatAmount(visibleIncome)}</div>
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+          <div className="text-sm text-slate-500">Visible income</div>
+          <div className="mt-3 text-2xl font-semibold text-emerald-600">{formatAmount(visibleIncome)}</div>
         </div>
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-1 items-center gap-3 rounded-full border border-white/8 bg-white/4 px-4 py-3">
-          <Search className="size-4 text-slate-400" />
+        <div className="flex flex-1 items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-3">
+          <Search className="size-4 text-slate-500" />
           <input
-            className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+            className="w-full bg-transparent text-sm text-slate-950 outline-none placeholder:text-slate-500"
             placeholder="Search merchants, descriptions, categories, or amounts"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:w-[30rem]">
-          <label className="flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-4 py-3 text-sm text-slate-300">
+          <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
             <SlidersHorizontal className="size-4" />
             <select
-              className="w-full bg-transparent text-sm text-white outline-none"
+              className="w-full bg-transparent text-sm text-slate-950 outline-none"
               value={category}
               onChange={(event) => setCategory(event.target.value)}
             >
@@ -174,9 +174,9 @@ export function TransactionsWorkbench({
               ))}
             </select>
           </label>
-          <label className="rounded-full border border-white/8 bg-white/4 px-4 py-3">
+          <label className="rounded-full border border-slate-200 bg-slate-50 px-4 py-3">
             <select
-              className="w-full bg-transparent text-sm text-white outline-none"
+              className="w-full bg-transparent text-sm text-slate-950 outline-none"
               value={direction}
               onChange={(event) => setDirection(event.target.value)}
             >
@@ -194,10 +194,10 @@ export function TransactionsWorkbench({
         </div>
       </div>
 
-      {message ? <div className="rounded-full bg-white/6 px-4 py-3 text-sm text-slate-300">{message}</div> : null}
+      {message ? <div className="rounded-full bg-slate-100 px-4 py-3 text-sm text-slate-600">{message}</div> : null}
 
-      <div className="overflow-hidden rounded-[28px] border border-white/8">
-        <div className="hidden grid-cols-[1.5fr_1.15fr_0.6fr_0.55fr] gap-4 bg-white/6 px-5 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 md:grid">
+      <div className="overflow-hidden rounded-[28px] border border-slate-200">
+        <div className="hidden grid-cols-[1.5fr_1.15fr_0.6fr_0.55fr] gap-4 bg-slate-100 px-5 py-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 md:grid">
           <span>Merchant</span>
           <span>Category</span>
           <span className="text-right">Amount</span>
@@ -210,22 +210,22 @@ export function TransactionsWorkbench({
           return (
             <div
               key={transaction.id}
-              className="grid gap-4 border-t border-white/8 px-5 py-5 text-sm md:grid-cols-[1.5fr_1.15fr_0.6fr_0.55fr]"
+              className="grid gap-4 border-t border-slate-200 px-5 py-5 text-sm md:grid-cols-[1.5fr_1.15fr_0.6fr_0.55fr]"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/8 text-slate-200">
+                  <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${transaction.amount > 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}>
                     {transaction.amount > 0 ? <ArrowUpRight className="size-4" /> : <ArrowDownLeft className="size-4" />}
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate font-medium text-white">{merchant}</div>
-                    <div className="mt-1 truncate text-slate-400">{transaction.description}</div>
+                    <div className="truncate font-medium text-slate-950">{merchant}</div>
+                    <div className="mt-1 truncate text-slate-500">{transaction.description}</div>
                   </div>
                 </div>
               </div>
               <div>
                 <select
-                  className="w-full rounded-full border border-white/8 bg-white/4 px-4 py-2 text-sm text-white outline-none transition focus:border-[var(--color-accent)]"
+                  className="w-full rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-950 outline-none transition focus:border-[var(--color-accent)]"
                   value={transaction.categoryRaw ?? "UNCATEGORIZED"}
                   disabled={savingId === transaction.id}
                   onChange={(event) => {
@@ -239,10 +239,10 @@ export function TransactionsWorkbench({
                   ))}
                 </select>
               </div>
-              <div className={`font-medium md:text-right ${transaction.amount > 0 ? "text-[var(--color-accent)]" : "text-white"}`}>
+              <div className={`font-medium md:text-right ${transaction.amount > 0 ? "text-emerald-600" : "text-red-600"}`}>
                 {formatAmount(transaction.amount)}
               </div>
-              <div className="text-slate-400 md:text-right">
+              <div className="text-slate-500 md:text-right">
                 <div>{transaction.status ?? "Posted"}</div>
                 <div className="mt-1 text-xs">{transaction.date ?? transactionDirection}</div>
               </div>
@@ -250,7 +250,7 @@ export function TransactionsWorkbench({
           );
         })}
         {visibleTransactions.length === 0 ? (
-          <div className="border-t border-white/8 px-5 py-10 text-center text-sm text-slate-400">
+          <div className="border-t border-slate-200 px-5 py-10 text-center text-sm text-slate-500">
             No transactions match the current search and filters.
           </div>
         ) : null}

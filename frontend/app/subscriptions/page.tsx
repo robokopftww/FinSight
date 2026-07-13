@@ -37,16 +37,16 @@ export default async function SubscriptionsPage() {
       </div>
       <section className="grid gap-4 lg:grid-cols-3">
         <Panel className="p-5">
-          <div className="text-sm text-slate-400">Monthly subscription cost</div>
-          <div className="mt-4 text-3xl font-semibold text-white">{formatCurrency(totalMonthly)}</div>
+          <div className="text-sm text-slate-500">Monthly subscription cost</div>
+          <div className="mt-4 text-3xl font-semibold text-slate-950">{formatCurrency(totalMonthly)}</div>
         </Panel>
         <Panel className="p-5">
-          <div className="text-sm text-slate-400">Yearly subscription cost</div>
-          <div className="mt-4 text-3xl font-semibold text-white">{formatCurrency(totalYearly)}</div>
+          <div className="text-sm text-slate-500">Yearly subscription cost</div>
+          <div className="mt-4 text-3xl font-semibold text-slate-950">{formatCurrency(totalYearly)}</div>
         </Panel>
         <Panel className="p-5">
-          <div className="text-sm text-slate-400">Savings opportunity</div>
-          <div className="mt-4 text-3xl font-semibold text-white">{formatCurrency(reviewYearly)}</div>
+          <div className="text-sm text-slate-500">Savings opportunity</div>
+          <div className="mt-4 text-3xl font-semibold text-slate-950">{formatCurrency(reviewYearly)}</div>
         </Panel>
       </section>
 
@@ -54,10 +54,10 @@ export default async function SubscriptionsPage() {
         {response.data.length ? (
           <div className="grid gap-4 lg:grid-cols-3">
             {response.data.map((item) => (
-              <div key={item.id ?? item.name ?? item.merchantName} className="rounded-[28px] border border-white/8 bg-white/4 p-5">
+              <div key={item.id ?? item.name ?? item.merchantName} className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-white">{item.name ?? item.merchantName}</h2>
+                    <h2 className="text-lg font-semibold text-slate-950">{item.name ?? item.merchantName}</h2>
                     <div className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
                       {item.category ?? item.cadence ?? "Recurring"}
                     </div>
@@ -65,26 +65,26 @@ export default async function SubscriptionsPage() {
                   <span
                     className={
                       item.opportunity === "Review"
-                        ? "rounded-full bg-amber-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-100"
+                        ? "rounded-full bg-amber-300/14 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700"
                         : "rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]"
                     }
                   >
                     {item.opportunity}
                   </span>
                 </div>
-                <div className="mt-6 text-3xl font-semibold text-white">{formatCurrency(item.monthlyCost)}</div>
-                <div className="mt-2 text-sm text-slate-400">{formatCurrency(item.yearlyCost)} yearly</div>
+                <div className="mt-6 text-3xl font-semibold text-slate-950">{formatCurrency(item.monthlyCost)}</div>
+                <div className="mt-2 text-sm text-slate-500">{formatCurrency(item.yearlyCost)} yearly</div>
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-[20px] border border-white/8 bg-slate-950/20 p-3">
+                  <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-3">
                     <div className="text-slate-500">Charges</div>
-                    <div className="mt-1 font-medium text-white">{item.chargeCount ?? 2}</div>
+                    <div className="mt-1 font-medium text-slate-950">{item.chargeCount ?? 2}</div>
                   </div>
-                  <div className="rounded-[20px] border border-white/8 bg-slate-950/20 p-3">
+                  <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-3">
                     <div className="text-slate-500">Confidence</div>
-                    <div className="mt-1 font-medium text-white">{Math.round((item.confidence ?? 0.68) * 100)}%</div>
+                    <div className="mt-1 font-medium text-slate-950">{Math.round((item.confidence ?? 0.68) * 100)}%</div>
                   </div>
                 </div>
-                <p className="mt-6 text-sm leading-7 text-slate-300">
+                <p className="mt-6 text-sm leading-7 text-slate-600">
                   {item.note ?? "Recurring charge detected from historical transaction cadence."}
                 </p>
                 {item.status ? <SubscriptionActions id={item.id} status={item.status} /> : null}
@@ -92,9 +92,9 @@ export default async function SubscriptionsPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-[28px] border border-white/8 bg-white/4 p-8 text-center">
-            <h2 className="text-xl font-semibold text-white">No recurring charges detected yet</h2>
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-300">
+          <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-8 text-center">
+            <h2 className="text-xl font-semibold text-slate-950">No recurring charges detected yet</h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
               Sync more Plaid transactions and WealthLens will group repeated merchants by amount and cadence.
             </p>
           </div>

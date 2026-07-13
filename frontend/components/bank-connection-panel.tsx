@@ -200,14 +200,14 @@ export function BankConnectionPanel() {
     <Panel className="p-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex gap-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
             {connected ? <ShieldCheck className="size-5" /> : <Landmark className="size-5" />}
           </span>
           <div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-slate-950">
               {connected ? "Bank connection active" : "Connect your first bank account"}
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-300">
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
               {connected
                 ? "WealthLens can now use synced accounts and transactions as the source for forecasts, scoring, and AI insights."
                 : `Connect a ${plaidEnvironment === "production" ? "bank account" : "Plaid sandbox account"} so WealthLens can replace demo data with real account, balance, and transaction records.`}
@@ -237,22 +237,22 @@ export function BankConnectionPanel() {
       </div>
 
       <div className="mt-6 grid gap-3 md:grid-cols-3">
-        <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
-          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">{plaidEnvironmentLabel}</div>
-          <div className="mt-2 text-lg font-semibold text-white">{plaidStatusLabel}</div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">{plaidEnvironmentLabel}</div>
+          <div className="mt-2 text-lg font-semibold text-slate-950">{plaidStatusLabel}</div>
         </div>
-        <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
-          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Accounts</div>
-          <div className="mt-2 text-lg font-semibold text-white">{status?.accountsCount ?? 0}</div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Accounts</div>
+          <div className="mt-2 text-lg font-semibold text-slate-950">{status?.accountsCount ?? 0}</div>
         </div>
-        <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
-          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Transactions</div>
-          <div className="mt-2 text-lg font-semibold text-white">{status?.transactionsCount ?? 0}</div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Transactions</div>
+          <div className="mt-2 text-lg font-semibold text-slate-950">{status?.transactionsCount ?? 0}</div>
         </div>
       </div>
 
       {message ? (
-        <div className="mt-5 rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm leading-6 text-slate-200">
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">
           {message}
         </div>
       ) : null}

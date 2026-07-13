@@ -63,7 +63,7 @@ const payFrequencies: Array<NonNullable<UserProfile["payFrequency"]>> = [
   "monthly",
   "annually",
 ];
-const profileInputClass = "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-[var(--color-accent-border)]";
+const profileInputClass = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-950 outline-none focus:border-[var(--color-accent-border)]";
 
 async function authenticatedFetch(path: string, token: string | null, init?: RequestInit) {
   if (!apiBaseUrl) {
@@ -104,8 +104,8 @@ function StatusPill({ active, label }: { active: boolean; label: string }) {
     <span
       className={
         active
-          ? "rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-text)]"
-          : "rounded-full bg-amber-300/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-100"
+          ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700"
+          : "rounded-full bg-amber-300/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700"
       }
     >
       {label}
@@ -115,10 +115,10 @@ function StatusPill({ active, label }: { active: boolean; label: string }) {
 
 function StatTile({ label, value, detail }: { label: string; value: string | number; detail?: string }) {
   return (
-    <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
+    <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
       <div className="text-xs uppercase tracking-[0.18em] text-slate-500">{label}</div>
-      <div className="mt-3 text-2xl font-semibold text-white">{value}</div>
-      {detail ? <div className="mt-2 text-sm leading-6 text-slate-400">{detail}</div> : null}
+      <div className="mt-3 text-2xl font-semibold text-slate-950">{value}</div>
+      {detail ? <div className="mt-2 text-sm leading-6 text-slate-500">{detail}</div> : null}
     </div>
   );
 }
@@ -243,7 +243,7 @@ export function SettingsControlCenter() {
   if (!status) {
     return (
       <Panel className="flex min-h-64 items-center justify-center p-8">
-        <div className="flex items-center gap-3 text-slate-300">
+        <div className="flex items-center gap-3 text-slate-600">
           <Loader2 className="size-5 animate-spin" />
           Loading settings
         </div>
@@ -268,12 +268,12 @@ export function SettingsControlCenter() {
         <Panel className="p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex gap-3">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
                 <PlugZap className="size-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold text-white">Connected institutions</h2>
-                <p className="mt-2 text-sm leading-7 text-slate-300">
+                <h2 className="text-xl font-semibold text-slate-950">Connected institutions</h2>
+                <p className="mt-2 text-sm leading-7 text-slate-600">
                   Review and disconnect the institutions that supply balances and transactions to WealthLens.
                 </p>
               </div>
@@ -284,10 +284,10 @@ export function SettingsControlCenter() {
           <div className="mt-6 grid gap-3">
             <div className="space-y-3">
               {status.plaid.institutionConnections.map((institution) => (
-                <div key={institution.id} className="flex flex-col gap-3 rounded-[24px] border border-white/8 bg-white/4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div key={institution.id} className="flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="font-medium text-white">{institution.name}</div>
-                    <div className="mt-1 text-sm text-slate-400">
+                    <div className="font-medium text-slate-950">{institution.name}</div>
+                    <div className="mt-1 text-sm text-slate-500">
                       {institution.accountsCount} account{institution.accountsCount === 1 ? "" : "s"} · Last synced {formatDate(institution.lastSyncedAt)}
                     </div>
                   </div>
@@ -298,8 +298,8 @@ export function SettingsControlCenter() {
                 </div>
               ))}
               {status.plaid.institutionConnections.length === 0 ? (
-                <div className="rounded-[24px] border border-white/8 bg-white/4 p-4 text-sm text-slate-400">
-                  No institutions connected yet. Add one from the dashboard.
+                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                  No institutions connected yet. Use the bank connection panel above to add one.
                 </div>
               ) : null}
             </div>
@@ -309,12 +309,12 @@ export function SettingsControlCenter() {
         <Panel className="p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex gap-3">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/8 text-white">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-950">
                 <ServerCog className="size-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold text-white">AI runtime</h2>
-                <p className="mt-2 text-sm leading-7 text-slate-300">
+                <h2 className="text-xl font-semibold text-slate-950">AI runtime</h2>
+                <p className="mt-2 text-sm leading-7 text-slate-600">
                   Confirms the Python analytics service and Gemini explanation layer are reachable from the backend.
                 </p>
               </div>
@@ -332,12 +332,12 @@ export function SettingsControlCenter() {
       <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <Panel className="p-6">
           <div className="flex gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/8 text-white">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-950">
               <UserRound className="size-5" />
             </span>
             <div>
-              <h2 className="text-xl font-semibold text-white">Account</h2>
-              <p className="mt-2 text-sm leading-7 text-slate-300">Clerk identity mapped to the app user stored in PostgreSQL.</p>
+              <h2 className="text-xl font-semibold text-slate-950">Account</h2>
+              <p className="mt-2 text-sm leading-7 text-slate-600">Clerk identity mapped to the app user stored in PostgreSQL.</p>
             </div>
           </div>
 
@@ -350,12 +350,12 @@ export function SettingsControlCenter() {
         <Panel className="p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex gap-3">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-300/14 text-amber-100">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-300/14 text-amber-700">
                 <AlertTriangle className="size-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold text-white">Data reset</h2>
-                <p className="mt-2 text-sm leading-7 text-slate-300">
+                <h2 className="text-xl font-semibold text-slate-950">Data reset</h2>
+                <p className="mt-2 text-sm leading-7 text-slate-600">
                   Clear the current user’s synced Plaid records, generated analytics artifacts, and advisor chat history.
                 </p>
               </div>
@@ -367,7 +367,7 @@ export function SettingsControlCenter() {
               {action === "refreshing" ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
               Refresh status
             </Button>
-            <Button type="button" variant="secondary" onClick={clearSandboxData} disabled={busy} className="gap-2 border-amber-300/20 text-amber-100 hover:bg-amber-300/10">
+            <Button type="button" variant="secondary" onClick={clearSandboxData} disabled={busy} className="gap-2 border-amber-300/20 text-amber-700 hover:bg-amber-300/10">
               {action === "clearing" ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
               Clear financial data
             </Button>
@@ -377,12 +377,12 @@ export function SettingsControlCenter() {
 
       <Panel className="p-6">
         <div className="flex gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-[var(--color-accent-text)]">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600/16 text-[var(--color-accent-text)]">
             <BriefcaseBusiness className="size-5" />
           </span>
           <div>
-            <h2 className="text-xl font-semibold text-white">Employment profile</h2>
-            <p className="mt-2 text-sm leading-7 text-slate-300">
+            <h2 className="text-xl font-semibold text-slate-950">Employment profile</h2>
+            <p className="mt-2 text-sm leading-7 text-slate-600">
               Declare pay details to show monthly income. Without them, the dashboard shows transaction-based surplus.
             </p>
           </div>
@@ -390,7 +390,7 @@ export function SettingsControlCenter() {
 
         {profile ? (
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <label className="space-y-2 text-sm text-slate-300">
+            <label className="space-y-2 text-sm text-slate-600">
               <span>Employment status</span>
               <select
                 className={profileInputClass}
@@ -412,15 +412,15 @@ export function SettingsControlCenter() {
 
             {profile.employmentStatus === "employed" ? (
               <>
-                <label className="space-y-2 text-sm text-slate-300">
+                <label className="space-y-2 text-sm text-slate-600">
                   <span>Job title</span>
                   <input className={profileInputClass} value={profile.jobTitle ?? ""} onChange={(event) => setProfile({ ...profile, jobTitle: event.target.value || null })} />
                 </label>
-                <label className="space-y-2 text-sm text-slate-300">
+                <label className="space-y-2 text-sm text-slate-600">
                   <span>Gross pay per period</span>
                   <input className={profileInputClass} min="0" type="number" value={profile.grossPay ?? ""} onChange={(event) => setProfile({ ...profile, grossPay: event.target.value ? Number(event.target.value) : null })} />
                 </label>
-                <label className="space-y-2 text-sm text-slate-300">
+                <label className="space-y-2 text-sm text-slate-600">
                   <span>Pay frequency</span>
                   <select className={profileInputClass} value={profile.payFrequency ?? "monthly"} onChange={(event) => setProfile({ ...profile, payFrequency: event.target.value as NonNullable<UserProfile["payFrequency"]> })}>
                     {payFrequencies.map((frequency) => <option key={frequency} value={frequency}>{frequency}</option>)}
@@ -437,7 +437,7 @@ export function SettingsControlCenter() {
             </div>
           </div>
         ) : (
-          <div className="mt-6 flex items-center gap-3 text-sm text-slate-400">
+          <div className="mt-6 flex items-center gap-3 text-sm text-slate-500">
             <Loader2 className="size-4 animate-spin" />
             Loading employment profile
           </div>
@@ -446,11 +446,11 @@ export function SettingsControlCenter() {
 
       <Panel className="p-6">
         <div className="flex items-start gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent)]/16 text-[var(--color-accent-text)]">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600/16 text-[var(--color-accent-text)]">
             <Database className="size-5" />
           </span>
           <div>
-            <h2 className="text-xl font-semibold text-white">System health</h2>
+            <h2 className="text-xl font-semibold text-slate-950">System health</h2>
             <div className="mt-4 flex flex-wrap gap-2">
               <StatusPill active={status.database.connected} label={`${status.database.provider} online`} />
               <StatusPill active={status.clerk.configured} label={status.clerk.configured ? "Clerk configured" : "Clerk missing"} />
@@ -462,7 +462,7 @@ export function SettingsControlCenter() {
       </Panel>
 
       {message ? (
-        <div className="rounded-[24px] border border-white/8 bg-white/5 px-5 py-4 text-sm leading-7 text-slate-100">
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4 text-sm leading-7 text-slate-800">
           {message}
         </div>
       ) : null}

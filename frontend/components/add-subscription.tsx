@@ -101,7 +101,7 @@ export function AddSubscription({ transactions }: { transactions: TransactionRow
   }
 
   const inputClass =
-    "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none focus:border-[var(--color-accent-border)]";
+    "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-950 outline-none focus:border-[var(--color-accent-border)]";
 
   if (!open) {
     return (
@@ -113,11 +113,11 @@ export function AddSubscription({ transactions }: { transactions: TransactionRow
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[var(--color-surface)] p-6 shadow-2xl">
+      <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-[var(--color-surface)] p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-white">Add a subscription</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
+            <h2 className="text-xl font-semibold text-slate-950">Add a subscription</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
               Pick a merchant from your transactions, or enter one manually.
             </p>
           </div>
@@ -151,14 +151,14 @@ export function AddSubscription({ transactions }: { transactions: TransactionRow
                     type="button"
                     disabled={pending}
                     onClick={() => void submit({ transactionId: candidate.transactionId })}
-                    className="flex w-full items-center justify-between gap-4 rounded-2xl border border-white/8 bg-white/4 px-4 py-3 text-left transition hover:bg-white/8 disabled:opacity-50"
+                    className="flex w-full items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100 disabled:opacity-50"
                   >
-                    <span className="text-sm font-medium text-white">{candidate.merchant}</span>
-                    <span className="text-sm text-slate-400">{formatCurrency(candidate.amount)}</span>
+                    <span className="text-sm font-medium text-slate-950">{candidate.merchant}</span>
+                    <span className="text-sm text-slate-500">{formatCurrency(candidate.amount)}</span>
                   </button>
                 ))
               ) : (
-                <p className="px-1 py-4 text-sm text-slate-400">No matching transactions.</p>
+                <p className="px-1 py-4 text-sm text-slate-500">No matching transactions.</p>
               )}
             </div>
           </div>
@@ -190,7 +190,7 @@ export function AddSubscription({ transactions }: { transactions: TransactionRow
           </div>
         )}
 
-        {error ? <p className="mt-4 text-sm text-rose-300">{error}</p> : null}
+        {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
       </div>
     </div>
   );

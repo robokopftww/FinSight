@@ -44,7 +44,7 @@ export function SubscriptionActions({ id, status }: { id?: string; status?: Stat
 
   return (
     <div className="mt-5 flex flex-wrap gap-2">
-      <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-200">
+      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
         {current}
       </span>
       {current !== "cancelled" ? (

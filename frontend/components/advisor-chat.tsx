@@ -187,19 +187,19 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className={compact ? "flex min-h-0 flex-1 flex-col" : "grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]"}>
-      <section className={compact ? "flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--color-surface)]" : "overflow-hidden rounded-[28px] border border-white/8 bg-[var(--color-surface)]"}>
-        {!compact ? <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+      <section className={compact ? "flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--color-surface)]" : "overflow-hidden rounded-[28px] border border-slate-200 bg-[var(--color-surface)]"}>
+        {!compact ? <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-blue-600 text-white">
               <Sparkles className="size-5" />
             </span>
             <div>
-              <h2 className="font-semibold text-white">Financial advisor</h2>
-              <p className="text-sm text-slate-400">Grounded in synced balances, spending, and forecasts.</p>
+              <h2 className="font-semibold text-slate-950">Financial advisor</h2>
+              <p className="text-sm text-slate-500">Grounded in synced balances, spending, and forecasts.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {isLoadingHistory ? <Loader2 className="size-4 animate-spin text-slate-400" /> : null}
+            {isLoadingHistory ? <Loader2 className="size-4 animate-spin text-slate-500" /> : null}
             <span className="hidden rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)] sm:inline-flex">
               Gemini + Python
             </span>
@@ -207,13 +207,13 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
         </div> : null}
 
         {compact ? (
-          <div className="flex items-center gap-2 border-b border-white/8 px-4 py-3">
+          <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
             <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
               {starterPrompts.map((prompt) => (
                 <button
                   key={prompt}
                   type="button"
-                  className="shrink-0 rounded-full border border-white/8 bg-white/4 px-3 py-2 text-xs text-slate-300 transition hover:border-[var(--color-accent)] hover:text-white"
+                  className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 transition hover:border-[var(--color-accent)] hover:text-slate-950"
                   onClick={() => void sendQuestion(prompt)}
                 >
                   {prompt}
@@ -222,7 +222,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
             </div>
             <button
               type="button"
-              className="shrink-0 rounded-full border border-white/8 p-2 text-slate-300 transition hover:border-amber-300/30 hover:bg-amber-300/10 hover:text-amber-100 disabled:opacity-50"
+              className="shrink-0 rounded-full border border-slate-200 p-2 text-slate-600 transition hover:border-amber-300/30 hover:bg-amber-300/10 hover:text-amber-700 disabled:opacity-50"
               onClick={() => void clearHistory()}
               disabled={isSending || isLoadingHistory}
               aria-label="Clear advisor history"
@@ -235,7 +235,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
 
         <div className={compact ? "min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4" : "max-h-[34rem] space-y-4 overflow-y-auto px-5 py-5"}>
           {historyMessage ? (
-            <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-white/8 bg-white/5 px-3 py-2 text-xs text-slate-300">
+            <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
               <Clock3 className="size-3.5" />
               {historyMessage}
             </div>
@@ -246,24 +246,24 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
             return (
               <div key={message.id} className={`flex gap-3 ${isAssistant ? "" : "justify-end"}`}>
                 {isAssistant ? (
-                  <span className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/16 text-[var(--color-accent-text)]">
+                  <span className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-600/16 text-[var(--color-accent-text)]">
                     <Bot className="size-4" />
                   </span>
                 ) : null}
                 <div
                   className={
                     isAssistant
-                      ? "max-w-2xl rounded-[24px] border border-white/8 bg-white/6 px-5 py-4 text-sm leading-7 text-slate-100"
-                      : "max-w-2xl rounded-[24px] bg-[var(--color-accent)] px-5 py-4 text-sm leading-7 text-slate-950"
+                      ? "max-w-2xl rounded-[24px] border border-slate-200 bg-slate-100 px-5 py-4 text-sm leading-7 text-slate-800"
+                      : "max-w-2xl rounded-[24px] bg-blue-600 px-5 py-4 text-sm leading-7 text-white"
                   }
                 >
                   <p>{message.content}</p>
                   {message.dataPoints?.length ? (
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       {message.dataPoints.map((point) => (
-                        <div key={point.label} className="rounded-2xl border border-white/8 bg-slate-950/30 p-3">
+                        <div key={point.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                           <div className="text-xs uppercase tracking-[0.18em] text-slate-500">{point.label}</div>
-                          <div className="mt-1 font-semibold text-white">{point.value}</div>
+                          <div className="mt-1 font-semibold text-slate-950">{point.value}</div>
                         </div>
                       ))}
                     </div>
@@ -275,7 +275,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
                   ) : null}
                 </div>
                 {!isAssistant ? (
-                  <span className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white">
+                  <span className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-950">
                     <UserRound className="size-4" />
                   </span>
                 ) : null}
@@ -284,10 +284,10 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
           })}
         </div>
 
-        <form onSubmit={handleSubmit} className="border-t border-white/8 p-4">
-          <div className="flex flex-col gap-3 rounded-[24px] border border-white/8 bg-white/5 p-2 sm:flex-row">
+        <form onSubmit={handleSubmit} className="border-t border-slate-200 p-4">
+          <div className="flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-slate-50 p-2 sm:flex-row">
             <input
-              className="min-h-12 flex-1 bg-transparent px-4 text-sm text-white outline-none placeholder:text-slate-500"
+              className="min-h-12 flex-1 bg-transparent px-4 text-sm text-slate-950 outline-none placeholder:text-slate-500"
               placeholder="Ask if a purchase is safe, why spending changed, or how to save more"
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
@@ -301,12 +301,12 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
       </section>
 
       {!compact ? <aside className="space-y-4">
-        <div className="rounded-[28px] border border-white/8 bg-white/5 p-5">
+        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-semibold text-white">Try asking</h2>
+            <h2 className="font-semibold text-slate-950">Try asking</h2>
             <button
               type="button"
-              className="rounded-full border border-white/8 p-2 text-slate-300 transition hover:border-amber-300/30 hover:bg-amber-300/10 hover:text-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-slate-200 p-2 text-slate-600 transition hover:border-amber-300/30 hover:bg-amber-300/10 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => void clearHistory()}
               disabled={isSending || isLoadingHistory}
               aria-label="Clear advisor history"
@@ -320,7 +320,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
               <button
                 key={prompt}
                 type="button"
-                className="w-full rounded-2xl border border-white/8 bg-white/4 px-4 py-3 text-left text-sm leading-6 text-slate-200 transition hover:border-[var(--color-accent)] hover:text-white"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm leading-6 text-slate-700 transition hover:border-[var(--color-accent)] hover:text-slate-950"
                 onClick={() => void sendQuestion(prompt)}
               >
                 {prompt}
@@ -331,7 +331,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
 
         <div className="rounded-[28px] border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-5">
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]">Context sources</div>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-200">
+          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
             <p>Synced account balances</p>
             <p>Recent Plaid transactions</p>
             <p>Subscription estimates</p>

@@ -14,13 +14,15 @@ export function MetricCard({
   trend?: "up" | "down";
 }) {
   const Icon = trend === "up" ? ArrowUpRight : ArrowDownRight;
+  const trendColor = trend === "up" ? "text-emerald-600" : "text-red-600";
+  const trendBackground = trend === "up" ? "bg-emerald-50" : "bg-red-50";
 
   return (
     <Panel className="p-5">
-      <div className="text-sm text-slate-400">{label}</div>
-      <div className="mt-4 text-3xl font-semibold text-white">{value}</div>
-      <div className="mt-5 flex items-center gap-2 text-sm text-slate-300">
-        <span className="flex size-8 items-center justify-center rounded-full bg-white/8">
+      <div className="text-sm text-slate-500">{label}</div>
+      <div className="mt-4 text-3xl font-semibold text-slate-950">{value}</div>
+      <div className={`mt-5 flex items-center gap-2 text-sm font-medium ${trendColor}`}>
+        <span className={`flex size-8 items-center justify-center rounded-full ${trendBackground}`}>
           <Icon className="size-4" />
         </span>
         {delta}
