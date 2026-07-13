@@ -253,8 +253,8 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
                 <div
                   className={
                     isAssistant
-                      ? "max-w-2xl rounded-[24px] border border-slate-200 bg-slate-100 px-5 py-4 text-sm leading-7 text-slate-800"
-                      : "max-w-2xl rounded-[24px] bg-blue-600 px-5 py-4 text-sm leading-7 text-white"
+                      ? `${compact ? "max-w-[85%]" : "max-w-2xl"} rounded-[24px] border border-slate-200 bg-slate-100 px-5 py-4 text-sm leading-7 text-slate-800`
+                      : `${compact ? "max-w-[85%]" : "max-w-2xl"} rounded-[24px] bg-blue-600 px-5 py-4 text-sm leading-7 text-white`
                   }
                 >
                   <p>{message.content}</p>
@@ -285,16 +285,24 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
         </div>
 
         <form onSubmit={handleSubmit} className="border-t border-slate-200 p-4">
-          <div className="flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-slate-50 p-2 sm:flex-row">
+          <div className={compact
+            ? "flex items-center gap-2 rounded-[24px] border border-slate-200 bg-slate-50 p-2"
+            : "flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-slate-50 p-2 sm:flex-row"
+          }>
             <input
               className="min-h-12 flex-1 bg-transparent px-4 text-sm text-slate-950 outline-none placeholder:text-slate-500"
-              placeholder="Ask if a purchase is safe, why spending changed, or how to save more"
+              aria-label="Advisor question"
+              placeholder={compact ? "Ask about your finances…" : "Ask if a purchase is safe, why spending changed, or how to save more"}
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
             />
-            <Button type="submit" disabled={isSending || !question.trim()} className="gap-2">
+            <Button
+              type="submit"
+              disabled={isSending || !question.trim()}
+              className={compact ? "size-11 shrink-0 p-0" : "gap-2"}
+            >
               <Send className="size-4" />
-              {isSending ? "Thinking" : "Send"}
+              <span className={compact ? "sr-only" : ""}>{isSending ? "Thinking" : "Send"}</span>
             </Button>
           </div>
         </form>
