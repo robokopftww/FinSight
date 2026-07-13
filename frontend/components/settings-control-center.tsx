@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { AlertTriangle, BriefcaseBusiness, Database, Loader2, PlugZap, RefreshCw, ServerCog, ShieldCheck, Trash2, Unplug, UserRound } from "lucide-react";
+import { AlertTriangle, BriefcaseBusiness, Database, Loader2, PlugZap, ServerCog, ShieldCheck, Trash2, Unplug, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
@@ -55,7 +55,7 @@ type SettingsStatus = {
   };
 };
 
-type ActionState = "idle" | "syncing" | "disconnecting" | "clearing" | "refreshing";
+type ActionState = "idle" | "disconnecting" | "clearing" | "refreshing";
 const payFrequencies: Array<NonNullable<UserProfile["payFrequency"]>> = [
   "weekly",
   "biweekly",
@@ -212,15 +212,6 @@ export function SettingsControlCenter() {
     }
   }
 
-  async function syncTransactions() {
-    await runAction(
-      "syncing",
-      "/api/plaid/sync",
-      { method: "POST" },
-      "Plaid sync finished. Dashboard, reports, and advisor context are ready to refresh.",
-    );
-  }
-
   async function disconnectInstitution(institution: SettingsStatus["plaid"]["institutionConnections"][number]) {
     if (!window.confirm(`Disconnect ${institution.name} and remove its synced accounts and transactions?`)) {
       return;
@@ -281,9 +272,9 @@ export function SettingsControlCenter() {
                 <PlugZap className="size-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold text-white">Plaid connection</h2>
+                <h2 className="text-xl font-semibold text-white">Connected institutions</h2>
                 <p className="mt-2 text-sm leading-7 text-slate-300">
-                  Manage synced Plaid banking data used by forecasts, health scoring, reports, and Gemini advisor context.
+                  Review and disconnect the institutions that supply balances and transactions to WealthLens.
                 </p>
               </div>
             </div>
@@ -291,21 +282,6 @@ export function SettingsControlCenter() {
           </div>
 
           <div className="mt-6 grid gap-3">
-            <div className="rounded-[24px] border border-white/8 bg-white/4 p-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Configuration</div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <StatusPill active={status.plaid.configured} label={status.plaid.configured ? "Plaid keys set" : "Missing Plaid keys"} />
-                <StatusPill active={status.plaid.itemsCount > 0} label={`${status.plaid.itemsCount} item${status.plaid.itemsCount === 1 ? "" : "s"}`} />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button type="button" onClick={syncTransactions} disabled={busy || !status.plaid.connected} className="gap-2">
-                {action === "syncing" ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-                Sync transactions
-              </Button>
-            </div>
-
             <div className="space-y-3">
               {status.plaid.institutionConnections.map((institution) => (
                 <div key={institution.id} className="flex flex-col gap-3 rounded-[24px] border border-white/8 bg-white/4 p-4 sm:flex-row sm:items-center sm:justify-between">
