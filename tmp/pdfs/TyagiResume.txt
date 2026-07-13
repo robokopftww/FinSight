@@ -1,0 +1,45 @@
+Keshav Tyagi
+(813) 327-9470 • Tampa, FL • keshav54@usf.edu • linkedin.com/in/keshav--tyagi
+EDUCATION
+University of South Florida | Tampa, FL — B.S. Computer Science
+PROJECTS
+WealthLens | AI Financial Copilot | Full-Stack + AI Engineering 2026
+Next.js · React · TypeScript · Node.js/Fastify · PostgreSQL · Prisma · Python FastAPI · scikit-learn · Gemini LLM · Plaid API · Vercel
+• Built a production-deployed AI financial copilot using Next.js, React, TypeScript, and Node.js/Fastify with REST API
+endpoints — users connect real bank accounts via Plaid with Clerk auth for real-time spending tracking and
+personalized financial insights.
+• Engineered a Python FastAPI analytics service with Pandas, NumPy, and scikit-learn to forecast cash flow, score
+financial health, and automatically detect subscriptions and anomalies from transaction data.
+• Integrated Gemini LLM with transaction-aware context for an AI advisor chat, automated weekly reports, and goal
+planning; deployed across Vercel, Render, and Neon with GitHub Actions CI/CD.
+BayGuard Tampa | Hackathon | Frontend, Backend & AI Integration 2026
+React 19 · Vite · TypeScript · Node.js/Express · Google Maps API · Gemini AI · Redis · Vercel
+• Collaborated in a team of 4 to build a Tampa disaster intelligence web app pulling live data from NWS, NOAA, NHC,
+FL-511, and Tampa Electric into a real-time neighborhood risk map with alerts, address safety checks, and SMS
+notifications.
+• Architected a multi-agent AI layer using Google Gemini — specialized bots for weather, flood, storm, and report
+verification feed into a final synthesis layer that converts raw API data into readable evacuation guidance and
+situational summaries.
+• Built resident report submission with AI-assisted verification cross-referencing live evidence, and an SMS alert system
+with subscriber management, cooldowns, and simulation modes for flood and hurricane drills.
+TECHNICAL SKILLS
+Languages: Python, TypeScript, JavaScript, C++, SQL
+Frontend: Next.js, React, Tailwind CSS, ShadCN UI, Recharts, responsive UI/UX
+Backend & Data: Node.js, Fastify, Express, REST APIs, PostgreSQL, Prisma ORM, Neon, Redis
+AI / ML: FastAPI, Pandas, NumPy, scikit-learn, Gemini LLM, AI agents, Plaid API, forecasting, anomaly detection
+DevOps: Git, GitHub Actions CI/CD, Vercel, Render, production debugging, testing
+EXPERIENCE
+Student Assistant | USF Office of the Provost (Academic Affairs) — Tampa, FL Jun 2026 – Present
+• Support the Provost's office by managing and triaging JIRA tickets, coordinating task workflows, and collaborating with
+a team to resolve administrative and technical requests efficiently.
+• Leverage Office 365 tools including Teams, Word, and Excel to facilitate communication and documentation across
+office staff.
+Import & Export Assistant | Family Business — Riverview, FL 2022 – 2024
+• Managed vendor pricing research, bulk inventory procurement, shipment coordination, and online inventory tracking.
+Cashier & Stock Associate | Local Grocery Store — Gibsonton, FL 2023 – 2024
+• Processed high-volume transactions, restocked inventory, and maintained customer-facing areas in a fast-paced retail
+environment.
+Volunteer | Feeding Tampa Bay — Tampa, FL 2022 – 2023
+• Supported high-volume community food distribution: meal prep, pantry operations, and service logistics.
+ACTIVITIES
+JV Wrestling — Competed in tournaments; developed discipline, teamwork, and resilience through consistent training.
