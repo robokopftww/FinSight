@@ -11,6 +11,7 @@ import {
 } from "../../lib/financial-analytics.js";
 import { persistAnalyticsSnapshot } from "../../lib/analytics-persistence.js";
 import { getPlaidClient, isPlaidConfigured } from "../../lib/plaid.js";
+import { refreshPlaidAccounts } from "../../lib/plaid-account-sync.js";
 import { deleteOwnedPlaidItem } from "../../lib/plaid-items.js";
 import { prisma } from "../../lib/prisma.js";
 
@@ -240,8 +241,34 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
     let addedCount = 0;
     let modifiedCount = 0;
     let removedCount = 0;
+    let refreshedAccountsCount = 0;
+    const syncedAt = new Date();
 
     for (const plaidItem of plaidItems) {
+      try {
+        refreshedAccountsCount += await refreshPlaidAccounts({
+          store: prisma,
+          item: plaidItem,
+          fetchAccounts: async (accessToken) => {
+            const response = await plaid.accountsGet({ access_token: accessToken });
+            return response.data.accounts;
+          },
+          syncedAt,
+        });
+      } catch (error) {
+        const plaidError = getPlaidError(error);
+        request.log.warn({ plaidError, plaidItemId: plaidItem.id }, "Plaid account refresh failed");
+
+        return reply.status(409).send({
+          error:
+            plaidError.code === "INVALID_ACCESS_TOKEN" || plaidError.code === "ITEM_LOGIN_REQUIRED"
+              ? "Stored Plaid connection cannot sync anymore. Disconnect this bank and reconnect it."
+              : "Unable to refresh account balances from Plaid right now.",
+          plaidErrorCode: plaidError.code,
+          plaidErrorMessage: plaidError.message,
+        });
+      }
+
       let cursor = plaidItem.transactionsCursor ?? undefined;
       let hasMore = true;
 
@@ -350,7 +377,7 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
         where: { id: plaidItem.id },
         data: {
           transactionsCursor: cursor,
-          lastSyncedAt: new Date(),
+          lastSyncedAt: syncedAt,
         },
       });
     }
@@ -408,6 +435,8 @@ export async function registerPlaidRoutes(app: FastifyInstance) {
       addedCount,
       modifiedCount,
       removedCount,
+      refreshedAccountsCount,
+      syncedAt: syncedAt.toISOString(),
     });
   });
 }
