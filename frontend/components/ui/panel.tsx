@@ -8,7 +8,7 @@ export function Panel({ className, ...props }: PanelProps) {
   return (
     <div
       className={cn(
-        "rounded-3xl border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(167,195,255,0.025))] shadow-[0_18px_80px_rgba(0,0,0,0.25)] backdrop-blur",
+        "rounded-3xl border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)]",
         className,
       )}
       {...props}

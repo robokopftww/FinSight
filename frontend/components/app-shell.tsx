@@ -32,12 +32,12 @@ export function AppShell({
   const isClerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(167,195,255,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(124,199,245,0.14),transparent_24%),var(--background)] text-white">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.10),transparent_28%),radial-gradient(circle_at_top_right,rgba(14,165,233,0.08),transparent_24%),var(--background)] text-slate-950">
       {isClerkConfigured && !demoMode ? <UserSync /> : null}
       <div className="mx-auto grid min-h-screen max-w-7xl gap-6 px-6 py-6 lg:grid-cols-[250px_minmax(0,1fr)] lg:px-8">
-        <aside className="rounded-[28px] border border-white/8 bg-white/4 p-5 backdrop-blur-xl">
-          <Link href="/" className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-white">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-slate-950">
+        <aside className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
+          <Link href="/" className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-950">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-blue-600 text-white">
               <Landmark className="size-5" aria-hidden="true" />
             </span>
             WealthLens
@@ -54,7 +54,7 @@ export function AppShell({
                     "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition",
                     currentPath === item.href
                       ? "border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]"
-                      : "text-slate-300 hover:bg-white/6 hover:text-white",
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
                   )}
                 >
                   <Icon className="size-4" />
@@ -69,19 +69,19 @@ export function AppShell({
               <ChartNoAxesCombined className="size-4" />
               Analyst mode
             </div>
-            <p className="mt-3 text-sm leading-6 text-slate-200">
+            <p className="mt-3 text-sm leading-6 text-slate-600">
               Forecasts, health scoring, and advisor responses are designed to be powered by the Python analytics service.
             </p>
           </div>
         </aside>
 
         <main className="space-y-6">
-          <section className="rounded-[30px] border border-white/8 bg-white/5 p-6 shadow-[0_24px_120px_rgba(0,0,0,0.24)] backdrop-blur-xl lg:p-8">
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{eyebrow}</div>
+          <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] lg:p-8">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{eyebrow}</div>
             <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h1 className="text-3xl font-semibold tracking-tight text-white lg:text-4xl">{title}</h1>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
+                <h1 className="text-3xl font-semibold tracking-tight text-slate-950 lg:text-4xl">{title}</h1>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
                   Modern financial intelligence grounded in real account behavior, forecast risk, and recommendation quality.
                 </p>
               </div>

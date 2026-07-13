@@ -1,16 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #070d1a;
-  --foreground: #f8fafc;
-  --muted: #94a3b8;
-  --color-surface: #0a1222;
-  --color-accent: #a7c3ff;
-  --color-accent-strong: #8fb0ff;
-  --color-accent-soft: rgba(167, 195, 255, 0.12);
-  --color-accent-soft-strong: rgba(167, 195, 255, 0.18);
-  --color-accent-border: rgba(167, 195, 255, 0.22);
-  --color-accent-text: #dbe6ff;
+  --background: #f4f7fb;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --color-surface: #ffffff;
+  --color-accent: #2563eb;
+  --color-accent-strong: #1d4ed8;
+  --color-accent-soft: rgba(37, 99, 235, 0.09);
+  --color-accent-soft-strong: rgba(37, 99, 235, 0.14);
+  --color-accent-border: rgba(37, 99, 235, 0.22);
+  --color-accent-text: #1d4ed8;
+  --color-positive: #059669;
+  --color-negative: #dc2626;
+  --color-warning: #d97706;
+  --color-border: #dbe4f0;
 }
 
 @theme inline {
@@ -26,8 +30,8 @@
 
 html {
   background:
-    radial-gradient(circle at top left, rgba(167, 195, 255, 0.16), transparent 24%),
-    radial-gradient(circle at top right, rgba(124, 199, 245, 0.14), transparent 20%),
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.1), transparent 24%),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.09), transparent 20%),
     var(--background);
 }
 
@@ -48,20 +52,20 @@ input::placeholder {
 }
 
 ::selection {
-  background: rgba(167, 195, 255, 0.24);
+  background: rgba(37, 99, 235, 0.2);
 }
 
 .wl-landing {
-  --wl-bg: #070d1a;
-  --wl-panel-top: rgba(255, 255, 255, 0.07);
-  --wl-panel-bottom: rgba(255, 255, 255, 0.03);
-  --wl-line: rgba(255, 255, 255, 0.08);
-  --wl-line-soft: rgba(255, 255, 255, 0.06);
-  --wl-line-strong: rgba(255, 255, 255, 0.12);
-  --wl-accent: #a7c3ff;
-  --wl-accent-strong: #8fb0ff;
-  --wl-text: #f8fafc;
-  --wl-muted: #94a3b8;
+  --wl-bg: #f4f7fb;
+  --wl-panel-top: #ffffff;
+  --wl-panel-bottom: #f8fafc;
+  --wl-line: rgba(15, 23, 42, 0.1);
+  --wl-line-soft: rgba(15, 23, 42, 0.07);
+  --wl-line-strong: rgba(15, 23, 42, 0.16);
+  --wl-accent: #2563eb;
+  --wl-accent-strong: #1d4ed8;
+  --wl-text: #0f172a;
+  --wl-muted: #64748b;
   min-height: 100vh;
   overflow-x: clip;
   background: var(--wl-bg);
@@ -79,7 +83,7 @@ input::placeholder {
   top: 0;
   z-index: 30;
   border-bottom: 1px solid var(--wl-line-soft);
-  background: rgba(6, 10, 18, 0.72);
+  background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(18px);
 }
 
@@ -98,7 +102,7 @@ input::placeholder {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #fff;
+  color: #0f172a;
   font-size: 0.875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -115,7 +119,7 @@ input::placeholder {
   flex: none;
   border-radius: 0.75rem;
   background: var(--wl-accent);
-  color: #020617;
+  color: #ffffff;
 }
 
 .wl-landing-nav,
@@ -133,7 +137,7 @@ input::placeholder {
 
 .wl-landing-nav a,
 .wl-landing-footer-links a {
-  color: #cbd5e1;
+  color: #475569;
   font-size: 0.875rem;
   transition: color 180ms ease, background 180ms ease;
 }
@@ -144,8 +148,8 @@ input::placeholder {
 }
 
 .wl-landing-nav a:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
 }
 
 .wl-landing-header-cta {
@@ -169,7 +173,7 @@ input::placeholder {
 
 .wl-landing-btn-primary {
   background: var(--wl-accent);
-  color: #020617;
+  color: #ffffff;
 }
 
 .wl-landing-btn-primary:hover {
@@ -178,20 +182,20 @@ input::placeholder {
 
 .wl-landing-btn-secondary {
   border-color: var(--wl-line-strong);
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: #ffffff;
+  color: #0f172a;
 }
 
 .wl-landing-btn-secondary:hover,
 .wl-landing-btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .wl-landing-btn-ghost {
   padding: 0.5625rem 1rem;
   background: transparent;
-  color: #cbd5e1;
+  color: #475569;
 }
 
 .wl-landing-btn-lg {
@@ -235,33 +239,33 @@ input::placeholder {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.66;
-  filter: brightness(0.82) saturate(1.12) contrast(1.05);
+  opacity: 0.3;
+  filter: brightness(1.08) saturate(0.82) contrast(0.92);
 }
 
 .wl-landing-video-wash {
   background: linear-gradient(
     to bottom,
     var(--wl-bg) 0%,
-    rgba(7, 13, 26, 0.45) 25%,
-    rgba(7, 13, 26, 0.38) 50%,
-    rgba(7, 13, 26, 0.82) 76%,
+    rgba(244, 247, 251, 0.58) 25%,
+    rgba(244, 247, 251, 0.62) 50%,
+    rgba(244, 247, 251, 0.9) 76%,
     var(--wl-bg) 100%
   );
 }
 
 .wl-landing-brand-glow {
   background:
-    radial-gradient(circle at top left, rgba(167, 195, 255, 0.24), transparent 28%),
-    radial-gradient(circle at 78% 8%, rgba(124, 199, 245, 0.18), transparent 26%),
-    radial-gradient(circle at 50% 120%, rgba(167, 195, 255, 0.13), transparent 45%);
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 28%),
+    radial-gradient(circle at 78% 8%, rgba(14, 165, 233, 0.14), transparent 26%),
+    radial-gradient(circle at 50% 120%, rgba(37, 99, 235, 0.09), transparent 45%);
 }
 
 .wl-landing-grain {
   opacity: 0.4;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
   background-size: 4rem 4rem;
   mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 72%);
 }
@@ -283,8 +287,8 @@ input::placeholder {
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--wl-line);
-  background: rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.82);
+  color: #475569;
   border-radius: 999px;
 }
 
@@ -305,7 +309,7 @@ input::placeholder {
 .wl-landing-headline {
   max-width: 18ch;
   margin: 1.75rem 0 0;
-  color: #fff;
+  color: #0f172a;
   font-size: clamp(2.6rem, 6.2vw, 5.1rem);
   font-weight: 700;
   line-height: 1.02;
@@ -319,7 +323,7 @@ input::placeholder {
 .wl-landing-desc {
   max-width: 46rem;
   margin: 1.625rem auto 0;
-  color: #cbd5e1;
+  color: #475569;
   font-size: clamp(1.02rem, 1.5vw, 1.2rem);
   line-height: 1.7;
   text-wrap: pretty;
@@ -345,7 +349,7 @@ input::placeholder {
   border: 1px solid var(--wl-line);
   border-radius: 1.5rem;
   background: linear-gradient(180deg, var(--wl-panel-top), var(--wl-panel-bottom));
-  box-shadow: 0 18px 80px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.09);
   backdrop-filter: blur(8px);
 }
 
@@ -383,7 +387,7 @@ input::placeholder {
 
 .wl-landing-value {
   margin-top: 0.875rem;
-  color: #fff;
+  color: #0f172a;
   font-size: clamp(1.8rem, 3vw, 2.3rem);
   font-weight: 700;
   line-height: 1;
@@ -400,7 +404,7 @@ input::placeholder {
   display: inline-flex;
   align-items: center;
   gap: 0.4375rem;
-  color: #cbd5e1;
+  color: #475569;
   font-size: 0.78125rem;
 }
 
@@ -413,7 +417,7 @@ input::placeholder {
 }
 
 .wl-landing-dot-warning {
-  background: #ffb65e;
+  background: #f59e0b;
 }
 
 .wl-landing-pill {
@@ -421,8 +425,8 @@ input::placeholder {
   display: inline-block;
   border-radius: 999px;
   padding: 0.375rem 0.75rem;
-  background: rgba(167, 195, 255, 0.16);
-  color: #c9d9ff;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -451,7 +455,7 @@ input::placeholder {
 
 .wl-landing-section-alt {
   border-top: 1px solid var(--wl-line-soft);
-  background: rgba(0, 0, 0, 0.16);
+  background: rgba(37, 99, 235, 0.035);
 }
 
 .wl-landing-section-head {
@@ -466,7 +470,7 @@ input::placeholder {
 .wl-landing-section-title,
 .wl-landing-card-title,
 .wl-landing-getstarted h2 {
-  color: #fff;
+  color: #0f172a;
   font-weight: 700;
   line-height: 1.08;
   text-wrap: balance;
@@ -496,13 +500,13 @@ input::placeholder {
   align-items: center;
   justify-content: center;
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(37, 99, 235, 0.1);
   color: var(--wl-accent);
 }
 
 .wl-landing-feature h3 {
   margin-top: 1.375rem;
-  color: #fff;
+  color: #0f172a;
   font-size: 1.18rem;
   font-weight: 700;
 }
@@ -510,7 +514,7 @@ input::placeholder {
 .wl-landing-feature p,
 .wl-landing-tier p,
 .wl-landing-getstarted p {
-  color: #cbd5e1;
+  color: #475569;
   font-size: 0.875rem;
   line-height: 1.7;
 }
@@ -546,7 +550,7 @@ input::placeholder {
   border: 1px solid var(--wl-line);
   border-radius: 1.25rem;
   padding: 1rem 1.125rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: #ffffff;
 }
 
 .wl-landing-sub-row + .wl-landing-sub-row {
@@ -556,7 +560,7 @@ input::placeholder {
 .wl-landing-sub-name,
 .wl-landing-sub-cost,
 .wl-landing-testimonial-name {
-  color: #fff;
+  color: #0f172a;
   font-weight: 600;
 }
 
@@ -588,14 +592,14 @@ input::placeholder {
   border: 1px solid var(--wl-line);
   border-radius: 1.25rem;
   padding: 1.125rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: #ffffff;
 }
 
 .wl-landing-mix-cat {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  color: #cbd5e1;
+  color: #475569;
   font-size: 0.8125rem;
 }
 
@@ -608,7 +612,7 @@ input::placeholder {
 
 .wl-landing-mix-amount {
   margin-top: 1rem;
-  color: #fff;
+  color: #0f172a;
   font-size: 1.6rem;
   font-weight: 700;
 }
@@ -643,7 +647,7 @@ input::placeholder {
 }
 
 .wl-landing-testimonial-card p {
-  color: #eef2f7;
+  color: #334155;
   font-size: 1.02rem;
   line-height: 1.7;
 }
@@ -665,15 +669,15 @@ input::placeholder {
 }
 
 .wl-landing-tier-featured {
-  border-color: rgba(167, 195, 255, 0.45);
-  box-shadow: 0 18px 90px rgba(167, 195, 255, 0.18);
+  border-color: rgba(37, 99, 235, 0.4);
+  box-shadow: 0 18px 70px rgba(37, 99, 235, 0.14);
 }
 
 .wl-landing-tier-name {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  color: #cbd5e1;
+  color: #475569;
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -682,7 +686,7 @@ input::placeholder {
   border-radius: 999px;
   padding: 0.1875rem 0.5625rem;
   background: var(--wl-accent);
-  color: #020617;
+  color: #ffffff;
   font-family: var(--font-ibm-plex-mono), monospace;
   font-size: 0.625rem;
   font-weight: 700;
@@ -698,7 +702,7 @@ input::placeholder {
 }
 
 .wl-landing-price span:first-child {
-  color: #fff;
+  color: #0f172a;
   font-size: 3rem;
   font-weight: 800;
   line-height: 1;
@@ -744,7 +748,7 @@ input::placeholder {
 
 .wl-landing-footer {
   border-top: 1px solid var(--wl-line-soft);
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .wl-landing-footer-inner {
@@ -758,7 +762,7 @@ input::placeholder {
 }
 
 .wl-landing-footer-links a:hover {
-  color: #fff;
+  color: #0f172a;
 }
 
 .wl-landing-copy {

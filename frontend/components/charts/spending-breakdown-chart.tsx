@@ -27,10 +27,11 @@ export function SpendingBreakdownChart({
             <Tooltip
               cursor={false}
               contentStyle={{
-                backgroundColor: "#0a1222",
-                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "#ffffff",
+                border: "1px solid #dbe4f0",
                 borderRadius: 16,
-                color: "white",
+                color: "#0f172a",
+                boxShadow: "0 14px 36px rgba(15, 23, 42, 0.12)",
               }}
             />
           </PieChart>
