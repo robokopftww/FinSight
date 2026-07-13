@@ -11,6 +11,7 @@ import { DashboardAdvisor } from "@/components/dashboard-advisor";
 import { InsightCard } from "@/components/insight-card";
 import { MetricCard } from "@/components/metric-card";
 import { OnboardingModal } from "@/components/onboarding-modal";
+import { OverviewRefreshController } from "@/components/overview-refresh-controller";
 import { Panel } from "@/components/ui/panel";
 import { getDashboardOverview } from "@/lib/api";
 
@@ -35,11 +36,13 @@ export default async function DashboardPage() {
       <OnboardingModal />
       <DashboardAdvisor />
 
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section className="grid items-start gap-4 xl:grid-cols-2">
         <BalanceCard
           currentBalance={data.currentBalance}
+          availableBalance={data.availableBalance}
           monthOverMonthChange={data.monthOverMonthChange}
           accountsBreakdown={data.accountsBreakdown}
+          refreshStatus={<OverviewRefreshController />}
         />
         <CreditCardPaymentsCard
           totalOutstanding={data.creditCardBalance ?? 0}
