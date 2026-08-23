@@ -14,33 +14,156 @@ type Props = {
 };
 
 const CITATION_RE = /\[(\d+)\]/g;
+const BOLD_RE = /\*\*([^*]+)\*\*/g;
 
-function renderContent(content: string, onCitationClick: (n: number) => void) {
-  const nodes: Array<string | React.JSX.Element> = [];
+type BlockKind = "paragraph" | "heading" | "ordered" | "unordered";
+
+type Block = { kind: BlockKind; level?: number; number?: string; text: string };
+
+function parseBlocks(content: string): Block[] {
+  const lines = content.split(/\r?\n/);
+  const blocks: Block[] = [];
+  let buffer: string[] = [];
+
+  const flushParagraph = () => {
+    if (buffer.length === 0) return;
+    const text = buffer.join(" ").trim();
+    if (text) blocks.push({ kind: "paragraph", text });
+    buffer = [];
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      flushParagraph();
+      continue;
+    }
+    const heading = line.match(/^(#{1,3})\s+(.*)$/);
+    if (heading) {
+      flushParagraph();
+      blocks.push({ kind: "heading", level: heading[1].length, text: heading[2] });
+      continue;
+    }
+    const ordered = line.match(/^(\d+)\.\s+(.*)$/);
+    if (ordered) {
+      flushParagraph();
+      blocks.push({ kind: "ordered", number: ordered[1], text: ordered[2] });
+      continue;
+    }
+    const unordered = line.match(/^[-*]\s+(.*)$/);
+    if (unordered) {
+      flushParagraph();
+      blocks.push({ kind: "unordered", text: unordered[1] });
+      continue;
+    }
+    buffer.push(line);
+  }
+  flushParagraph();
+  return blocks;
+}
+
+function renderInline(
+  text: string,
+  onCitationClick: (n: number) => void,
+  keyPrefix: string,
+): React.ReactNode[] {
+  const withBold: Array<string | React.JSX.Element> = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
-  CITATION_RE.lastIndex = 0;
-  while ((match = CITATION_RE.exec(content)) !== null) {
-    if (match.index > lastIndex) nodes.push(content.slice(lastIndex, match.index));
-    const n = Number(match[1]);
-    nodes.push(
-      <sup key={`c-${match.index}`} className="mx-0.5 text-[10px]">
-        <a
-          href={`#src-${n}`}
-          onClick={(e) => {
-            e.preventDefault();
-            onCitationClick(n);
-          }}
-          className="rounded-sm bg-[var(--color-accent-soft)] px-1.5 py-0.5 font-semibold text-[var(--color-accent-text)] hover:underline"
-        >
-          [{n}]
-        </a>
-      </sup>,
+  BOLD_RE.lastIndex = 0;
+  while ((match = BOLD_RE.exec(text)) !== null) {
+    if (match.index > lastIndex) withBold.push(text.slice(lastIndex, match.index));
+    withBold.push(
+      <strong key={`${keyPrefix}-b-${match.index}`} className="font-semibold text-slate-950">
+        {match[1]}
+      </strong>,
     );
     lastIndex = match.index + match[0].length;
   }
-  if (lastIndex < content.length) nodes.push(content.slice(lastIndex));
-  return nodes.map((node, idx) => <Fragment key={idx}>{node}</Fragment>);
+  if (lastIndex < text.length) withBold.push(text.slice(lastIndex));
+
+  const withCitations: React.ReactNode[] = [];
+  withBold.forEach((chunk, idx) => {
+    if (typeof chunk !== "string") {
+      withCitations.push(<Fragment key={`${keyPrefix}-w-${idx}`}>{chunk}</Fragment>);
+      return;
+    }
+    let cursor = 0;
+    let m: RegExpExecArray | null;
+    CITATION_RE.lastIndex = 0;
+    while ((m = CITATION_RE.exec(chunk)) !== null) {
+      if (m.index > cursor) {
+        withCitations.push(
+          <Fragment key={`${keyPrefix}-t-${idx}-${cursor}`}>{chunk.slice(cursor, m.index)}</Fragment>,
+        );
+      }
+      const n = Number(m[1]);
+      withCitations.push(
+        <sup key={`${keyPrefix}-c-${idx}-${m.index}`} className="mx-0.5 text-[10px]">
+          <a
+            href={`#src-${n}`}
+            onClick={(e) => {
+              e.preventDefault();
+              onCitationClick(n);
+            }}
+            className="rounded-sm bg-[var(--color-accent-soft)] px-1.5 py-0.5 font-semibold text-[var(--color-accent-text)] hover:underline"
+          >
+            [{n}]
+          </a>
+        </sup>,
+      );
+      cursor = m.index + m[0].length;
+    }
+    if (cursor < chunk.length) {
+      withCitations.push(
+        <Fragment key={`${keyPrefix}-t-${idx}-end`}>{chunk.slice(cursor)}</Fragment>,
+      );
+    }
+  });
+  return withCitations;
+}
+
+function renderContent(content: string, onCitationClick: (n: number) => void) {
+  const blocks = parseBlocks(content);
+  return blocks.map((block, idx) => {
+    const inline = renderInline(block.text, onCitationClick, `b${idx}`);
+    if (block.kind === "heading") {
+      const cls =
+        block.level === 1
+          ? "mt-4 text-base font-semibold text-slate-950 first:mt-0"
+          : block.level === 2
+            ? "mt-3 text-sm font-semibold text-slate-950 first:mt-0"
+            : "mt-2 text-sm font-semibold text-slate-700 first:mt-0";
+      return (
+        <p key={idx} className={cls}>
+          {inline}
+        </p>
+      );
+    }
+    if (block.kind === "ordered") {
+      return (
+        <div key={idx} className="mt-1 flex gap-2 first:mt-0">
+          <span className="min-w-[1.25rem] pt-[1px] text-right font-mono text-xs text-slate-500 tabular-nums">
+            {block.number}.
+          </span>
+          <p className="flex-1">{inline}</p>
+        </div>
+      );
+    }
+    if (block.kind === "unordered") {
+      return (
+        <div key={idx} className="mt-1 flex gap-2 first:mt-0">
+          <span className="min-w-[0.75rem] pt-[1px] text-slate-500">•</span>
+          <p className="flex-1">{inline}</p>
+        </div>
+      );
+    }
+    return (
+      <p key={idx} className="mt-2 first:mt-0">
+        {inline}
+      </p>
+    );
+  });
 }
 
 export function AdvisorMessage({ role, content, sources }: Props) {

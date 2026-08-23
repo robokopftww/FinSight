@@ -2,9 +2,9 @@
 
 ![CI](https://github.com/robokopftww/WealthLens/actions/workflows/ci.yml/badge.svg)
 
-WealthLens is an AI-powered financial copilot that connects to Plaid sandbox bank data, analyzes spending behavior, forecasts cash flow, and uses Gemini to explain financial decisions in plain English.
+WealthLens is an AI-powered financial copilot that connects to Plaid bank data, analyzes spending behavior, forecasts cash flow, and answers user questions with a real Retrieval-Augmented Generation (RAG) advisor. Claude Haiku 4.5 runs a tool-calling loop over the user's own transactions, subscriptions, balances, forecasts, and a pgvector-backed corpus of CFPB / IRS consumer-finance guides — every domain claim carries an inline `[n]` citation.
 
-The product is built like a startup MVP: real authentication, real persistence, real Plaid sync, a separate Python analytics service, and a polished fintech dashboard experience.
+The product is built like a startup MVP: real authentication, real persistence, real Plaid sync, a separate Python analytics service, a hybrid RAG loop, and a polished fintech dashboard experience.
 
 ## What It Does
 
@@ -13,7 +13,7 @@ The product is built like a startup MVP: real authentication, real persistence, 
 - Calculates spending mix, cash-flow forecasts, safe-to-spend, and financial health.
 - Detects subscriptions and recurring spending patterns.
 - Generates weekly AI financial reports.
-- Answers advisor questions with Gemini using synced financial context.
+- Answers advisor questions via a real RAG loop: Claude Haiku 4.5 selects from six typed tools (`searchDocs` over a pgvector corpus, plus `getTransactions`, `getSubscriptions`, `getBalance`, `getInsights`, `getForecast`) and returns replies with inline `[n]` citations linking back to CFPB / IRS source URLs.
 - Includes a public demo mode for quick recruiter or hackathon walkthroughs.
 - Provides settings controls for service status, sync, sandbox reset, and Plaid disconnect.
 
@@ -25,7 +25,7 @@ The product is built like a startup MVP: real authentication, real persistence, 
 - `/transactions` - transaction search, filtering, and recategorization
 - `/subscriptions` - recurring payment analysis
 - `/financial-health` - score, factors, and recommendations
-- `/advisor` - Gemini + Python financial advisor
+- `/advisor` - Claude Haiku + RAG financial advisor with inline citations
 - `/reports` - weekly AI financial report
 - `/settings` - integration and data control center
 
@@ -56,10 +56,11 @@ The product is built like a startup MVP: real authentication, real persistence, 
 **AI Service**
 
 - Python FastAPI
-- Pandas
-- NumPy
-- Scikit-learn
-- Gemini via `google-genai`
+- Pandas / NumPy / Scikit-learn (deterministic analytics: scoring, forecasting, insights)
+- Anthropic Claude Haiku 4.5 (RAG answerer + tool caller)
+- OpenAI `text-embedding-3-small` (1536-dim embeddings)
+- pgvector (cosine similarity search over the knowledge-base corpus)
+- pypdf + trafilatura + tiktoken (corpus ingestion)
 
 ## Architecture
 
@@ -68,23 +69,31 @@ flowchart TD
     U["User"] --> F["Next.js Frontend"]
     F --> C["Clerk Auth"]
     F --> B["Node/Fastify Backend"]
-    B --> DB[("PostgreSQL + Prisma")]
+    B --> DB[("PostgreSQL + Prisma\n(with pgvector)")]
     B --> R[("Redis optional cache")]
-    B --> P["Plaid Sandbox API"]
+    B --> P["Plaid API"]
     B --> A["Python FastAPI AI Service"]
     A --> ML["Pandas + NumPy + Scikit-learn"]
-    A --> G["Gemini LLM"]
+    A --> AN["Anthropic Claude Haiku 4.5\n(tool-calling loop)"]
+    A --> OAI["OpenAI text-embedding-3-small"]
+    A --> DB
+    AN -. "personal-data tools\nsigned JWT round-trip" .-> B
 ```
 
-WealthLens is intentionally analytics-first. Python computes the numeric truth first: balances, spending deltas, forecasts, safe-to-spend, subscription burden, goal gaps, and risk indicators. Gemini then turns that grounded context into a concise explanation. That keeps the product from becoming a generic chatbot wrapper.
+WealthLens is intentionally analytics-first. Python computes the numeric truth first: balances, spending deltas, forecasts, safe-to-spend, subscription burden, goal gaps, and risk indicators. The RAG advisor then reasons over that truth: Claude Haiku picks from typed tools — `searchDocs` fetches semantically-relevant chunks from an on-disk corpus of CFPB and IRS consumer-finance guides via pgvector cosine similarity, while personal-data tools proxy back to the backend over a short-lived HS256 JWT to read the signed-in user's transactions, subscriptions, balances, insights, and forecasts. Every domain claim in the reply carries a `[n]` citation linking to a source URL. That keeps the product from becoming a generic chatbot wrapper.
 
 ## Repository Structure
 
 ```text
 WealthLens/
-├── frontend/      # Next.js product UI, auth pages, demo mode, charts
-├── backend/       # Fastify API, Clerk auth, Prisma, Plaid sync, orchestration
-├── ai-service/    # FastAPI analytics, scoring, forecasting, Gemini prompts
+├── frontend/            # Next.js product UI, auth pages, demo mode, charts, AdvisorMessage w/ citations
+├── backend/             # Fastify API, Clerk auth, Prisma, Plaid sync, orchestration
+│   └── src/modules/chat # /api/advisor/answer + /internal/advisor/tool (JWT-signed tool callback)
+├── ai-service/          # FastAPI analytics + RAG
+│   ├── rag/             # embed, search, chunk, ingest, answer (Anthropic tool loop)
+│   ├── schemas/rag.py   # RagRequest / RagResponse / SourceOut
+│   └── ...              # scoring, forecasting, insights, categorization, llm (deprecated)
+├── docs/superpowers/    # design specs + implementation plans
 ├── README.md
 ├── SETUP.md
 ├── ARCHITECTURE.md
@@ -139,33 +148,68 @@ For the full local setup, see `SETUP.md`.
 
 ## Environment Variables
 
-WealthLens needs local env files for:
+WealthLens needs local env files for three services.
 
-- Clerk publishable and secret keys
-- PostgreSQL `DATABASE_URL`
-- Plaid sandbox client id and secret
-- AI service URL
-- Optional Gemini API key
+**Frontend** (`frontend/.env.local`):
+- Clerk publishable key
+- `NEXT_PUBLIC_API_BASE_URL` — backend URL
 
-The checked-in `.env.example` files show the required names without exposing secrets.
+**Backend** (`backend/.env`):
+- Clerk publishable + secret keys
+- `DATABASE_URL` — Postgres (Neon works; must have the `vector` extension enabled)
+- Plaid client id + secret
+- `AI_SERVICE_URL` — where the FastAPI service is reachable
+- `ADVISOR_TOOL_SECRET` — 32+ byte hex secret used to sign short-lived tool JWTs (generate with `openssl rand -hex 32`)
+
+**AI service** (`ai-service/.env`):
+- `ANTHROPIC_API_KEY` — Claude Haiku for the RAG loop
+- `OPENAI_API_KEY` — `text-embedding-3-small` for chunk + query embeddings
+- `DATABASE_URL` — same Postgres as backend (pgvector reads/writes to `KbDocument` / `KbChunk`)
+- `BACKEND_URL` — where the Fastify service is reachable
+
+The checked-in `.env.example` files show every required name without exposing secrets. If `ANTHROPIC_API_KEY` is missing, the advisor returns a deterministic fallback message rather than crashing.
+
+### Enable pgvector once per database
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+Then run the Prisma migration from the backend workspace (`npm run db:migrate --workspace backend`) which creates the `KbDocument` and `KbChunk` tables and the ivfflat index.
+
+### Seed the knowledge-base corpus
+
+```bash
+cd ai-service && python -m rag.ingest              # fetch + embed + upsert
+cd ai-service && python -m rag.ingest --dry-run    # preview without DB writes
+cd ai-service && python -m rag.ingest --reset      # truncate corpus first
+cd ai-service && python -m rag.eval                # run the 10-question golden set
+```
 
 ## Resume-Ready Highlights
 
-- Built a full-stack fintech application with bank data aggregation, authentication, persistence, and AI-powered analytics.
-- Designed a three-service architecture with Next.js, Node/Fastify, PostgreSQL/Prisma, and Python FastAPI.
-- Integrated Plaid sandbox to sync real account, balance, and transaction data.
-- Implemented financial forecasting, safe-to-spend calculations, weekly reports, goal planning, and advisor chat grounded in user transaction history.
-- Added Gemini as an explanation layer on top of deterministic analytics rather than relying on ungrounded chatbot responses.
+- Built a full-stack fintech application with bank data aggregation, authentication, persistence, deterministic analytics, and a real RAG advisor.
+- Designed a three-service architecture with Next.js, Node/Fastify, PostgreSQL/Prisma+pgvector, and Python FastAPI.
+- Integrated Plaid to sync real account, balance, and transaction data.
+- Implemented financial forecasting, safe-to-spend calculations, weekly reports, goal planning, and a citation-backed advisor grounded in both the user's transactions and a curated CFPB/IRS knowledge base.
+- Built a production RAG loop from scratch: pgvector cosine search + OpenAI embeddings + Claude Haiku tool-calling with six typed tools, short-lived HS256 JWT for the personal-data callback, and inline `[n]` citations in the frontend.
 
 ## Roadmap
 
-- Add backend API route tests.
-- Add frontend component tests for dashboard and advisor workflows.
-- Deploy frontend to Vercel.
-- Deploy backend and AI service to Render, Railway, or Fly.io.
-- Move PostgreSQL to Neon and Redis to Upstash.
-- Add Plaid webhooks for background transaction sync.
-- Add budget goals, notification rules, and email weekly reports.
+Shipped:
+
+- Backend + frontend test suites (Vitest, pytest).
+- Vercel (frontend) + Render (backend + ai-service) + Neon (Postgres w/ pgvector) deployment.
+- Real RAG advisor: pgvector corpus + Claude Haiku tool-calling + inline citations.
+
+Next:
+
+- SSE streaming for the advisor loop (spec § v2).
+- Nightly cron for corpus refresh (spec § v2).
+- Expand corpus to NerdWallet / Investopedia (excerpt-only, always cite-and-link).
+- Prompt-cache the system prompt + tool schemas for cost optimization.
+- Plaid webhooks for background transaction sync.
+- Budget goals, notification rules, and email weekly reports.
 - Harden production data retention and account deletion flows.
 
 ## Docs
