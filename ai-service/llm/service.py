@@ -30,6 +30,8 @@ def refine_advisor_answer(
     data_points: list[dict[str, str]],
     top_category: tuple[str, float] | None,
 ) -> tuple[str, str]:
+    """DEPRECATED: replaced by ai_service.rag.answer.answer_question. Remove once
+    frontend no longer imports the legacy path (target: next release)."""
     prompt = f"""
 You are WealthLens, an AI financial copilot. Rewrite the draft answer into a clear,
 professional response for a consumer finance dashboard.

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import calendar
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+import os
 import re
 from datetime import datetime, timedelta, timezone
 
@@ -85,6 +86,9 @@ def weekly_report(payload: AnalyticsRequest) -> dict:
 
 @router.post("/analytics/chat")
 def chat(payload: ChatRequest) -> dict:
+    if os.getenv("LEGACY_ADVISOR", "0") != "1":
+        raise HTTPException(status_code=410, detail="legacy advisor removed — use /rag/answer")
+
     transactions = [transaction.model_dump() for transaction in payload.transactions]
     score_data = calculate_financial_health_score(
         payload.monthly_income,

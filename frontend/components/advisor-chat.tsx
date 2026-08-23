@@ -233,7 +233,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
                   </span>
                 ) : null}
                 <div className={compact ? "max-w-[85%]" : "max-w-2xl"}>
-                  {isAssistant && (message.sources || message.sources?.length) ? (
+                  {isAssistant && message.sources?.length ? (
                     <AdvisorMessageView role={message.role} content={message.content} sources={message.sources} />
                   ) : (
                     <div

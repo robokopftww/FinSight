@@ -1,8 +1,8 @@
 "use client";
 
+import React, { Fragment, useCallback } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
-import { Fragment, useCallback } from "react";
 
 import type { AdvisorSource } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ type Props = {
 const CITATION_RE = /\[(\d+)\]/g;
 
 function renderContent(content: string, onCitationClick: (n: number) => void) {
-  const nodes: Array<string | JSX.Element> = [];
+  const nodes: Array<string | React.JSX.Element> = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   CITATION_RE.lastIndex = 0;
