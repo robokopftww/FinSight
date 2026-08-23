@@ -1,7 +1,7 @@
 services:
   postgres:
-    image: postgres:16
-    container_name: finsight-postgres
+    image: pgvector/pgvector:pg16
+    container_name: wealthlens-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: finsight
@@ -10,14 +10,88 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - finsight-postgres-data:/var/lib/postgresql/data
+      - wealthlens-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finsight -d finsight"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   redis:
     image: redis:7
-    container_name: finsight-redis
+    container_name: wealthlens-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend-migrate:
+    build:
+      context: ./backend
+      target: dev
+    container_name: wealthlens-backend-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://finsight:finsight@postgres:5432/finsight
+    command: ["npx", "prisma", "migrate", "deploy"]
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    container_name: wealthlens-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend-migrate:
+        condition: service_completed_successfully
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://finsight:finsight@postgres:5432/finsight
+      REDIS_URL: redis://redis:6379
+      AI_SERVICE_URL: http://ai-service:8000
+      PORT: "4000"
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - backend-node-modules:/app/node_modules
+
+  ai-service:
+    build:
+      context: ./ai-service
+      target: dev
+    container_name: wealthlens-ai
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./ai-service/.env
+    environment:
+      DATABASE_URL: postgres://finsight:finsight@postgres:5432/finsight
+      BACKEND_URL: http://backend:4000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-service:/app
+      - ai-service-cache:/root/.cache
 
 volumes:
-  finsight-postgres-data:
+  wealthlens-postgres-data:
+  backend-node-modules:
+  ai-service-cache:
