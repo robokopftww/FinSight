@@ -72,15 +72,25 @@ def _upsert(conn: psycopg.Connection, source: Source, content: bytes,
 def main() -> None:
     parser = argparse.ArgumentParser(description="Ingest WealthLens knowledge-base sources.")
     parser.add_argument("--only", help="substring filter over source URL")
+    parser.add_argument("--dry-run", action="store_true", help="fetch + count only, no DB writes")
+    parser.add_argument("--reset", action="store_true", help="delete all KbDocuments first")
     args = parser.parse_args()
     dsn = os.environ["DATABASE_URL"]
     total_chunks = 0
     with psycopg.connect(dsn, autocommit=False) as conn:
+        if args.reset:
+            with conn.cursor() as cur:
+                cur.execute('DELETE FROM "KbDocument"')
+            conn.commit()
+            print("Cleared all existing documents.")
         for source in SEED_SOURCES:
             if args.only and args.only not in source.url:
                 continue
             content_type = "application/pdf" if source.url.endswith(".pdf") else "text/html"
             content, content_hash = fetch_bytes(source.url)
+            if args.dry_run:
+                print(f"[dry] {source.publisher}: {source.title[:60]} ({len(content)} bytes)")
+                continue
             doc_id, added = _upsert(conn, source, content, content_hash, content_type)
             conn.commit()
             print(f"{source.publisher}: {source.title[:60]} → {doc_id} (+{added} chunks)")
