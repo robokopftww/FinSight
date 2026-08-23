@@ -12,6 +12,7 @@ import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { isPlaidConfigured } from "../lib/plaid.js";
 import { profileUpdateSchema } from "../lib/profile.js";
+import { registerAdvisorAnswerRoutes } from "../modules/chat/advisor-routes.js";
 import { registerAdvisorToolRoutes } from "../modules/chat/tool-routes.js";
 
 const editableCategories = [
@@ -34,6 +35,7 @@ const editableCategories = [
 
 export async function registerRoutes(app: FastifyInstance) {
   await registerAdvisorToolRoutes(app);
+  await registerAdvisorAnswerRoutes(app);
 
   app.get("/health", async () => ({
     status: "ok",
