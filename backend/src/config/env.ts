@@ -20,10 +20,7 @@ const envSchema = z.object({
   PLAID_CLIENT_ID: z.string().optional(),
   PLAID_SECRET: z.string().optional(),
   PLAID_ENV: z.enum(["sandbox", "development", "production"]).default("sandbox"),
-  ADVISOR_TOOL_SECRET: z
-    .string()
-    .min(32)
-    .default("0000000000000000000000000000000000000000000000000000000000000000"),
+  ADVISOR_TOOL_SECRET: z.string().min(32),
 });
 
 export const env = envSchema.parse(process.env);

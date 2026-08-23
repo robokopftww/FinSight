@@ -3,10 +3,6 @@ import Fastify from "fastify";
 import { registerRoutes } from "../src/routes/index.js";
 import { signAdvisorToolJwt } from "../src/lib/advisor-tool-jwt.js";
 
-process.env.ADVISOR_TOOL_SECRET =
-  process.env.ADVISOR_TOOL_SECRET ??
-  "0000000000000000000000000000000000000000000000000000000000000000";
-
 let app: Awaited<ReturnType<typeof buildApp>>;
 
 async function buildApp() {
