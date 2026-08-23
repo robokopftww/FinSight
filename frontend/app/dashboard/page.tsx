@@ -105,6 +105,12 @@ export default async function DashboardPage() {
           delta={`${subscriptions.length} charges`}
           tone="warning"
           points={billsTrend}
+          detailsLabel={`View ${subscriptions.length} biller${subscriptions.length === 1 ? "" : "s"}`}
+          details={subscriptions.map((s) => ({
+            primary: s.name,
+            secondary: s.note ?? "Auto-renews monthly",
+            value: formatCurrency(s.monthlyCost),
+          }))}
         />
       </section>
 

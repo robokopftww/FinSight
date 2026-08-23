@@ -1,3 +1,5 @@
+import { ChevronDown } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { Panel } from "@/components/ui/panel";
 
@@ -10,6 +12,12 @@ const toneMap: Record<MetricTone, { chip: string; text: string; stroke: string }
   accent: { chip: "bg-[var(--color-accent-soft)]", text: "text-[var(--color-accent-text)]", stroke: "#2563eb" },
 };
 
+export type MetricDetailRow = {
+  primary: string;
+  secondary?: string;
+  value: string;
+};
+
 export function MetricCard({
   label,
   value,
@@ -17,6 +25,8 @@ export function MetricCard({
   tone,
   points,
   trend,
+  details,
+  detailsLabel,
 }: {
   label: string;
   value: string;
@@ -24,12 +34,14 @@ export function MetricCard({
   tone?: MetricTone;
   points?: number[];
   trend?: "up" | "down";
+  details?: MetricDetailRow[];
+  detailsLabel?: string;
 }) {
   const resolvedTone: MetricTone = tone ?? (trend === "down" ? "negative" : "positive");
   const t = toneMap[resolvedTone];
 
-  return (
-    <Panel className="p-5">
+  const summary = (
+    <>
       <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-slate-500">{label}</div>
       <div className="mt-3 flex items-baseline gap-2">
         <div className="font-mono text-[22px] font-semibold tabular-nums text-slate-950">{value}</div>
@@ -44,6 +56,37 @@ export function MetricCard({
           <Sparkline points={points} color={t.stroke} />
         </div>
       ) : null}
+    </>
+  );
+
+  if (!details || details.length === 0) {
+    return <Panel className="p-5">{summary}</Panel>;
+  }
+
+  return (
+    <Panel className="p-0">
+      <details className="group [&>summary::-webkit-details-marker]:hidden">
+        <summary className="flex cursor-pointer list-none flex-col p-5 outline-none">
+          {summary}
+          <span className="mt-3 flex items-center justify-between text-[11px] font-medium text-slate-500">
+            <span>{detailsLabel ?? "See breakdown"}</span>
+            <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
+          </span>
+        </summary>
+        <ul className="divide-y divide-slate-100 border-t border-slate-100 px-5 pb-3 pt-1">
+          {details.map((row) => (
+            <li key={`${row.primary}-${row.value}`} className="flex items-center justify-between gap-3 py-2.5">
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-semibold text-slate-950">{row.primary}</div>
+                {row.secondary ? (
+                  <div className="truncate text-[11px] text-slate-500">{row.secondary}</div>
+                ) : null}
+              </div>
+              <div className="font-mono text-[13px] font-semibold tabular-nums text-slate-950">{row.value}</div>
+            </li>
+          ))}
+        </ul>
+      </details>
     </Panel>
   );
 }

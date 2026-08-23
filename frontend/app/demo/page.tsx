@@ -101,6 +101,12 @@ export default function DemoPage() {
           delta="−$180"
           tone="warning"
           points={[1380, 1360, 1420, 1300, 1250, 1204]}
+          detailsLabel={`View ${renewals.length} billers`}
+          details={renewals.map((r) => ({
+            primary: r.name,
+            secondary: r.note,
+            value: fmt(r.monthlyCost, { maximumFractionDigits: 2 }),
+          }))}
         />
       </section>
 
