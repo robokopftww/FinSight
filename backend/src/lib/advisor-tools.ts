@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { prisma } from "./prisma.js";
+import { summarizeDashboard } from "./financial-analytics.js";
 
 export const transactionQuerySchema = z.object({
   category: z.string().optional(),
@@ -55,4 +56,81 @@ export async function getRecentTransactionsForUser(
     amount: Number(r.amount),
     direction: r.direction,
   }));
+}
+
+export async function getSubscriptionsForUser(userId: string) {
+  const rows = await prisma.subscription.findMany({
+    where: { userId },
+    orderBy: { monthlyCost: "desc" },
+  });
+  return rows.map((s) => ({
+    name: s.merchantName ?? "Subscription",
+    monthlyCost: Number(s.monthlyCost ?? 0),
+    note: s.category ?? undefined,
+    lastChargedAt: s.lastChargedAt?.toISOString(),
+    cadence: undefined,
+  }));
+}
+
+export async function getBalanceForUser(userId: string, args: Record<string, unknown>) {
+  const asOfDate = typeof args.asOfDate === "string"
+    ? args.asOfDate
+    : new Date().toISOString().slice(0, 10);
+
+  const accounts = await prisma.account.findMany({
+    where: { userId },
+  });
+  const transactions = await prisma.transaction.findMany({
+    where: { userId },
+  });
+
+  const overview = summarizeDashboard(accounts, transactions);
+
+  return {
+    asOfDate,
+    totalBalance: Number(overview.currentBalance ?? 0),
+    accounts: (overview.accountsBreakdown ?? []).map((a) => ({
+      name: a.name,
+      mask: a.mask ?? null,
+      balance: Number(a.currentBalance ?? 0),
+    })),
+  };
+}
+
+export async function getInsightsForUser(userId: string, args: Record<string, unknown>) {
+  const severity = args.severity as "high" | "medium" | "low" | undefined;
+  const rows = await prisma.insight.findMany({
+    where: {
+      userId,
+      ...(severity ? { severity } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map((i) => ({
+    title: i.title,
+    summary: i.summary,
+    severity: i.severity,
+    createdAt: i.createdAt.toISOString(),
+  }));
+}
+
+export async function getForecastForUser(userId: string, args: Record<string, unknown>) {
+  const horizon = [7, 30, 90].includes(args.horizonDays as number)
+    ? (args.horizonDays as number)
+    : 30;
+
+  const forecast = await prisma.forecast.findFirst({
+    where: { userId, horizonDays: horizon },
+    orderBy: { generatedAt: "desc" },
+  });
+
+  const points = forecast?.data && typeof forecast.data === "object" && "points" in forecast.data
+    ? (forecast.data as { points: Array<{ date: string; balance: number }> }).points
+    : [];
+
+  return {
+    horizonDays: horizon,
+    points: points.map((p) => ({ date: p.date, balance: Number(p.balance) })),
+    safeToSpend: Number(forecast?.projectedBalance ?? 0),
+  };
 }

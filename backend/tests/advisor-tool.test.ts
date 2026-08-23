@@ -63,4 +63,16 @@ describe("POST /internal/advisor/tool", () => {
     expect(resp.statusCode).toBe(400);
     expect(resp.json()).toMatchObject({ error: expect.stringContaining("invalid args") });
   });
+
+  it("returns an empty subscriptions array for a user with no data", async () => {
+    const token = signAdvisorToolJwt({ userId: "u_no_data", ttlSeconds: 60 });
+    const resp = await app.inject({
+      method: "POST",
+      url: "/internal/advisor/tool",
+      headers: { authorization: `Bearer ${token}` },
+      payload: { tool: "getSubscriptions", args: {}, userId: "u_no_data" },
+    });
+    expect(resp.statusCode).toBe(200);
+    expect(resp.json().data).toBeInstanceOf(Array);
+  });
 });

@@ -34,6 +34,54 @@ _TOOLS = [
             "required": ["query"],
         },
     },
+    {
+        "name": "getTransactions",
+        "description": (
+            "Fetch the signed-in user's recent transactions. Filter by category, "
+            "merchant, date range, or amount."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string"},
+                "merchant": {"type": "string"},
+                "startDate": {"type": "string", "format": "date"},
+                "endDate": {"type": "string", "format": "date"},
+                "minAmount": {"type": "number"},
+                "maxAmount": {"type": "number"},
+                "limit": {"type": "integer", "default": 50, "maximum": 200},
+            },
+        },
+    },
+    {
+        "name": "getSubscriptions",
+        "description": "List the user's detected recurring subscriptions.",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "getBalance",
+        "description": "Return the user's current balance, or historical balance on a given date.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"asOfDate": {"type": "string", "format": "date"}},
+        },
+    },
+    {
+        "name": "getInsights",
+        "description": "Fetch AI-generated insights already computed for this user.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"severity": {"type": "string", "enum": ["high", "medium", "low"]}},
+        },
+    },
+    {
+        "name": "getForecast",
+        "description": "Return the user's cash-flow forecast for 7d, 30d, or 90d.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"horizonDays": {"type": "integer", "enum": [7, 30, 90], "default": 30}},
+        },
+    },
 ]
 
 
