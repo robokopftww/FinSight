@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import {
   Bell,
   Bot,
@@ -31,7 +32,7 @@ const navItems = [
 
 const ranges = ["1M", "3M", "6M", "1Y", "All"] as const;
 
-export function AppShell({
+export async function AppShell({
   children,
   currentPath,
   title,
@@ -45,6 +46,8 @@ export function AppShell({
   demoMode?: boolean;
 }) {
   const isClerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  const signedIn = isClerkConfigured ? Boolean((await auth()).userId) : false;
+  const visibleNavItems = signedIn ? navItems.filter((item) => item.href !== "/demo") : navItems;
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.10),transparent_28%),radial-gradient(circle_at_top_right,rgba(14,165,233,0.08),transparent_24%),var(--background)] text-slate-950">
@@ -59,7 +62,7 @@ export function AppShell({
             WealthLens
           </Link>
           <nav className="flex-1 space-y-1 px-3">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const active = currentPath === item.href;
               return (
