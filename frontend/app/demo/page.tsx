@@ -1,323 +1,213 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Bot, CalendarDays, CreditCard, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
+import { ChevronRight, Sparkles } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
-import { CashFlowChart } from "@/components/charts/cash-flow-chart";
-import { SpendingBreakdownChart } from "@/components/charts/spending-breakdown-chart";
+import { BalanceHistoryChart } from "@/components/charts/balance-history-chart";
 import { InsightCard } from "@/components/insight-card";
 import { MetricCard } from "@/components/metric-card";
-import { ScoreRing } from "@/components/score-ring";
-import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 
-const demoOverview = {
-  currentBalance: 8420,
-  monthlySpending: 3125,
-  monthlyIncome: 5400,
-  savingsRate: 18.6,
-  healthScore: 82,
-  safeToSpend: 650,
-  projectedBalance: 6340,
-  riskProbability: 0.22,
-};
-
-const demoForecast = [
-  { label: "Today", balance: 8420 },
-  { label: "Day 7", balance: 7940 },
-  { label: "Day 30", balance: 6340 },
-  { label: "Day 90", balance: 5640 },
+const balanceTrend = [
+  { label: "Mar", balance: 118400 },
+  { label: "Apr", balance: 122100 },
+  { label: "May", balance: 124800 },
+  { label: "Jun", balance: 131300 },
+  { label: "Jul", balance: 137600 },
+  { label: "Aug", balance: 142830 },
 ];
 
-const demoSpending = [
-  { category: "Food", amount: 840, fill: "#2563eb" },
-  { category: "Bills", amount: 780, fill: "#58b8ff" },
-  { category: "Shopping", amount: 670, fill: "#ffb65e" },
-  { category: "Entertainment", amount: 543, fill: "#ff7b72" },
-  { category: "Transportation", amount: 292, fill: "#d0a2ff" },
+const spendingBreakdown = [
+  { category: "Groceries", amount: 842.1, fill: "#2563eb" },
+  { category: "Dining", amount: 514.63, fill: "#0ea5e9" },
+  { category: "Transport", amount: 412.5, fill: "#8b5cf6" },
+  { category: "Shopping", amount: 318.9, fill: "#ec4899" },
+  { category: "Subscriptions", amount: 246.0, fill: "#f97316" },
+  { category: "Entertainment", amount: 180.25, fill: "#22c55e" },
 ];
 
-const demoTransactions = [
-  { merchant: "Apple Payroll", description: "PAYROLL DEPOSIT", amount: 2700, category: "Income", date: "May 24" },
-  { merchant: "Whole Foods", description: "WHOLEFDS BKLYN 01", amount: -86, category: "Food", date: "May 28" },
-  { merchant: "Netflix", description: "NETFLIX.COM", amount: -15, category: "Subscription", date: "May 27" },
-  { merchant: "Shell", description: "SHELL OIL 574112", amount: -43, category: "Transportation", date: "May 26" },
-  { merchant: "Sweetgreen", description: "SWEETGREEN BROOKLYN", amount: -25, category: "Food", date: "May 25" },
+const renewals = [
+  { name: "Netflix", note: "Renews Aug 26", monthlyCost: 15.99 },
+  { name: "Spotify", note: "Renews Aug 28", monthlyCost: 10.99 },
+  { name: "Adobe CC", note: "Renews Sep 02", monthlyCost: 54.99 },
+  { name: "iCloud+", note: "Renews Sep 04", monthlyCost: 2.99 },
 ];
 
-const demoSubscriptions = [
-  { name: "Netflix", monthlyCost: 15.49, yearlyCost: 186, opportunity: "Keep" },
-  { name: "Spotify", monthlyCost: 10.99, yearlyCost: 132, opportunity: "Review" },
-  { name: "Climbing Gym", monthlyCost: 49, yearlyCost: 588, opportunity: "Review" },
-];
-
-const demoInsights = [
+const insights = [
   {
-    title: "Restaurant spending is up 28%",
-    summary: "Most of the increase came from weekend dining. Holding restaurant spend to $140/week keeps your forecast above target.",
-    severity: "medium",
+    title: "Overdraft risk on Chase Checking",
+    summary: "Balance likely dips below $0 in 4 days at current burn.",
+    severity: "high" as const,
   },
   {
-    title: "Cash-flow runway is stable",
-    summary: "Your projected 30-day balance is $6,340 after recurring bills and expected income.",
-    severity: "low",
+    title: "Dining spend up 38% vs 3-month average",
+    summary: "You've spent $514.63 on dining this month; typical is $370.",
+    severity: "medium" as const,
   },
   {
-    title: "Subscriptions could free $342 yearly",
-    summary: "Spotify and the climbing gym are candidates for review based on cost and recent usage.",
-    severity: "low",
+    title: "Unused subscription: Hulu (44 days)",
+    summary: "No activity since Jul 10 — cancel to save $17.99/mo.",
+    severity: "low" as const,
   },
 ];
 
-const weeklySpend = [
-  { label: "Mon", amount: 108 },
-  { label: "Tue", amount: 62 },
-  { label: "Wed", amount: 184 },
-  { label: "Thu", amount: 96 },
-  { label: "Fri", amount: 270 },
-  { label: "Sat", amount: 315 },
-  { label: "Sun", amount: 213 },
+const suggestedPrompts = [
+  "What's my top spending category?",
+  "Am I on track this month?",
+  "Which subscriptions did I forget?",
 ];
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function formatSignedCurrency(value: number) {
-  const formatted = formatCurrency(Math.abs(value));
-  return value < 0 ? `-${formatted}` : formatted;
+function fmt(value: number, opts: Intl.NumberFormatOptions = {}) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", ...opts }).format(value);
 }
 
 export default function DemoPage() {
-  const maxWeeklySpend = Math.max(...weeklySpend.map((day) => day.amount), 1);
+  const total = spendingBreakdown.reduce((s, d) => s + d.amount, 0);
+  const max = Math.max(...spendingBreakdown.map((d) => d.amount));
 
   return (
-    <AppShell currentPath="/demo" eyebrow="Recruiter-ready demo" title="Explore WealthLens with polished sample data" demoMode>
-      <Panel className="p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
-              <Sparkles className="size-5" />
-            </span>
-            <div>
-              <h2 className="text-xl font-semibold text-slate-950">Demo Mode is using realistic sample finances</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-600">
-                This view skips sign-in and Plaid so recruiters can inspect the product immediately. The real app still uses Clerk,
-                Plaid, PostgreSQL, Python analytics, and Gemini.
-              </p>
-            </div>
-          </div>
-          <Button asChild variant="secondary" className="h-12">
-            <Link href="/dashboard">
-              Open live app
-              <ArrowRight className="ml-2 size-4" />
-            </Link>
-          </Button>
-        </div>
-      </Panel>
+    <AppShell
+      currentPath="/demo"
+      eyebrow="Overview"
+      title="Good afternoon, Keshav"
+      demoMode
+    >
+      <p className="-mt-4 text-sm text-slate-600">Here&rsquo;s how your money moved this month.</p>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Current balance" value={formatCurrency(demoOverview.currentBalance)} delta="Demo checking + savings" />
-        <MetricCard label="Monthly spending" value={formatCurrency(demoOverview.monthlySpending)} delta="14% higher than last month" trend="down" />
-        <MetricCard label="Monthly income" value={formatCurrency(demoOverview.monthlyIncome)} delta="Stable payroll cadence" />
-        <MetricCard label="Savings rate" value={`${demoOverview.savingsRate}%`} delta="Trending toward 20% target" />
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Net Worth"
+          value={fmt(142830.19, { maximumFractionDigits: 2 })}
+          delta="+3.2%"
+          tone="positive"
+          points={[118400, 122100, 124800, 131300, 137600, 142830]}
+        />
+        <MetricCard
+          label="Monthly Cash Flow"
+          value={fmt(4218.72, { maximumFractionDigits: 2 })}
+          delta="+12.4%"
+          tone="positive"
+          points={[3200, 3400, 3300, 3800, 4000, 4218]}
+        />
+        <MetricCard
+          label="Health Score"
+          value="82 / 100"
+          delta="+4 pts"
+          tone="accent"
+          points={[70, 72, 74, 76, 78, 82]}
+        />
+        <MetricCard
+          label="Upcoming Bills"
+          value={fmt(1204.0, { maximumFractionDigits: 2 })}
+          delta="−$180"
+          tone="warning"
+          points={[1380, 1360, 1420, 1300, 1250, 1204]}
+        />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
-        <Panel className="p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-slate-950">Cash flow forecast</h2>
-              <p className="mt-2 text-sm text-slate-600">Projected balances across the next 7, 30, and 90 days.</p>
-            </div>
-            <span className="rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]">
-              Safe to spend {formatCurrency(demoOverview.safeToSpend)}
+      <section className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+        <BalanceHistoryChart data={balanceTrend} />
+        <Panel className="flex flex-col gap-4 p-6">
+          <div className="flex items-center gap-3">
+            <span className="flex size-9 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]">
+              <Sparkles className="size-4" />
             </span>
-          </div>
-          <div className="mt-6">
-            <CashFlowChart data={demoForecast} />
-          </div>
-        </Panel>
-
-        <Panel className="p-6">
-          <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-950">Spending mix</h2>
-              <p className="mt-2 text-sm text-slate-600">Clean demo categories without Plaid sandbox transfer noise.</p>
+              <div className="text-base font-semibold text-slate-950">Ask WealthLens</div>
+              <div className="text-[11px] text-slate-500">Grounded in your data</div>
             </div>
-            <CreditCard className="size-5 text-[var(--color-accent)]" />
           </div>
-          <SpendingBreakdownChart data={demoSpending} />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {demoSpending.map((item) => (
-              <div key={item.category} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                <div className="flex items-center gap-3 text-slate-700">
-                  <span className="size-3 rounded-full" style={{ backgroundColor: item.fill }} />
-                  {item.category}
-                </div>
-                <span className="font-medium text-slate-950">{formatCurrency(item.amount)}</span>
-              </div>
+          <div className="rounded-[12px] border border-slate-200 bg-[var(--background)] px-3.5 py-3 text-[13px] text-slate-500">
+            Where did I overspend last week?
+          </div>
+          <div className="space-y-1.5">
+            {suggestedPrompts.map((q) => (
+              <Link
+                key={q}
+                href="/advisor"
+                className="flex items-center gap-2 rounded-[10px] bg-[var(--background)] px-3 py-2 text-[12px] text-slate-800 transition hover:bg-slate-100"
+              >
+                <ChevronRight className="size-3.5 text-[var(--color-accent-text)]" />
+                {q}
+              </Link>
             ))}
           </div>
         </Panel>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-        <Panel className="flex flex-col items-center justify-center p-8">
-          <ScoreRing score={demoOverview.healthScore} />
-          <div className="mt-5 grid w-full gap-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Emergency runway</div>
-              <div className="mt-2 text-2xl font-semibold text-slate-950">81 days</div>
+      <section className="grid gap-5 xl:grid-cols-2">
+        <Panel className="p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-950">Spending by category</h2>
+              <p className="mt-0.5 text-xs text-slate-500">August · {fmt(total, { maximumFractionDigits: 0 })} total</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Risk probability</div>
-              <div className="mt-2 text-2xl font-semibold text-slate-950">{Math.round(demoOverview.riskProbability * 100)}%</div>
-            </div>
+            <button type="button" className="text-xs font-semibold text-[var(--color-accent-text)] hover:underline">
+              View all
+            </button>
+          </div>
+          <div className="mt-5 space-y-4">
+            {spendingBreakdown.map((row) => {
+              const pct = Math.max(0.05, row.amount / max);
+              return (
+                <div key={row.category}>
+                  <div className="mb-1.5 flex items-center justify-between text-[13px]">
+                    <span className="font-medium text-slate-800">{row.category}</span>
+                    <span className="font-mono tabular-nums text-slate-500">
+                      {fmt(row.amount, { maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-[var(--background)]">
+                    <div className="h-full rounded-full" style={{ width: `${pct * 100}%`, backgroundColor: row.fill }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Panel>
 
         <Panel className="p-6">
-          <div className="flex items-center gap-3">
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
-              <Bot className="size-5" />
-            </span>
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-950">Advisor preview</h2>
-              <p className="mt-2 text-sm text-slate-600">What Gemini explains after Python calculates the numbers.</p>
+              <h2 className="text-lg font-semibold text-slate-950">Upcoming renewals</h2>
+              <p className="mt-0.5 text-xs text-slate-500">Next 14 days · {renewals.length} charges</p>
             </div>
+            <button type="button" className="text-xs font-semibold text-[var(--color-accent-text)] hover:underline">
+              Manage
+            </button>
           </div>
-          <div className="mt-6 space-y-4 rounded-[28px] border border-slate-200 bg-[var(--color-surface)] p-5">
-            <div className="ml-auto max-w-xl rounded-3xl bg-blue-600 px-4 py-3 text-sm text-white">
-              Can I afford a $400 monitor this month?
-            </div>
-            <div className="max-w-2xl rounded-3xl border border-slate-200 bg-slate-100 px-4 py-4 text-sm leading-7 text-slate-800">
-              A $400 purchase is affordable based on your forecast. Your safe-to-spend buffer would move from $650 to $250,
-              so WealthLens would recommend keeping discretionary dining below $140 this week to protect your savings target.
-            </div>
-            <div className="inline-flex rounded-full bg-[var(--color-accent-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-text)]">
-              Gemini + Python analytics
-            </div>
-          </div>
+          <ul className="mt-5 space-y-2.5">
+            {renewals.map((sub) => (
+              <li key={sub.name} className="flex items-center gap-3 rounded-[12px] p-1.5">
+                <span className="flex size-9 items-center justify-center rounded-[10px] bg-[var(--color-accent-soft)] text-sm font-semibold text-[var(--color-accent-text)]">
+                  {sub.name.slice(0, 1).toUpperCase()}
+                </span>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold text-slate-950">{sub.name}</div>
+                  <div className="text-[11px] text-slate-500">{sub.note}</div>
+                </div>
+                <div className="font-mono text-sm font-semibold tabular-nums text-slate-950">
+                  {fmt(sub.monthlyCost, { maximumFractionDigits: 2 })}
+                </div>
+              </li>
+            ))}
+          </ul>
         </Panel>
       </section>
 
       <Panel className="p-6">
-        <div className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
-            <Sparkles className="size-5" />
-          </span>
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-slate-950">AI insight feed</h2>
-            <p className="mt-2 text-sm text-slate-600">Grounded insight cards generated from the demo financial profile.</p>
+            <h2 className="text-lg font-semibold text-slate-950">Insights</h2>
+            <p className="mt-0.5 text-xs text-slate-500">AI-generated · updated 4 min ago</p>
           </div>
+          <button type="button" className="text-xs font-semibold text-[var(--color-accent-text)] hover:underline">
+            Dismiss all
+          </button>
         </div>
-        <div className="mt-6 grid gap-4 lg:grid-cols-3">
-          {demoInsights.map((insight) => (
-            <InsightCard
-              key={insight.title}
-              title={insight.title}
-              summary={insight.summary}
-              severity={insight.severity as "high" | "medium" | "low"}
-            />
+        <div className="mt-5 space-y-3">
+          {insights.map((it) => (
+            <InsightCard key={it.title} title={it.title} summary={it.summary} severity={it.severity} />
           ))}
-        </div>
-      </Panel>
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        <Panel className="p-6">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="size-5 text-[var(--color-accent)]" />
-            <h2 className="text-xl font-semibold text-slate-950">Weekly report</h2>
-          </div>
-          <p className="mt-2 text-sm text-slate-600">May 24 - May 30</p>
-          <div className="mt-6 flex h-56 items-end gap-3 border-b border-slate-200 pb-4">
-            {weeklySpend.map((day) => (
-              <div key={day.label} className="flex min-w-0 flex-1 flex-col items-center gap-3">
-                <div className="flex h-40 w-full items-end rounded-t-2xl bg-slate-50">
-                  <div
-                    className="w-full rounded-t-2xl bg-[linear-gradient(180deg,var(--color-accent),rgba(37,99,235,0.14))]"
-                    style={{ height: `${Math.max((day.amount / maxWeeklySpend) * 100, 8)}%` }}
-                  />
-                </div>
-                <div className="text-xs font-medium text-slate-500">{day.label}</div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 rounded-[24px] border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-4 text-sm leading-7 text-[var(--color-accent-text)]">
-            Spending increased 12% this week, led by food and weekend entertainment. Your forecast remains stable, but holding
-            dining spend flat would keep the 30-day balance above $6,300.
-          </div>
-        </Panel>
-
-        <Panel className="p-6">
-          <div className="flex items-center gap-3">
-            <RefreshCw className="size-5 text-[var(--color-accent)]" />
-            <h2 className="text-xl font-semibold text-slate-950">Subscriptions</h2>
-          </div>
-          <div className="mt-6 space-y-3">
-            {demoSubscriptions.map((subscription) => (
-              <div key={subscription.name} className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                <div>
-                  <div className="font-medium text-slate-950">{subscription.name}</div>
-                  <div className="mt-1 text-sm text-slate-500">{subscription.opportunity}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-medium text-slate-950">{formatCurrency(subscription.monthlyCost)}</div>
-                  <div className="mt-1 text-sm text-slate-500">{formatCurrency(subscription.yearlyCost)} / year</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            Review candidates could save about <span className="font-semibold text-slate-950">$342/year</span>.
-          </div>
-        </Panel>
-      </section>
-
-      <Panel className="p-6">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="size-5 text-[var(--color-accent)]" />
-          <h2 className="text-xl font-semibold text-slate-950">Recent transactions</h2>
-        </div>
-        <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200">
-          {demoTransactions.map((transaction) => (
-            <div key={`${transaction.date}-${transaction.description}`} className="grid gap-3 border-b border-slate-200 px-4 py-4 text-sm last:border-b-0 md:grid-cols-[1fr_9rem_8rem_7rem] md:items-center">
-              <div>
-                <div className="font-medium text-slate-950">{transaction.merchant}</div>
-                <div className="mt-1 text-slate-500">{transaction.description}</div>
-              </div>
-              <div className="text-slate-600">{transaction.category}</div>
-              <div className={transaction.amount < 0 ? "font-medium text-red-600" : "font-medium text-emerald-600"}>
-                {formatSignedCurrency(transaction.amount)}
-              </div>
-              <div className="text-slate-500">{transaction.date}</div>
-            </div>
-          ))}
-        </div>
-      </Panel>
-
-      <Panel className="p-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-3">
-            <BadgeCheck className="mt-1 size-5 text-[var(--color-accent)]" />
-            <div>
-              <h2 className="text-xl font-semibold text-slate-950">Ready for the live workflow</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-                The protected app connects Clerk accounts, Plaid sandbox banks, PostgreSQL records, Python analytics, and Gemini
-                explanations. Demo Mode exists so the product is instantly reviewable.
-              </p>
-            </div>
-          </div>
-          <Button asChild className="h-12">
-            <Link href="/dashboard">
-              Connect Plaid sandbox
-              <ArrowRight className="ml-2 size-4" />
-            </Link>
-          </Button>
         </div>
       </Panel>
     </AppShell>

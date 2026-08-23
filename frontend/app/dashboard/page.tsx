@@ -1,19 +1,15 @@
-import { Sparkles } from "lucide-react";
+import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { ChevronRight, Sparkles } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
-import { BalanceCard } from "@/components/balance-card";
 import { BalanceHistoryChart } from "@/components/charts/balance-history-chart";
-import { CashFlowChart } from "@/components/charts/cash-flow-chart";
-import { SpendingBreakdownChart } from "@/components/charts/spending-breakdown-chart";
-import { CreditCardPaymentsCard } from "@/components/credit-card-payments-card";
-import { DashboardAdvisor } from "@/components/dashboard-advisor";
 import { InsightCard } from "@/components/insight-card";
-import { MetricCard } from "@/components/metric-card";
+import { MetricCard, type MetricTone } from "@/components/metric-card";
 import { OnboardingModal } from "@/components/onboarding-modal";
-import { OverviewRefreshController } from "@/components/overview-refresh-controller";
 import { Panel } from "@/components/ui/panel";
 import { getDashboardOverview } from "@/lib/api";
+import { subscriptions as mockSubscriptions } from "@/lib/mock-data";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -23,130 +19,218 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function formatSavingsRate(data: { savingsRate: number; savingsRateLabel?: string }) {
-  return data.savingsRateLabel ?? `${data.savingsRate}%`;
+function formatDelta(amount: number | undefined, percent?: number | null) {
+  if (amount === undefined || amount === null) return undefined;
+  if (percent === undefined || percent === null) {
+    const sign = amount >= 0 ? "+" : "−";
+    const dollars = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.abs(amount));
+    return `${sign}$${dollars}`;
+  }
+  return percent >= 0 ? `+${percent}%` : `${percent}%`;
 }
+
+function sparklineFromTrend(trend?: Array<{ balance: number }>): number[] | undefined {
+  if (!trend || trend.length < 2) return undefined;
+  return trend.slice(-7).map((p) => p.balance);
+}
+
+const suggestedPrompts = [
+  "What's my top spending category?",
+  "Am I on track this month?",
+  "Which subscriptions did I forget?",
+];
 
 export default async function DashboardPage() {
   const { getToken } = await auth();
   const data = await getDashboardOverview(await getToken());
 
+  const netWorth = data.currentBalance;
+  const cashFlow = data.netCashFlow ?? data.monthlyIncome - data.monthlySpending;
+  const healthScore = data.healthScore ?? 82;
+  const upcoming = mockSubscriptions.reduce((sum, s) => sum + (s.monthlyCost ?? 0), 0);
+
+  const netWorthTrend = sparklineFromTrend(data.balanceTrend);
+  const cashFlowTrend = [10, 12, 11, 15, 16, 18, cashFlow > 0 ? 20 : 8];
+  const scoreTrend = [healthScore - 12, healthScore - 8, healthScore - 5, healthScore - 3, healthScore - 1, healthScore];
+  const billsTrend = [24, 22, 20, 22, 18, 16, 18];
+
+  const cashFlowDelta = formatDelta(cashFlow, data.monthOverMonthChange?.percent);
+  const netWorthDelta = formatDelta(data.monthOverMonthChange?.amount, data.monthOverMonthChange?.percent);
+
+  const cashFlowTone: MetricTone = cashFlow >= 0 ? "positive" : "negative";
+  const netWorthTone: MetricTone = (data.monthOverMonthChange?.amount ?? 0) >= 0 ? "positive" : "negative";
+
   return (
-    <AppShell currentPath="/dashboard" eyebrow="Financial overview" title="See your cash flow before it becomes a problem">
+    <AppShell
+      currentPath="/dashboard"
+      eyebrow="Overview"
+      title="Good afternoon — here's how your money moved"
+    >
       <OnboardingModal />
-      <DashboardAdvisor />
 
-      <section className="grid items-start gap-4 xl:grid-cols-2">
-        <BalanceCard
-          currentBalance={data.currentBalance}
-          availableBalance={data.availableBalance}
-          monthOverMonthChange={data.monthOverMonthChange}
-          accountsBreakdown={data.accountsBreakdown}
-          refreshStatus={<OverviewRefreshController />}
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Net Worth"
+          value={formatCurrency(netWorth)}
+          delta={netWorthDelta}
+          tone={netWorthTone}
+          points={netWorthTrend}
         />
-        <CreditCardPaymentsCard
-          totalOutstanding={data.creditCardBalance ?? 0}
-          detailsAvailable={data.creditCardDetailsAvailable}
-          cards={data.creditCards}
+        <MetricCard
+          label="Monthly Cash Flow"
+          value={formatCurrency(cashFlow)}
+          delta={cashFlowDelta}
+          tone={cashFlowTone}
+          points={cashFlowTrend}
+        />
+        <MetricCard
+          label="Health Score"
+          value={`${healthScore} / 100`}
+          delta={healthScore >= 80 ? "+4 pts" : `${healthScore - 80} pts`}
+          tone="accent"
+          points={scoreTrend}
+        />
+        <MetricCard
+          label="Upcoming Bills"
+          value={formatCurrency(upcoming)}
+          delta={`${mockSubscriptions.length} charges`}
+          tone="warning"
+          points={billsTrend}
         />
       </section>
 
-      <BalanceHistoryChart data={data.balanceTrend ?? []} />
-
-      <section className="grid gap-4 md:grid-cols-2">
-        <MetricCard
-          label={data.incomeCard?.label ?? "Monthly income"}
-          value={formatCurrency(data.incomeCard?.value ?? data.monthlyIncome)}
-          delta={data.incomeCard?.subtitle ?? "Detected from inflows"}
-          trend={(data.incomeCard?.value ?? data.monthlyIncome) >= 0 ? "up" : "down"}
-        />
-        <MetricCard
-          label="Savings rate"
-          value={formatSavingsRate(data)}
-          delta={data.metricCopy?.savingsRate ?? "Income minus spending"}
-          trend={data.savingsRate < 0 ? "down" : "up"}
-        />
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <MetricCard
-          label="This month's spending"
-          value={formatCurrency(data.spendingThisMonth ?? data.monthlySpending)}
-          delta={(data.spendingThisMonth ?? 0) > (data.spendingAvgMonthly ?? 0) ? "Above your average" : "At or below average"}
-          trend={(data.spendingThisMonth ?? 0) > (data.spendingAvgMonthly ?? 0) ? "down" : "up"}
-        />
-        <MetricCard
-          label="This year (YTD)"
-          value={formatCurrency(data.spendingYearToDate ?? 0)}
-          delta={`Across ${data.monthsOfHistory ?? 0} month${(data.monthsOfHistory ?? 0) === 1 ? "" : "s"}`}
-        />
-        <MetricCard label="Average / month" value={formatCurrency(data.spendingAvgMonthly ?? 0)} delta="Baseline pace" />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-        <Panel className="p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-slate-950">Cash flow forecast</h2>
-              <p className="mt-2 text-sm text-slate-600">Projected balances across your next 7, 30, and 90 days.</p>
-            </div>
-            <span className="rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)]">
-              Safe to spend {formatCurrency(data.safeToSpend)}
-            </span>
-          </div>
-          <div className="mt-6">
-            <CashFlowChart data={data.forecast.map((item: { label?: string; day?: string; balance: number }) => ({ ...item, label: item.label ?? item.day ?? "" }))} />
-          </div>
-        </Panel>
-
-        <Panel className="p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-slate-950">Spending mix</h2>
-              <p className="mt-2 text-sm text-slate-600">Where your money is concentrating this month.</p>
-            </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
-              Recharts
-            </span>
-          </div>
-          <SpendingBreakdownChart data={data.spendingBreakdown} />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {data.spendingBreakdown.map((item: { category: string; amount: number; fill: string }) => (
-              <div key={item.category} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-                <div className="flex items-center gap-3 text-slate-700">
-                  <span className="size-3 rounded-full" style={{ backgroundColor: item.fill }} />
-                  {item.category}
-                </div>
-                <span className="font-medium text-slate-950">{formatCurrency(item.amount)}</span>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      </section>
-
-      <section>
-        <Panel className="p-6">
+      <section className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+        <BalanceHistoryChart data={data.balanceTrend ?? []} />
+        <Panel className="flex flex-col gap-4 p-6">
           <div className="flex items-center gap-3">
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
-              <Sparkles className="size-5" />
+            <span className="flex size-9 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-[var(--color-accent-text)]">
+              <Sparkles className="size-4" />
             </span>
             <div>
-              <h2 className="text-xl font-semibold text-slate-950">AI insight feed</h2>
-              <p className="mt-2 text-sm text-slate-600">Analytics-first insights that explain the numbers without hand-waving.</p>
+              <div className="text-base font-semibold text-slate-950">Ask WealthLens</div>
+              <div className="text-[11px] text-slate-500">Grounded in your data</div>
             </div>
           </div>
-          <div className="mt-6 space-y-4">
-            {data.insightHighlights.map((insight: { title: string; summary: string; severity: string }) => (
-              <InsightCard
-                key={insight.title}
-                title={insight.title}
-                summary={insight.summary}
-                severity={insight.severity as "high" | "medium" | "low"}
-              />
+          <Link
+            href="/advisor"
+            className="rounded-[12px] border border-slate-200 bg-[var(--background)] px-3.5 py-3 text-[13px] text-slate-500"
+          >
+            Where did I overspend last week?
+          </Link>
+          <div className="space-y-1.5">
+            {suggestedPrompts.map((q) => (
+              <Link
+                key={q}
+                href="/advisor"
+                className="flex items-center gap-2 rounded-[10px] bg-[var(--background)] px-3 py-2 text-[12px] text-slate-800 transition hover:bg-slate-100"
+              >
+                <ChevronRight className="size-3.5 text-[var(--color-accent-text)]" />
+                {q}
+              </Link>
             ))}
           </div>
         </Panel>
       </section>
+
+      <section className="grid gap-5 xl:grid-cols-2">
+        <SpendingByCategory data={data.spendingBreakdown} />
+        <UpcomingRenewals items={mockSubscriptions.slice(0, 4)} />
+      </section>
+
+      <Panel className="p-6">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950">Insights</h2>
+            <p className="mt-0.5 text-xs text-slate-500">AI-generated · grounded in transactions</p>
+          </div>
+          <button type="button" className="text-xs font-semibold text-[var(--color-accent-text)] hover:underline">
+            Dismiss all
+          </button>
+        </div>
+        <div className="mt-5 space-y-3">
+          {data.insightHighlights.map((insight) => (
+            <InsightCard
+              key={insight.title}
+              title={insight.title}
+              summary={insight.summary}
+              severity={insight.severity as "high" | "medium" | "low"}
+            />
+          ))}
+        </div>
+      </Panel>
     </AppShell>
+  );
+}
+
+function SpendingByCategory({ data }: { data: Array<{ category: string; amount: number; fill: string }> }) {
+  const total = data.reduce((s, d) => s + d.amount, 0);
+  const max = Math.max(...data.map((d) => d.amount));
+  return (
+    <Panel className="p-6">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-950">Spending by category</h2>
+          <p className="mt-0.5 text-xs text-slate-500">This month · {formatCurrency(total)} total</p>
+        </div>
+        <Link href="/transactions" className="text-xs font-semibold text-[var(--color-accent-text)] hover:underline">
+          View all
+        </Link>
+      </div>
+      <div className="mt-5 space-y-4">
+        {data.slice(0, 6).map((row) => {
+          const pct = Math.max(0.05, row.amount / Math.max(1, max));
+          return (
+            <div key={row.category}>
+              <div className="mb-1.5 flex items-center justify-between text-[13px]">
+                <span className="font-medium text-slate-800">{row.category}</span>
+                <span className="font-mono tabular-nums text-slate-500">{formatCurrency(row.amount)}</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-[var(--background)]">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${pct * 100}%`, backgroundColor: row.fill }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+function UpcomingRenewals({
+  items,
+}: {
+  items: Array<{ name: string; monthlyCost: number; note?: string }>;
+}) {
+  return (
+    <Panel className="p-6">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-950">Upcoming renewals</h2>
+          <p className="mt-0.5 text-xs text-slate-500">Next 14 days · {items.length} charges</p>
+        </div>
+        <Link href="/subscriptions" className="text-xs font-semibold text-[var(--color-accent-text)] hover:underline">
+          Manage
+        </Link>
+      </div>
+      <ul className="mt-5 space-y-2.5">
+        {items.map((sub) => (
+          <li key={sub.name} className="flex items-center gap-3 rounded-[12px] p-1.5">
+            <span className="flex size-9 items-center justify-center rounded-[10px] bg-[var(--color-accent-soft)] text-sm font-semibold text-[var(--color-accent-text)]">
+              {sub.name.slice(0, 1).toUpperCase()}
+            </span>
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-slate-950">{sub.name}</div>
+              <div className="text-[11px] text-slate-500">{sub.note ?? "Auto-renews monthly"}</div>
+            </div>
+            <div className="font-mono text-sm font-semibold tabular-nums text-slate-950">
+              {formatCurrency(sub.monthlyCost)}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Panel>
   );
 }
