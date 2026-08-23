@@ -108,7 +108,7 @@ export default async function ReportsPage() {
           </span>
           <div>
             <h2 className="text-xl font-semibold text-slate-950">AI weekly brief</h2>
-            <p className="mt-2 text-sm text-slate-600">Generated from synced transactions, Python analytics, and the Gemini explanation layer.</p>
+            <p className="mt-2 text-sm text-slate-600">Generated from synced transactions, Python analytics, and the Claude-backed RAG advisor.</p>
           </div>
         </div>
         {report.llmSummary ? (

@@ -183,7 +183,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
           <div className="flex items-center gap-2">
             {isLoadingHistory ? <Loader2 className="size-4 animate-spin text-slate-500" /> : null}
             <span className="hidden rounded-full bg-[var(--color-accent-soft-strong)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-text)] sm:inline-flex">
-              Gemini + Python
+              Claude + RAG
             </span>
           </div>
         </div> : null}
@@ -332,7 +332,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
             <p>Recent Plaid transactions</p>
             <p>Subscription estimates</p>
             <p>Python forecast and score</p>
-            <p>Gemini explanation layer</p>
+            <p>Claude Haiku via RAG (CFPB, IRS docs)</p>
           </div>
         </div>
       </aside> : null}
@@ -341,8 +341,8 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
 }
 
 function formatSourceLabel(source: string) {
-  if (source.startsWith("gemini")) {
-    return "Gemini + Python analytics";
+  if (source.startsWith("gemini") || source.startsWith("anthropic") || source.startsWith("claude")) {
+    return "Claude + RAG";
   }
 
   if (source.startsWith("typescript")) {
