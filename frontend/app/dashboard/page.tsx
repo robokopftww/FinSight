@@ -8,8 +8,7 @@ import { InsightCard } from "@/components/insight-card";
 import { MetricCard, type MetricTone } from "@/components/metric-card";
 import { OnboardingModal } from "@/components/onboarding-modal";
 import { Panel } from "@/components/ui/panel";
-import { getDashboardOverview } from "@/lib/api";
-import { subscriptions as mockSubscriptions } from "@/lib/mock-data";
+import { getDashboardOverview, getSubscriptions } from "@/lib/api";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -42,12 +41,22 @@ const suggestedPrompts = [
 
 export default async function DashboardPage() {
   const { getToken } = await auth();
-  const data = await getDashboardOverview(await getToken());
+  const token = await getToken();
+  const [data, subs] = await Promise.all([
+    getDashboardOverview(token),
+    getSubscriptions(token),
+  ]);
+
+  const subscriptions = (subs.data ?? []).map((s) => ({
+    name: s.name ?? s.merchantName ?? "Subscription",
+    monthlyCost: s.monthlyCost ?? 0,
+    note: s.note,
+  }));
 
   const netWorth = data.currentBalance;
   const cashFlow = data.netCashFlow ?? data.monthlyIncome - data.monthlySpending;
   const healthScore = data.healthScore ?? 82;
-  const upcoming = mockSubscriptions.reduce((sum, s) => sum + (s.monthlyCost ?? 0), 0);
+  const upcoming = subscriptions.reduce((sum, s) => sum + s.monthlyCost, 0);
 
   const netWorthTrend = sparklineFromTrend(data.balanceTrend);
   const cashFlowTrend = [10, 12, 11, 15, 16, 18, cashFlow > 0 ? 20 : 8];
@@ -93,7 +102,7 @@ export default async function DashboardPage() {
         <MetricCard
           label="Upcoming Bills"
           value={formatCurrency(upcoming)}
-          delta={`${mockSubscriptions.length} charges`}
+          delta={`${subscriptions.length} charges`}
           tone="warning"
           points={billsTrend}
         />
@@ -134,7 +143,7 @@ export default async function DashboardPage() {
 
       <section className="grid gap-5 xl:grid-cols-2">
         <SpendingByCategory data={data.spendingBreakdown} />
-        <UpcomingRenewals items={mockSubscriptions.slice(0, 4)} />
+        <UpcomingRenewals items={subscriptions.slice(0, 4)} />
       </section>
 
       <Panel className="p-6">
