@@ -47,4 +47,20 @@ describe("POST /internal/advisor/tool", () => {
     expect(resp.statusCode).toBe(400);
     expect(resp.json()).toMatchObject({ error: expect.stringContaining("unknown tool") });
   });
+
+  it("returns 400 for invalid getTransactions args", async () => {
+    const token = signAdvisorToolJwt({ userId: "u_1", ttlSeconds: 60 });
+    const resp = await app.inject({
+      method: "POST",
+      url: "/internal/advisor/tool",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        tool: "getTransactions",
+        args: { startDate: "not-a-date" },
+        userId: "u_1",
+      },
+    });
+    expect(resp.statusCode).toBe(400);
+    expect(resp.json()).toMatchObject({ error: expect.stringContaining("invalid args") });
+  });
 });

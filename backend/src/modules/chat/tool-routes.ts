@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
 import { verifyAdvisorToolJwt } from "../../lib/advisor-tool-jwt.js";
-import { getRecentTransactionsForUser } from "../../lib/advisor-tools.js";
+import { getRecentTransactionsForUser, transactionQuerySchema } from "../../lib/advisor-tools.js";
 
 const bodySchema = z.object({
   tool: z.string(),
@@ -31,7 +31,13 @@ export async function registerAdvisorToolRoutes(app: FastifyInstance) {
     try {
       switch (parsed.data.tool) {
         case "getTransactions": {
-          const data = await getRecentTransactionsForUser(claims.userId, parsed.data.args);
+          const argsResult = transactionQuerySchema.safeParse(parsed.data.args);
+          if (!argsResult.success) {
+            return reply
+              .code(400)
+              .send({ error: "invalid args", details: argsResult.error.format() });
+          }
+          const data = await getRecentTransactionsForUser(claims.userId, argsResult.data);
           return reply.send({ data });
         }
         default:

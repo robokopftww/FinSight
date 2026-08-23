@@ -3,6 +3,7 @@ import { env } from "../config/env.js";
 
 const ISSUER = "wealthlens-backend";
 const AUDIENCE = "wealthlens-ai-service";
+const MAX_TTL_SECONDS = 120;
 
 export function signAdvisorToolJwt({
   userId,
@@ -11,11 +12,12 @@ export function signAdvisorToolJwt({
   userId: string;
   ttlSeconds: number;
 }): string {
+  const clampedTtl = Math.min(Math.max(1, ttlSeconds), MAX_TTL_SECONDS);
   return jwt.sign({ sub: userId }, env.ADVISOR_TOOL_SECRET, {
     algorithm: "HS256",
     issuer: ISSUER,
     audience: AUDIENCE,
-    expiresIn: ttlSeconds,
+    expiresIn: clampedTtl,
   });
 }
 
