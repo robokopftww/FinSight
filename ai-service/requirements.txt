@@ -6,3 +6,7 @@ numpy==2.0.2
 scikit-learn==1.6.1
 google-genai==1.40.0
 python-dotenv==1.0.1
+anthropic>=0.40
+openai>=1.50
+psycopg[binary]>=3.2
+pyjwt>=2.9
