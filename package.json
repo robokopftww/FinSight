@@ -14,6 +14,8 @@
     "build:backend": "npm run build --workspace backend",
     "lint:frontend": "npm run lint --workspace frontend",
     "typecheck:backend": "npm run typecheck --workspace backend",
+    "test:frontend": "npm run test --workspace frontend",
+    "test:frontend:coverage": "npm run test:coverage --workspace frontend",
     "test:backend": "npm run test --workspace backend",
     "test:ai": "cd ai-service && .venv/bin/python -m pytest"
   }

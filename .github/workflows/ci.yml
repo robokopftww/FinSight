@@ -27,6 +27,17 @@ jobs:
       - name: Lint frontend
         run: npm run lint:frontend
 
+      - name: Test frontend
+        run: npm run test:frontend:coverage
+
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          if-no-files-found: ignore
+
       - name: Build frontend
         run: npm run build:frontend
         env:
