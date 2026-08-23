@@ -103,12 +103,6 @@ WealthLens/
 
 ## Local Development
 
-Install dependencies:
-
-```bash
-npm install
-```
-
 Create env files:
 
 ```bash
@@ -117,7 +111,34 @@ cp backend/.env.example backend/.env
 cp ai-service/.env.example ai-service/.env
 ```
 
-Generate Prisma and create tables:
+### Option A — Docker (recommended)
+
+Requires Docker (Docker Desktop, OrbStack, or Colima). Boots Postgres (pgvector), Redis, the backend, and the ai-service; runs Prisma migrations automatically via a one-shot `backend-migrate` service.
+
+```bash
+docker compose up --build
+```
+
+Then run the frontend natively (Next.js hot reload is faster on host):
+
+```bash
+npm install
+npm run dev:frontend
+```
+
+Open `http://localhost:3000`. Backend on `:4000`, ai-service on `:8000`, Postgres on `:5432`, Redis on `:6379`.
+
+Reset everything: `docker compose down -v`.
+
+### Option B — Native
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Bring up Postgres (with pgvector) and Redis however you prefer, then generate Prisma and create tables:
 
 ```bash
 cd backend
