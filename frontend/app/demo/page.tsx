@@ -32,6 +32,12 @@ const renewals = [
   { name: "iCloud+", note: "Renews Sep 04", monthlyCost: 2.99 },
 ];
 
+const creditCards = [
+  { name: "Chase Sapphire", mask: "4821", due: "Sep 02", minimum: 45.0, statement: 812.34 },
+  { name: "Amex Gold", mask: "1005", due: "Sep 08", minimum: 60.0, statement: 1240.5 },
+  { name: "Apple Card", mask: "3391", due: "Sep 15", minimum: 25.0, statement: 318.16 },
+];
+
 const insights = [
   {
     title: "Overdraft risk on Chase Checking",
@@ -96,16 +102,19 @@ export default function DemoPage() {
           points={[70, 72, 74, 76, 78, 82]}
         />
         <MetricCard
-          label="Upcoming Bills"
-          value={fmt(1204.0, { maximumFractionDigits: 2 })}
-          delta="−$180"
+          label="Credit Card Bills"
+          value={fmt(
+            creditCards.reduce((s, c) => s + c.minimum, 0),
+            { maximumFractionDigits: 2 },
+          )}
+          delta={`${creditCards.length} cards`}
           tone="warning"
           points={[1380, 1360, 1420, 1300, 1250, 1204]}
-          detailsLabel={`View ${renewals.length} billers`}
-          details={renewals.map((r) => ({
-            primary: r.name,
-            secondary: r.note,
-            value: fmt(r.monthlyCost, { maximumFractionDigits: 2 }),
+          detailsLabel={`View ${creditCards.length} cards`}
+          details={creditCards.map((c) => ({
+            primary: `${c.name} ••${c.mask}`,
+            secondary: `Due ${c.due} · min payment (statement ${fmt(c.statement, { maximumFractionDigits: 0 })})`,
+            value: fmt(c.minimum, { maximumFractionDigits: 2 }),
           }))}
         />
       </section>

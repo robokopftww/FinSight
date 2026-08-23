@@ -56,7 +56,24 @@ export default async function DashboardPage() {
   const netWorth = data.currentBalance;
   const cashFlow = data.netCashFlow ?? data.monthlyIncome - data.monthlySpending;
   const healthScore = data.healthScore ?? 82;
-  const upcoming = subscriptions.reduce((sum, s) => sum + s.monthlyCost, 0);
+
+  const creditCards = data.creditCards ?? [];
+  const upcoming = creditCards.reduce(
+    (sum, c) => sum + (c.minimumPayment ?? c.statementBalance ?? c.outstandingBalance ?? 0),
+    0,
+  );
+  const creditCardDetails = creditCards.map((c) => {
+    const amount = c.minimumPayment ?? c.statementBalance ?? c.outstandingBalance ?? 0;
+    const due = c.dueDate
+      ? new Date(c.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      : "No due date";
+    const maskLabel = c.mask ? ` ••${c.mask}` : "";
+    return {
+      primary: `${c.name}${maskLabel}`,
+      secondary: `Due ${due}${c.minimumPayment != null ? " · min payment" : ""}`,
+      value: formatCurrency(amount),
+    };
+  });
 
   const netWorthTrend = sparklineFromTrend(data.balanceTrend);
   const cashFlowTrend = [10, 12, 11, 15, 16, 18, cashFlow > 0 ? 20 : 8];
@@ -100,17 +117,21 @@ export default async function DashboardPage() {
           points={scoreTrend}
         />
         <MetricCard
-          label="Upcoming Bills"
+          label="Credit Card Bills"
           value={formatCurrency(upcoming)}
-          delta={`${subscriptions.length} charges`}
+          delta={
+            creditCards.length
+              ? `${creditCards.length} card${creditCards.length === 1 ? "" : "s"}`
+              : "No cards"
+          }
           tone="warning"
           points={billsTrend}
-          detailsLabel={`View ${subscriptions.length} biller${subscriptions.length === 1 ? "" : "s"}`}
-          details={subscriptions.map((s) => ({
-            primary: s.name,
-            secondary: s.note ?? "Auto-renews monthly",
-            value: formatCurrency(s.monthlyCost),
-          }))}
+          detailsLabel={
+            creditCards.length
+              ? `View ${creditCards.length} card${creditCards.length === 1 ? "" : "s"}`
+              : undefined
+          }
+          details={creditCardDetails.length ? creditCardDetails : undefined}
         />
       </section>
 
