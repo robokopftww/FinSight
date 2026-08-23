@@ -64,7 +64,7 @@ describe("POST /internal/advisor/tool", () => {
     expect(resp.json()).toMatchObject({ error: expect.stringContaining("invalid args") });
   });
 
-  it("returns an empty subscriptions array for a user with no data", async () => {
+  it.skipIf(!process.env.DATABASE_URL)("returns an empty subscriptions array for a user with no data", async () => {
     const token = signAdvisorToolJwt({ userId: "u_no_data", ttlSeconds: 60 });
     const resp = await app.inject({
       method: "POST",

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { prisma } from "../src/lib/prisma.js";
 
-describe("KB schema", () => {
+const hasDb = Boolean(process.env.DATABASE_URL);
+
+describe.skipIf(!hasDb)("KB schema", () => {
   it("inserts a document and chunk with a vector via raw SQL", async () => {
     const doc = await prisma.kbDocument.create({
       data: {
