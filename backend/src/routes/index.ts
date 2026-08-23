@@ -12,6 +12,7 @@ import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { isPlaidConfigured } from "../lib/plaid.js";
 import { profileUpdateSchema } from "../lib/profile.js";
+import { registerAdvisorToolRoutes } from "../modules/chat/tool-routes.js";
 
 const editableCategories = [
   "FOOD_AND_DRINK",
@@ -32,6 +33,8 @@ const editableCategories = [
 ];
 
 export async function registerRoutes(app: FastifyInstance) {
+  await registerAdvisorToolRoutes(app);
+
   app.get("/health", async () => ({
     status: "ok",
     service: "wealthlens-backend",
