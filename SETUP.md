@@ -93,16 +93,37 @@ PLAID_ENV=sandbox
 
 Plaid sandbox is enough for the MVP. You do not need Plaid production access yet.
 
-## 7. Configure Gemini
+## 7. Configure the RAG advisor
 
-Put your Google AI Studio key in `ai-service/.env`:
+Put your Anthropic and OpenAI keys in `ai-service/.env`:
 
 ```bash
-GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
+ANTHROPIC_API_KEY=       # Claude Haiku 4.5 for the tool-calling loop
+OPENAI_API_KEY=          # text-embedding-3-small (1536-dim) for chunk + query embeddings
+DATABASE_URL=            # same Postgres as backend; must have the `vector` extension enabled
+BACKEND_URL=http://127.0.0.1:4000   # ai-service calls backend for personal-data tools
 ```
 
-WealthLens still runs without Gemini. If the key is missing, advisor chat and reports fall back to deterministic Python analytics.
+Match `ADVISOR_TOOL_SECRET` in `backend/.env`:
+
+```bash
+ADVISOR_TOOL_SECRET=     # 32+ byte hex, generate with `openssl rand -hex 32`
+AI_SERVICE_URL=http://127.0.0.1:8000
+```
+
+Enable pgvector on the database (once per DB):
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+Seed the knowledge-base corpus (CFPB / IRS PDFs):
+
+```bash
+cd ai-service && python -m rag.ingest
+```
+
+WealthLens still runs without the Anthropic key. If it is missing, advisor replies fall back to a configured message; deterministic analytics keep working.
 
 ## 8. Start The App
 
@@ -151,7 +172,7 @@ Useful routes:
 - `/transactions` - synced transaction table
 - `/subscriptions` - recurring spend analysis
 - `/financial-health` - score and recommendations
-- `/advisor` - Gemini + Python advisor
+- `/advisor` - Claude Haiku + RAG advisor with inline citations
 - `/reports` - weekly financial report
 - `/settings` - service and data controls
 
@@ -203,12 +224,18 @@ PLAID_ENV=sandbox
 
 Then restart the backend.
 
-### Advisor says `LOCAL FALLBACK`
+### Advisor says `LOCAL FALLBACK` or "could not reach advisor service"
 
-Either Gemini is not configured, the AI service is not running, or Gemini returned an error. Check:
+Either the Anthropic key is missing, the AI service is not running, the backend cannot reach the AI service, or the tool JWT is misconfigured. Check:
 
 ```bash
 curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:4000/health
 ```
 
-If the badge says `GEMINI + PYTHON ANALYTICS`, Gemini is active.
+If the badge on the advisor page says `CLAUDE + RAG`, the RAG loop is active. Verify all four env pairs match:
+
+- `ADVISOR_TOOL_SECRET` — identical string in `backend/.env` and used only by backend (ai-service does not need it).
+- `AI_SERVICE_URL` in backend points at the FastAPI URL.
+- `BACKEND_URL` in ai-service points at the Fastify URL.
+- `DATABASE_URL` in both points at the same Postgres (with `vector` extension enabled).

@@ -37,8 +37,9 @@ CLERK_PUBLISHABLE_KEY=
 PLAID_CLIENT_ID=
 PLAID_SECRET=
 PLAID_ENV=sandbox
-GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+ADVISOR_TOOL_SECRET=
 PYTHON_VERSION=3.11.9
 ```
 
@@ -64,7 +65,9 @@ Create:
 - A Neon PostgreSQL database
 - A Clerk application for the deployed frontend URL
 - A Plaid sandbox app
-- A Google AI Studio Gemini API key
+- An Anthropic API key (Claude Haiku 4.5)
+- An OpenAI API key (`text-embedding-3-small`)
+- A 32+ byte hex `ADVISOR_TOOL_SECRET` shared between backend and (only) backend
 - A backend hosting service
 - An AI service hosting service
 - A Vercel project for `frontend`
@@ -85,6 +88,13 @@ PLAID_CLIENT_ID=
 PLAID_SECRET=
 PLAID_ENV=sandbox
 AI_SERVICE_URL=https://your-ai-service-host
+ADVISOR_TOOL_SECRET=       # 32+ byte hex, generate with `openssl rand -hex 32`
+```
+
+Before first deploy, enable pgvector on the Neon database (Neon SQL editor):
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
 Build and start commands:
@@ -107,8 +117,16 @@ npx prisma migrate deploy
 Set these in the AI service host:
 
 ```bash
-GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+DATABASE_URL=              # same Neon URL the backend uses
+BACKEND_URL=https://your-backend-host
+```
+
+Seed the corpus once after the pgvector migration lands (from a shell with `DATABASE_URL` + `OPENAI_API_KEY` set):
+
+```bash
+cd ai-service && python -m rag.ingest
 ```
 
 Install and start commands:

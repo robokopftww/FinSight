@@ -14,7 +14,11 @@ flowchart TD
     Backend --> Plaid["Plaid Sandbox"]
     Backend --> AI["AI Service: FastAPI"]
     AI --> Analytics["Pandas + NumPy + Scikit-learn"]
-    AI --> Gemini["Gemini LLM"]
+    AI --> Claude["Anthropic Claude Haiku 4.5<br/>(tool-calling loop)"]
+    AI --> OpenAI["OpenAI text-embedding-3-small"]
+    AI --> Postgres
+    Postgres --> KB[("KbDocument / KbChunk<br/>pgvector cosine")]
+    Claude -. "personal-data tools via signed JWT" .-> Backend
 ```
 
 ## Service Boundaries
@@ -31,7 +35,7 @@ The frontend is responsible for the user-facing product:
 - Recharts visualizations
 - Advisor chat interface and report presentation
 
-The frontend talks only to the backend API. It does not call Plaid, PostgreSQL, or Gemini directly.
+The frontend talks only to the backend API. It does not call Plaid, PostgreSQL, Anthropic, or OpenAI directly.
 
 ### Backend
 
@@ -59,9 +63,10 @@ The Python service owns analytics and AI composition:
 - Goal planning calculations
 - Advisor context generation
 - Transaction categorization suggestions
-- Gemini prompt construction and response generation
+- RAG advisor loop (Anthropic Claude Haiku 4.5 with six typed tools: `searchDocs`, `getTransactions`, `getSubscriptions`, `getBalance`, `getInsights`, `getForecast`)
+- Knowledge-base ingest pipeline (OpenAI embeddings → pgvector `KbChunk` rows)
 
-Gemini is used after the analytics layer has computed grounded facts. If `GEMINI_API_KEY` is missing, the service returns deterministic analytics explanations.
+Claude Haiku is invoked after deterministic analytics compute the numeric truth. If `ANTHROPIC_API_KEY` is missing, `/rag/answer` returns a configured fallback message and deterministic analytics keep working. `searchDocs` runs locally in the AI service against pgvector; the five personal-data tools proxy back to the backend over a short-lived HS256 JWT signed with `ADVISOR_TOOL_SECRET`.
 
 ## Data Flow
 
@@ -111,19 +116,30 @@ sequenceDiagram
     participant Frontend
     participant Backend
     participant AI
-    participant Gemini
+    participant Claude
     participant Postgres
 
     User->>Frontend: Ask financial question
-    Frontend->>Backend: POST /api/advisor/chat
-    Backend->>Postgres: Load synced financial context
-    Backend->>AI: POST /analytics/chat
-    AI->>AI: Calculate affordability, risk, goal, or spending context
-    AI->>Gemini: Generate grounded explanation when configured
-    Gemini-->>AI: Explanation
-    AI-->>Backend: Answer + facts + source label
-    Backend->>Postgres: Save chat history
-    Backend-->>Frontend: Advisor response
+    Frontend->>Backend: POST /api/advisor/answer
+    Backend->>Backend: Sign short-lived HS256 tool JWT (userId claim)
+    Backend->>AI: POST /rag/answer + x-tool-jwt header
+    loop up to 8 iterations
+        AI->>Claude: messages.create (system + tools + history)
+        Claude-->>AI: tool_use blocks
+        alt searchDocs
+            AI->>Postgres: pgvector cosine search on KbChunk
+            Postgres-->>AI: top-k chunks
+        else personal-data tool
+            AI->>Backend: POST /internal/advisor/tool + Bearer JWT
+            Backend->>Postgres: Prisma query scoped to userId
+            Postgres-->>Backend: rows
+            Backend-->>AI: {data}
+        end
+    end
+    Claude-->>AI: final answer with [n] markers
+    AI-->>Backend: {answer, sources, toolTrace}
+    Backend->>Postgres: Save chat history + snapshot
+    Backend-->>Frontend: Advisor response with citations
 ```
 
 ## Data Model
@@ -166,7 +182,8 @@ Product:
 
 Advisor:
 
-- `POST /api/advisor/chat`
+- `POST /api/advisor/answer` — RAG loop entrypoint (Clerk-authed)
+- `POST /internal/advisor/tool` — JWT-gated callback for ai-service personal-data tools
 - `GET /api/advisor/history`
 - `DELETE /api/advisor/history`
 
@@ -184,8 +201,9 @@ Settings:
 - `POST /analytics/insights`
 - `POST /analytics/summary`
 - `POST /analytics/report`
-- `POST /analytics/chat`
+- `POST /analytics/chat` (deprecated — legacy path, gated behind `LEGACY_ADVISOR=1`)
 - `POST /analytics/categorize`
+- `POST /rag/answer` — RAG loop entrypoint invoked by the backend
 
 ## Analytics Strategy
 
@@ -218,7 +236,8 @@ The LLM receives only a compact context object with calculated facts and is inst
 
 WealthLens is designed to keep working during local development:
 
-- If Gemini is missing, Python returns deterministic local explanations.
+- If `ANTHROPIC_API_KEY` is missing, `/rag/answer` returns a configured fallback message; deterministic analytics keep answering scoring/forecast/insight requests.
+- If the pgvector corpus is empty, `searchDocs` returns no hits and the model answers from personal-data tools only (no `[n]` citations).
 - If the AI service is offline, the backend uses TypeScript analytics fallbacks.
 - If Plaid is not configured, the UI shows setup status instead of failing silently.
 - Demo mode is public and does not require Clerk or Plaid.
