@@ -1,14 +1,26 @@
 "use client";
 
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
-import { useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Panel } from "@/components/ui/panel";
+import { cn } from "@/lib/utils";
 import {
   calculateBalanceChange,
   type BalanceHistoryPoint,
 } from "@/lib/balance-history";
+
+const RANGES = ["1M", "3M", "6M", "1Y", "All"] as const;
+type Range = (typeof RANGES)[number];
+
+const rangePoints: Record<Range, number | null> = {
+  "1M": 1,
+  "3M": 3,
+  "6M": 6,
+  "1Y": 12,
+  All: null,
+};
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -37,7 +49,13 @@ export function BalanceHistoryChart({ data }: { data: BalanceHistoryPoint[] }) {
     () => true,
     () => false,
   );
-  const change = calculateBalanceChange(data);
+  const [range, setRange] = useState<Range>("6M");
+  const visible = useMemo(() => {
+    const take = rangePoints[range];
+    if (take === null || take >= data.length) return data;
+    return data.slice(-take);
+  }, [data, range]);
+  const change = calculateBalanceChange(visible);
   const positive = change?.direction === "up";
   const ChangeIcon = positive ? ArrowUpRight : ArrowDownRight;
 
@@ -47,26 +65,45 @@ export function BalanceHistoryChart({ data }: { data: BalanceHistoryPoint[] }) {
         <div>
           <h2 className="text-xl font-semibold text-slate-950">Balance over time</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Estimated cash balance across your last six months of synced activity.
+            Estimated cash balance across your synced activity.
           </p>
         </div>
-        {change ? (
-          <div className={`flex items-center gap-2 text-sm font-semibold ${positive ? "text-emerald-600" : "text-red-600"}`}>
-            <span className={`flex size-9 items-center justify-center rounded-full ${positive ? "bg-emerald-50" : "bg-red-50"}`}>
-              <ChangeIcon className="size-4" aria-hidden="true" />
-            </span>
-            <span>
-              {formatSignedCurrency(change.amount)}
-              {change.percent === null ? "" : ` (${change.percent >= 0 ? "+" : ""}${change.percent}%)`} over this period
-            </span>
+        <div className="flex flex-col items-start gap-2 sm:items-end">
+          <div className="flex items-center rounded-[10px] border border-slate-200 bg-[var(--background)] p-0.5 text-xs">
+            {RANGES.map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRange(r)}
+                className={cn(
+                  "rounded-[8px] px-3 py-1.5 font-medium transition",
+                  r === range
+                    ? "bg-white text-slate-950 shadow-sm"
+                    : "text-slate-500 hover:text-slate-950",
+                )}
+              >
+                {r}
+              </button>
+            ))}
           </div>
-        ) : null}
+          {change ? (
+            <div className={`flex items-center gap-2 text-sm font-semibold ${positive ? "text-emerald-600" : "text-red-600"}`}>
+              <span className={`flex size-9 items-center justify-center rounded-full ${positive ? "bg-emerald-50" : "bg-red-50"}`}>
+                <ChangeIcon className="size-4" aria-hidden="true" />
+              </span>
+              <span>
+                {formatSignedCurrency(change.amount)}
+                {change.percent === null ? "" : ` (${change.percent >= 0 ? "+" : ""}${change.percent}%)`} over this period
+              </span>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {change ? (
         <div className="mt-6 h-80 w-full">
           <ul className="sr-only" aria-label="Balance history values">
-            {data.map((point, index) => (
+            {visible.map((point, index) => (
               <li key={`${point.label}-${index}`}>
                 {point.label}: {formatCurrency(point.balance)}
               </li>
@@ -74,7 +111,7 @@ export function BalanceHistoryChart({ data }: { data: BalanceHistoryPoint[] }) {
           </ul>
           {mounted ? (
             <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 1, height: 1 }}>
-              <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+              <AreaChart data={visible} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
                 <defs>
                   <linearGradient id="balance-history-fill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#2563eb" stopOpacity={0.28} />

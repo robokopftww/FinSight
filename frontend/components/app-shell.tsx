@@ -7,9 +7,7 @@ import {
   CreditCard,
   FileText,
   House,
-  Plus,
   Repeat,
-  Search,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -29,8 +27,6 @@ const navItems = [
   { href: "/advisor", label: "Advisor", icon: Bot },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
-
-const ranges = ["1M", "3M", "6M", "1Y", "All"] as const;
 
 export async function AppShell({
   children,
@@ -94,37 +90,7 @@ export async function AppShell({
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 flex h-[72px] items-center gap-3 border-b border-slate-200 bg-white px-8">
-            <label className="flex h-9 w-full max-w-[320px] items-center gap-2.5 rounded-[10px] border border-slate-200 bg-[var(--background)] px-3.5 text-[13px] text-slate-500">
-              <Search className="size-3.5" />
-              <input
-                type="search"
-                placeholder="Search transactions, categories…"
-                className="w-full bg-transparent outline-none placeholder:text-slate-400"
-              />
-            </label>
             <div className="flex-1" />
-            <div className="flex items-center rounded-[10px] border border-slate-200 bg-[var(--background)] p-0.5 text-xs">
-              {ranges.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  className={cn(
-                    "rounded-[8px] px-3 py-1.5 font-medium transition",
-                    r === "6M"
-                      ? "bg-white text-slate-950 shadow-sm"
-                      : "text-slate-500 hover:text-slate-950",
-                  )}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-[10px] bg-[var(--color-accent)] px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[var(--color-accent-strong)]"
-            >
-              <Plus className="size-3.5" /> Connect bank
-            </button>
             <button
               type="button"
               aria-label="Notifications"
