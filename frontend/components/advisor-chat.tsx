@@ -5,6 +5,9 @@ import { Bot, Clock3, Loader2, Send, Sparkles, Trash2, UserRound } from "lucide-
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { AdvisorMessage as AdvisorMessageView } from "@/components/advisor-message";
+import type { AdvisorSource } from "@/lib/api";
+import { askAdvisor } from "@/lib/api";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -16,6 +19,7 @@ type AdvisorMessage = {
   dataPoints?: Array<{ label: string; value: string }>;
   source?: string;
   createdAt?: string;
+  sources?: AdvisorSource[];
 };
 
 type HistoryResponse = {
@@ -44,6 +48,7 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
   const [isSending, setIsSending] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [historyMessage, setHistoryMessage] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
 
   const loadHistory = useCallback(async () => {
     if (!apiBaseUrl || !isSignedIn) {
@@ -98,40 +103,17 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
     setIsSending(true);
 
     try {
-      if (!apiBaseUrl) {
-        throw new Error("API base URL missing.");
-      }
-
       const token = await getToken();
-      const response = await fetch(`${apiBaseUrl}/api/advisor/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ question: trimmedQuestion }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Advisor request failed.");
-      }
-
-      const data = (await response.json()) as {
-        answer: string;
-        decision?: string;
-        dataPoints?: Array<{ label: string; value: string }>;
-        source?: string;
-      };
+      const answer = await askAdvisor(trimmedQuestion, sessionId, token);
+      setSessionId(answer.sessionId);
 
       setMessages((currentMessages) => [
         ...currentMessages,
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: data.answer,
-          decision: data.decision,
-          dataPoints: data.dataPoints,
-          source: data.source,
+          content: answer.answer,
+          sources: answer.sources,
         },
       ]);
     } catch {
@@ -250,29 +232,35 @@ export function AdvisorChat({ compact = false }: { compact?: boolean }) {
                     <Bot className="size-4" />
                   </span>
                 ) : null}
-                <div
-                  className={
-                    isAssistant
-                      ? `${compact ? "max-w-[85%]" : "max-w-2xl"} rounded-[24px] border border-slate-200 bg-slate-100 px-5 py-4 text-sm leading-7 text-slate-800`
-                      : `${compact ? "max-w-[85%]" : "max-w-2xl"} rounded-[24px] bg-blue-600 px-5 py-4 text-sm leading-7 text-white`
-                  }
-                >
-                  <p>{message.content}</p>
-                  {message.dataPoints?.length ? (
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      {message.dataPoints.map((point) => (
-                        <div key={point.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                          <div className="text-xs uppercase tracking-[0.18em] text-slate-500">{point.label}</div>
-                          <div className="mt-1 font-semibold text-slate-950">{point.value}</div>
+                <div className={compact ? "max-w-[85%]" : "max-w-2xl"}>
+                  {isAssistant && (message.sources || message.sources?.length) ? (
+                    <AdvisorMessageView role={message.role} content={message.content} sources={message.sources} />
+                  ) : (
+                    <div
+                      className={
+                        isAssistant
+                          ? `rounded-[24px] border border-slate-200 bg-slate-100 px-5 py-4 text-sm leading-7 text-slate-800`
+                          : `rounded-[24px] bg-blue-600 px-5 py-4 text-sm leading-7 text-white`
+                      }
+                    >
+                      <p>{message.content}</p>
+                      {message.dataPoints?.length ? (
+                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                          {message.dataPoints.map((point) => (
+                            <div key={point.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">{point.label}</div>
+                              <div className="mt-1 font-semibold text-slate-950">{point.value}</div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      ) : null}
+                      {isAssistant && message.source ? (
+                        <div className="mt-4 inline-flex rounded-full bg-[var(--color-accent-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-text)]">
+                          {formatSourceLabel(message.source)}
+                        </div>
+                      ) : null}
                     </div>
-                  ) : null}
-                  {isAssistant && message.source ? (
-                    <div className="mt-4 inline-flex rounded-full bg-[var(--color-accent-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-text)]">
-                      {formatSourceLabel(message.source)}
-                    </div>
-                  ) : null}
+                  )}
                 </div>
                 {!isAssistant ? (
                   <span className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-950">

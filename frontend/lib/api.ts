@@ -267,3 +267,43 @@ export async function getWeeklyReport(token?: string | null) {
 }
 
 export { cashFlowForecast, healthFactors, insights, overview, recommendations, spendingBreakdown, subscriptions };
+
+export type AdvisorSource = {
+  n: number;
+  title: string;
+  publisher: string;
+  url: string;
+  snippet: string;
+};
+
+export type AdvisorAnswer = {
+  answer: string;
+  sources: AdvisorSource[];
+  toolTrace: Array<{ name: string; input: unknown }>;
+  sessionId: string;
+};
+
+export async function askAdvisor(
+  question: string,
+  sessionId: string,
+  token?: string | null,
+): Promise<AdvisorAnswer> {
+  if (!apiBaseUrl) {
+    return {
+      answer: "Advisor is offline in local mock mode.",
+      sources: [],
+      toolTrace: [],
+      sessionId,
+    };
+  }
+  const resp = await fetch(`${apiBaseUrl}/api/advisor/answer`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ question, sessionId }),
+  });
+  if (!resp.ok) throw new Error(`advisor answer failed: ${resp.status}`);
+  return (await resp.json()) as AdvisorAnswer;
+}
