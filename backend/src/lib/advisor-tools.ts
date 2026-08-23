@@ -63,13 +63,22 @@ export async function getSubscriptionsForUser(userId: string) {
     where: { userId },
     orderBy: { monthlyCost: "desc" },
   });
-  return rows.map((s) => ({
-    name: s.merchantName ?? "Subscription",
-    monthlyCost: Number(s.monthlyCost ?? 0),
-    note: s.category ?? undefined,
-    lastChargedAt: s.lastChargedAt?.toISOString(),
-    cadence: undefined,
-  }));
+  return rows.map((s) => {
+    const yearly = Number(s.yearlyCost ?? 0);
+    const monthly = Number(s.monthlyCost ?? 0);
+    const cadence = yearly > 0 && monthly > 0
+      ? Math.abs(yearly / 12 - monthly) < 1
+        ? "monthly"
+        : "yearly"
+      : undefined;
+    return {
+      name: s.merchantName ?? "Subscription",
+      monthlyCost: monthly,
+      note: s.category ?? undefined,
+      lastChargedAt: s.lastChargedAt?.toISOString(),
+      cadence,
+    };
+  });
 }
 
 export async function getBalanceForUser(userId: string, args: Record<string, unknown>) {
