@@ -332,7 +332,7 @@ export function SettingsControlCenter({
               <div>
                 <h2 className="text-xl font-semibold text-slate-950">AI runtime</h2>
                 <p className="mt-2 text-sm leading-7 text-slate-600">
-                  Confirms the Python analytics service and Gemini explanation layer are reachable from the backend.
+                  Confirms the Python analytics service and Anthropic-backed RAG advisor are reachable from the backend.
                 </p>
               </div>
             </div>
@@ -341,7 +341,7 @@ export function SettingsControlCenter({
 
           <div className="mt-6 grid gap-3">
             <StatTile label="Analytics engine" value={status.ai.analytics} detail={status.ai.service} />
-            <StatTile label="LLM model" value={status.ai.llmModel} detail={status.ai.llmConfigured ? "Gemini key loaded in AI service" : "Using deterministic fallback"} />
+            <StatTile label="LLM model" value={status.ai.llmModel} detail={status.ai.llmConfigured ? "Anthropic key loaded in AI service" : "Using deterministic fallback"} />
           </div>
         </Panel>
       </section>
@@ -471,7 +471,7 @@ export function SettingsControlCenter({
             <div className="mt-4 flex flex-wrap gap-2">
               <StatusPill active={status.database.connected} label={`${status.database.provider} online`} />
               <StatusPill active={status.clerk.configured} label={status.clerk.configured ? "Clerk configured" : "Clerk missing"} />
-              <StatusPill active={status.ai.llmConfigured} label={status.ai.llmConfigured ? "Gemini enabled" : "Gemini fallback"} />
+              <StatusPill active={status.ai.llmConfigured} label={status.ai.llmConfigured ? "Anthropic enabled" : "LLM fallback"} />
               <StatusPill active={Boolean(apiBaseUrl)} label={apiBaseUrl ? "Frontend API set" : "Frontend API missing"} />
             </div>
           </div>
